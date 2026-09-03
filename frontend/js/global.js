@@ -17,7 +17,7 @@ function getHeaders() {
 function verificarSesion() {
     const token = sessionStorage.getItem('token');
     if (!token) {
-        window.location.href = '../login.html';
+        window.location.href = '../index.html';
         return false;
     }
     return true;
@@ -41,7 +41,7 @@ function cargarSesion() {
 function logout() {
     if (confirm('¿Cerrar sesión?')) {
         sessionStorage.clear();
-        window.location.href = '../login.html';
+        window.location.href = '../index.html';
     }
 }
 
