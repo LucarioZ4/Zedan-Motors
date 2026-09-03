@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 
 const express = require('express');
 const cors    = require('cors');
@@ -9,15 +10,27 @@ const app  = express();
 const port = process.env.PORT || 3000;
 
 // ── Middleware ──
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: false,
+}));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 // ── Rutas ──
 app.use('/api/auth',      require('./modules/auth/auth.routes'));
 app.use('/api/dashboard', require('./modules/dashboard/dashboard.routes'));
+app.use('/api/clientes', require('./modules/clientes/clientes.routes'));
+app.use('/api/vehiculos', require('./modules/vehiculos/vehiculos.routes'));
+
+// Servir frontend
+app.use(express.static(path.join(__dirname, '../../frontend')));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
+});
 
 // ── Health check ──
 app.get('/health', async (req, res) => {
