@@ -1,0 +1,40 @@
+.stat-pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.stat-pill span {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.btn-accion {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-secondary);
+}
+
+.btn-accion.editar:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-accion.eliminar:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+textarea.field-input {
+    resize: vertical;
+    min-height: 80px;
+}
