@@ -26,9 +26,10 @@ app.use('/api/clientes', require('./modules/clientes/clientes.routes'));
 app.use('/api/vehiculos', require('./modules/vehiculos/vehiculos.routes'));
 app.use('/api/citas',     require('./modules/citas/citas.routes'));
 app.use('/api/estados',   require('./modules/estados/estados.routes'));
-app.use('/api/ordenes',    require('./modules/ordenes/ordenes.routes'));
-app.use('/api/empleados',  require('./modules/empleados/empleados.routes'));
-app.use('/api/servicios',  require('./modules/servicios/servicios.routes'));
+app.use('/api/ordenes',   require('./modules/ordenes/ordenes.routes'));
+app.use('/api/empleados', require('./modules/empleados/empleados.routes'));
+app.use('/api/servicios', require('./modules/servicios/servicios.routes'));
+app.use('/api/inventario', require('./modules/inventario/inventario.routes'));
 
 // Servir frontend
 app.use(express.static(path.join(__dirname, '../../frontend')));

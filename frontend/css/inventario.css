@@ -1,0 +1,66 @@
+.stat-pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.stat-pill span {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.btn-accion {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-secondary);
+}
+
+.btn-accion.editar:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-accion.eliminar:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.alert-stock {
+    background: rgba(245,166,35,0.1);
+    border: 1px solid rgba(245,166,35,0.3);
+    border-left: 4px solid #F5A623;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #F5A623;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stock-bar {
+    width: 80px;
+    height: 6px;
+    background: #2a2a2a;
+    border-radius: 3px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+.stock-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+}
