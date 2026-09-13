@@ -1,10 +1,12 @@
 const jwt  = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { jwtSecret, jwtExpires } = require('../../config/env');
 
+// TODO: Temporal para la demo, mover a la base de datos
 const USUARIOS = [
-    { id: 1, usuario: 'admin',     password: '1234', rol: 'Administrador', nombre: 'Admin' },
-    { id: 2, usuario: 'mecanico',  password: '1234', rol: 'Mecánico',      nombre: 'Mecánico' },
-    { id: 3, usuario: 'recepcion', password: '1234', rol: 'Recepcionista', nombre: 'Recepción' },
+    { id: 1, usuario: 'admin',     passwordHash: '$2a$10$fklA676wn628NDubTeKP6ObJMqocZKEZrV4D.bUrbO/QY8zQZoItG', rol: 'Administrador', nombre: 'Admin' },
+    { id: 2, usuario: 'mecanico',  passwordHash: '$2a$10$fklA676wn628NDubTeKP6ObJMqocZKEZrV4D.bUrbO/QY8zQZoItG', rol: 'Mecánico',      nombre: 'Mecánico' },
+    { id: 3, usuario: 'recepcion', passwordHash: '$2a$10$fklA676wn628NDubTeKP6ObJMqocZKEZrV4D.bUrbO/QY8zQZoItG', rol: 'Recepcionista', nombre: 'Recepción' },
 ];
 
 const login = async (req, res) => {
@@ -15,7 +17,7 @@ const login = async (req, res) => {
             return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
 
         const encontrado = USUARIOS.find(
-            u => u.usuario === usuario && u.password === password
+            u => u.usuario === usuario && bcrypt.compareSync(password, u.passwordHash)
         );
 
         if (!encontrado)
