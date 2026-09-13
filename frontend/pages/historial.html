@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zedan Motor's — Historial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/historial.css">
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-box">Z</div>
+            <div>
+                <div class="logo-text">Zedan Motor's</div>
+                <div class="logo-sub">Taller Automotriz</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Principal</div>
+            <a href="dashboard.html" class="nav-item">
+                <i class="bi bi-grid-1x2-fill"></i> Dashboard
+            </a>
+            <div class="nav-section-label">Gestión</div>
+            <a href="clientes.html" class="nav-item">
+                <i class="bi bi-people-fill"></i> Clientes
+            </a>
+            <a href="vehiculos.html" class="nav-item">
+                <i class="bi bi-car-front-fill"></i> Vehículos
+            </a>
+            <a href="empleados.html" class="nav-item">
+                <i class="bi bi-person-badge-fill"></i> Empleados
+            </a>
+            <a href="servicios.html" class="nav-item">
+                <i class="bi bi-tools"></i> Servicios
+            </a>
+            <div class="nav-section-label">Operaciones</div>
+            <a href="citas.html" class="nav-item">
+                <i class="bi bi-calendar-check-fill"></i> Citas
+            </a>
+            <a href="ordenes.html" class="nav-item">
+                <i class="bi bi-clipboard2-check-fill"></i> Órdenes
+            </a>
+            <a href="inventario.html" class="nav-item">
+                <i class="bi bi-box-seam-fill"></i> Inventario
+            </a>
+            <a href="facturacion.html" class="nav-item">
+                <i class="bi bi-receipt-cutoff"></i> Facturación
+            </a>
+            <a href="historial.html" class="nav-item active">
+                <i class="bi bi-clock-history"></i> Historial
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="sidebarAvatar">A</div>
+                <div>
+                    <div class="user-name" id="sidebarUsuario">Admin</div>
+                    <div class="user-role" id="sidebarRol">Administrador</div>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="logout()">
+                <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-content">
+        <div class="topbar">
+            <div>
+                <div class="topbar-title">Historial por vehículo</div>
+                <div class="topbar-sub" id="topbarFecha"></div>
+            </div>
+        </div>
+
+        <div class="page-content">
+            <div class="row g-4">
+
+                <!-- Panel izquierdo selector -->
+                <div class="col-md-4 col-lg-3">
+                    <div class="card-dark">
+
+                        <div class="selector-titulo mb-3">
+                            <i class="bi bi-clock-history"
+                               style="color:var(--primary)"></i>
+                            Historial
+                        </div>
+                        <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px">
+                            Selecciona un cliente y vehículo para ver su trazabilidad completa
+                        </p>
+
+                        <label class="field-label">Cliente</label>
+                        <select class="field-input mb-3" id="selCliente"
+                                onchange="cargarVehiculosCliente()">
+                            <option value="">Seleccionar cliente...</option>
+                        </select>
+
+                        <label class="field-label">Vehículo</label>
+                        <select class="field-input mb-3" id="selVehiculo"
+                                onchange="cargarHistorial()">
+                            <option value="">Seleccionar vehículo...</option>
+                        </select>
+
+                        <!-- Info vehículo -->
+                        <div id="infoVehiculo" style="display:none">
+                            <div class="vehiculo-card">
+                                <div class="vehiculo-card-icon">
+                                    <i class="bi bi-car-front-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="vehiculo-card-nombre"
+                                         id="infoNombre"></div>
+                                    <div class="vehiculo-card-placa"
+                                         id="infoPlaca"></div>
+                                </div>
+                            </div>
+
+                            <div class="row g-2 mt-2">
+                                <div class="col-6">
+                                    <div class="mini-stat">
+                                        <div class="mini-stat-val"
+                                             id="statEventos">0</div>
+                                        <div class="mini-stat-label">Eventos</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mini-stat">
+                                        <div class="mini-stat-val"
+                                             style="color:#27AE60"
+                                             id="statServicios">0</div>
+                                        <div class="mini-stat-label">Servicios</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mini-stat">
+                                        <div class="mini-stat-val"
+                                             style="color:#9B59B6"
+                                             id="statFacturas">0</div>
+                                        <div class="mini-stat-label">Facturas</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mini-stat">
+                                        <div class="mini-stat-val"
+                                             style="color:#4A90D9"
+                                             id="statCitas">0</div>
+                                        <div class="mini-stat-label">Citas</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Panel derecho timeline -->
+                <div class="col-md-8 col-lg-9">
+                    <div class="card-dark" style="min-height:500px">
+
+                        <!-- Header -->
+                        <div class="d-flex justify-content-between
+                                    align-items-center mb-3">
+                            <div class="selector-titulo" id="timelineTitle">
+                                Selecciona un vehículo
+                            </div>
+                            <select class="field-input" id="filtroTipo"
+                                    style="width:160px"
+                                    onchange="filtrarTimeline()">
+                                <option value="">Todos</option>
+                                <option value="Cita">Citas</option>
+                                <option value="Orden">Órdenes</option>
+                                <option value="Servicio">Servicios</option>
+                                <option value="Repuesto">Repuestos</option>
+                                <option value="Factura">Facturas</option>
+                                <option value="Mensaje">Mensajes</option>
+                            </select>
+                        </div>
+
+                        <!-- Timeline -->
+                        <div id="timeline">
+                            <div class="timeline-vacio">
+                                <i class="bi bi-car-front"
+                                   style="font-size:48px;color:#333;
+                                          display:block;margin-bottom:16px"></i>
+                                Selecciona un cliente y vehículo<br>
+                                para ver su historial completo
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/global.js"></script>
+    <script src="../js/historial.js"></script>
+</body>
+</html>
