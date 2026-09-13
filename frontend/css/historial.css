@@ -1,0 +1,184 @@
+.selector-titulo {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── Info vehículo ── */
+.vehiculo-card {
+    background: #0f0f0f;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.vehiculo-card-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.vehiculo-card-nombre {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.vehiculo-card-placa {
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* ── Mini stats ── */
+.mini-stat {
+    background: #0f0f0f;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+}
+
+.mini-stat-val {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.mini-stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* ── Timeline ── */
+.timeline-vacio {
+    text-align: center;
+    color: #444;
+    font-size: 13px;
+    padding: 80px 20px;
+    line-height: 1.8;
+}
+
+.timeline-mes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0 12px;
+}
+
+.timeline-mes-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.timeline-mes-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ── Evento ── */
+.timeline-evento {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.timeline-evento-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 38px;
+    flex-shrink: 0;
+}
+
+.timeline-icono {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    border: 2px solid;
+}
+
+.timeline-linea {
+    width: 2px;
+    flex: 1;
+    background: #1f1f1f;
+    margin-top: 4px;
+    min-height: 20px;
+}
+
+.timeline-card {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 4px;
+    transition: border-color 0.15s;
+}
+
+.timeline-card:hover {
+    border-color: #3a3a3a;
+}
+
+.timeline-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.timeline-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.timeline-fecha {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.timeline-desc {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.timeline-empleado {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
