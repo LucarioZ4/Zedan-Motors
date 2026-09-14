@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -76,7 +76,10 @@
                 <div class="topbar-title">Inventario</div>
                 <div class="topbar-sub" id="topbarFecha"></div>
             </div>
-            <div class="ms-auto">
+            <div class="ms-auto d-flex gap-2">
+                <button class="btn-secondary-custom" onclick="abrirModalImportar()">
+                    <i class="bi bi-file-earmark-arrow-up"></i> Importar repuestos
+                </button>
                 <button class="btn-primary-custom" onclick="abrirModalNuevo()">
                     <i class="bi bi-plus-lg"></i> Nuevo repuesto
                 </button>
@@ -199,6 +202,106 @@
                     <button class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
                     <button class="btn-danger-custom" onclick="confirmarEliminar()">
                         <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IMPORTAR REPUESTOS -->
+    <div class="modal fade modal-custom" id="modalImportarRepuestos" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-file-earmark-arrow-up text-primary me-2"></i>Importación Masiva de Repuestos
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert-custom alert-error" id="modalImportError" style="display:none">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <span id="modalImportErrorMsg"></span>
+                    </div>
+
+                    <!-- Instrucciones y descarga de plantilla -->
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 p-3 rounded" style="background:#F8FAFC; border:1px solid var(--border)">
+                        <div>
+                            <div style="font-weight:600; font-size:13px; color:var(--text-primary)">
+                                <i class="bi bi-info-circle me-1 text-primary"></i> Orden de columnas requerido:
+                            </div>
+                            <div style="font-size:12px; color:var(--text-muted)">
+                                1. <strong>Nombre</strong> &bull; 2. <strong>Marca</strong> &bull; 3. <strong>Precio</strong> &bull; 4. <strong>Stock</strong>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-secondary-custom btn-sm mt-2 mt-sm-0" onclick="descargarPlantillaRepuestos()">
+                            <i class="bi bi-download me-1"></i> Descargar Plantilla (.CSV)
+                        </button>
+                    </div>
+
+                    <!-- Pestañas: Archivo vs Pegar texto -->
+                    <ul class="nav nav-pills import-nav-pills mb-3 gap-2" id="importTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-archivo-btn" data-bs-toggle="pill" data-bs-target="#tab-archivo" type="button" role="tab">
+                                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Subir Archivo (.csv)
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-pegar-btn" data-bs-toggle="pill" data-bs-target="#tab-pegar" type="button" role="tab">
+                                <i class="bi bi-clipboard-plus me-1"></i> Copiar y Pegar (Excel / Texto)
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="importTabsContent">
+                        <!-- Tab Archivo -->
+                        <div class="tab-pane fade show active" id="tab-archivo" role="tabpanel">
+                            <div class="drop-zone" id="dropZoneRepuestos" onclick="document.getElementById('fileInputRepuestos').click()">
+                                <input type="file" id="fileInputRepuestos" accept=".csv,text/csv" style="display:none" onchange="manejarArchivoRepuestos(event)">
+                                <div class="drop-zone-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+                                <div class="drop-zone-text">Haz clic aquí o arrastra tu archivo CSV</div>
+                                <div class="drop-zone-sub">Formato delimitado por comas (,) o punto y coma (;)</div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Pegar texto -->
+                        <div class="tab-pane fade" id="tab-pegar" role="tabpanel">
+                            <textarea class="field-input" id="textareaRepuestos" rows="5" placeholder="Pega aquí los datos copiados de Excel o CSV...&#10;Ejemplo:&#10;Filtro de Aceite,Bosch,15.50,20&#10;Pastillas de Freno,Brembo,45.00,10" oninput="parsearTextoRepuestos()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Vista previa -->
+                    <div id="seccionPreviewRepuestos" class="mt-3" style="display:none">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span style="font-size:13px; font-weight:700; color:var(--text-primary)">
+                                Vista previa (<span id="cantPreviewRepuestos">0</span> repuestos detectados)
+                            </span>
+                            <button class="btn btn-sm btn-link text-danger p-0 text-decoration-none" onclick="limpiarImportacionRepuestos()">
+                                <i class="bi bi-x-circle"></i> Limpiar
+                            </button>
+                        </div>
+                        <div class="preview-table-wrapper">
+                            <table class="table table-sm table-custom mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nombre</th>
+                                        <th>Marca</th>
+                                        <th>Precio</th>
+                                        <th>Stock</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyPreviewRepuestos"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn-primary-custom" id="btnConfirmarImportRepuestos" onclick="ejecutarImportacionRepuestos()" disabled>
+                        <i class="bi bi-check-circle me-1"></i> Confirmar Importación
                     </button>
                 </div>
             </div>

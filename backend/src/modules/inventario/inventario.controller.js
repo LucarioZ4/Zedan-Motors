@@ -106,4 +106,63 @@ const remove = async (req, res) => {
     }
 };
 
-module.exports = { getAll, getById, create, update, remove };
+const importar = async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const items = Array.isArray(req.body) ? req.body : req.body.items;
+
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ error: 'No se enviaron datos para importar' });
+        }
+
+        await client.query('BEGIN');
+        const insertados = [];
+        const errores = [];
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const fila = i + 1;
+            const nombre = item.nombre ? String(item.nombre).trim() : '';
+            const marca = item.marca ? String(item.marca).trim() : null;
+            const precio = parseFloat(item.precio);
+            const stock = item.stock !== undefined && item.stock !== '' ? parseInt(item.stock) : 0;
+
+            if (!nombre) {
+                errores.push(`Fila ${fila}: El nombre es obligatorio.`);
+                continue;
+            }
+            if (isNaN(precio) || precio <= 0) {
+                errores.push(`Fila ${fila} (${nombre}): Precio inválido (${item.precio}). Debe ser mayor a cero.`);
+                continue;
+            }
+            if (isNaN(stock) || stock < 0) {
+                errores.push(`Fila ${fila} (${nombre}): Stock inválido (${item.stock}). No puede ser negativo.`);
+                continue;
+            }
+
+            const result = await client.query(
+                `INSERT INTO inventario (nombre, marca, precio, stock)
+                 VALUES ($1, $2, $3, $4) RETURNING *`,
+                [nombre, marca, precio, stock]
+            );
+            insertados.push(result.rows[0]);
+        }
+
+        await client.query('COMMIT');
+
+        res.status(201).json({
+            mensaje: `Se importaron ${insertados.length} repuestos correctamente.`,
+            total: insertados.length,
+            errores: errores.length > 0 ? errores : undefined,
+            data: insertados
+        });
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ error: 'Error al importar repuestos: ' + err.message });
+    } finally {
+        client.release();
+    }
+};
+
+module.exports = { getAll, getById, create, update, remove, importar };
