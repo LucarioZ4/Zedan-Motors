@@ -19,12 +19,22 @@ function togglePassword() {
 function mostrarError(mensaje) {
     const box = document.getElementById('errorBox');
     const msg = document.getElementById('errorMsg');
-    msg.textContent   = mensaje;
+    msg.textContent = mensaje;
     box.style.display = 'flex';
 }
 
 function ocultarError() {
-    document.getElementById('errorBox').style.display = 'none';
+    const box = document.getElementById('errorBox');
+    box.style.display = 'none';
+}
+
+function setLoading(loading) {
+    const btn     = document.getElementById('btnLogin');
+    const text    = document.getElementById('btnText');
+    const spinner = document.getElementById('btnSpinner');
+    btn.disabled      = loading;
+    text.textContent  = loading ? 'Verificando...' : 'INGRESAR';
+    spinner.style.display = loading ? 'inline-flex' : 'none';
 }
 
 async function handleLogin(e) {
@@ -32,15 +42,14 @@ async function handleLogin(e) {
 
     const usuario  = document.getElementById('usuario').value.trim();
     const password = document.getElementById('password').value;
-    const btnLogin = document.getElementById('btnLogin');
 
     if (!usuario || !password) {
         mostrarError('Completa todos los campos.');
         return;
     }
 
-    btnLogin.disabled     = true;
-    btnLogin.textContent  = 'Verificando...';
+    setLoading(true);
+    ocultarError();
 
     try {
         const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -52,23 +61,19 @@ async function handleLogin(e) {
         const data = await response.json();
 
         if (response.ok) {
-            // Guardar token y datos de sesión
             sessionStorage.setItem('token',   data.token);
             sessionStorage.setItem('usuario', data.usuario.usuario);
             sessionStorage.setItem('rol',     data.usuario.rol);
             sessionStorage.setItem('nombre',  data.usuario.nombre);
-
             window.location.href = 'pages/dashboard.html';
         } else {
             mostrarError(data.error || 'Credenciales incorrectas.');
-            btnLogin.disabled    = false;
-            btnLogin.textContent = 'INGRESAR';
+            setLoading(false);
         }
 
     } catch (err) {
         mostrarError('No se pudo conectar al servidor.');
-        btnLogin.disabled    = false;
-        btnLogin.textContent = 'INGRESAR';
+        setLoading(false);
     }
 }
 

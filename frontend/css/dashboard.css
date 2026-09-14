@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════
-   ZEDAN MOTOR'S — Dashboard
-═══════════════════════════════════════ */
+/* ==========================================================================
+   ZEDAN MOTOR'S — Dashboard (dashboard.css)
+   ========================================================================== */
 
 .stat-icon {
     width: 38px;
@@ -30,7 +30,7 @@
 
 /* ── Acceso rápido ── */
 .quick-card {
-    background: #0f0f0f;
+    background: #0f0f0f; /* Nota: si quieres que sea claro, puedes cambiarlo a var(--bg-card) */
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 16px;

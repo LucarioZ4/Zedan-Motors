@@ -1,3 +1,7 @@
+/* ==========================================================================
+   clientes.css
+   ========================================================================== */
+
 .stat-pill {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -26,7 +30,7 @@
 
 .btn-accion:hover {
     background: var(--border);
-    color: var(--text-primary);
+    color: var(--text-main); 
 }
 
 .btn-accion.editar:hover {
@@ -39,11 +43,12 @@
     color: var(--danger);
 }
 
+/* Esta clase seguramente la usa tu archivo clientes.js para generar la tabla */
 .cliente-avatar {
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    background: linear-gradient(135deg, var(--primary), #60a5fa);
     display: inline-flex;
     align-items: center;
     justify-content: center;
