@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zedan Motor's â€” Clientes</title>
+    <title>Zedan Motor's — Clientes</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/global.css">
@@ -25,7 +25,7 @@
             <a href="dashboard.html" class="nav-item">
                 <i class="bi bi-grid-1x2-fill"></i> Dashboard
             </a>
-            <div class="nav-section-label">GestiÃ³n</div>
+            <div class="nav-section-label">Gestión</div>
             <a href="clientes.html" class="nav-item active">
                 <i class="bi bi-people-fill"></i> Clientes
             </a>
@@ -64,7 +64,7 @@
                 </div>
             </div>
             <button class="btn-logout" onclick="logout()">
-                <i class="bi bi-box-arrow-right"></i> Cerrar sesion
+                <i class="bi bi-box-arrow-right"></i> Cerrar sesión
             </button>
         </div>
     </aside>
@@ -88,12 +88,12 @@
         <!-- Contenido -->
         <div class="page-content">
 
-            <!-- Barra bÃºsqueda + stats -->
+            <!-- Barra búsqueda + stats -->
             <div class="d-flex align-items-center gap-3 mb-4">
                 <div class="search-bar">
                     <i class="bi bi-search"></i>
                     <input type="text" id="inputBuscar"
-                           placeholder="Buscar por nombre, apellido o telÃ©fono..."
+                           placeholder="Buscar por nombre, apellido o teléfono..."
                            oninput="buscarClientes()">
                 </div>
                 <div class="stat-pill">
@@ -109,9 +109,9 @@
                             <tr>
                                 <th>#</th>
                                 <th>Nombre</th>
-                                <th>TelÃ©fono</th>
+                                <th>Teléfono</th>
                                 <th>Correo</th>
-                                <th>DirecciÃ³n</th>
+                                <th>Dirección</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -153,16 +153,16 @@
                             <input type="text" class="field-input" id="fApellido" placeholder="Apellido">
                         </div>
                         <div class="col-md-6">
-                            <label class="field-label">TelÃ©fono *</label>
-                            <input type="text" class="field-input" id="fTelefono" placeholder="TelÃ©fono">
+                            <label class="field-label">Teléfono *</label>
+                            <input type="text" class="field-input" id="fTelefono" placeholder="Teléfono">
                         </div>
                         <div class="col-md-6">
                             <label class="field-label">Correo</label>
                             <input type="email" class="field-input" id="fCorreo" placeholder="correo@ejemplo.com">
                         </div>
                         <div class="col-12">
-                            <label class="field-label">DirecciÃ³n</label>
-                            <input type="text" class="field-input" id="fDireccion" placeholder="DirecciÃ³n">
+                            <label class="field-label">Dirección</label>
+                            <input type="text" class="field-input" id="fDireccion" placeholder="Dirección">
                         </div>
                     </div>
                 </div>
@@ -181,15 +181,15 @@
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Confirmar eliminaciÃ³n</h5>
+                    <h5 class="modal-title">Confirmar eliminación</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center py-3">
                     <i class="bi bi-exclamation-triangle-fill"
                        style="font-size:36px;color:#E74C3C"></i>
                     <p class="mt-3" style="color: var(--text-secondary)">
-                        Â¿Eliminar a <strong id="nombreEliminar"></strong>?
-                        Esta acciÃ³n no se puede deshacer.
+                        ¿Eliminar a <strong id="nombreEliminar"></strong>?
+                        Esta acción no se puede deshacer.
                     </p>
                 </div>
                 <div class="modal-footer">

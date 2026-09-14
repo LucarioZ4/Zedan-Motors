@@ -12,13 +12,13 @@ async function cargarKPIs() {
 
         const data = await response.json();
 
-        document.getElementById('kpiClientes').textContent  = data.clientes;
-        document.getElementById('kpiVehiculos').textContent = data.vehiculos;
-        document.getElementById('kpiCitas').textContent     = data.citasHoy;
-        document.getElementById('kpiOrdenes').textContent   = data.ordenes;
-        document.getElementById('kpiEmpleados').textContent = data.empleados;
-        document.getElementById('kpiStock').textContent     = data.stockBajo;
-        document.getElementById('kpiFacturas').textContent  = data.facturas;
+        document.getElementById('kpiClientes').textContent  = data.clientes ?? 0;
+        document.getElementById('kpiVehiculos').textContent = data.vehiculos ?? 0;
+        document.getElementById('kpiCitas').textContent     = data.citasHoy ?? 0;
+        document.getElementById('kpiOrdenes').textContent   = data.ordenes ?? 0;
+        document.getElementById('kpiEmpleados').textContent = data.empleados ?? 0;
+        document.getElementById('kpiStock').textContent     = data.stockBajo ?? 0;
+        document.getElementById('kpiFacturas').textContent  = data.facturas ?? 0;
 
     } catch (err) {
         console.error('Error KPIs:', err);
@@ -36,12 +36,29 @@ async function cargarCitasHoy() {
 
         const citas = await response.json();
         const tbody = document.getElementById('bodyCitasHoy');
+        const badge = document.getElementById('badgeCitasHoy');
+
+        if (badge) {
+            if (citas && citas.length > 0) {
+                badge.textContent = `${citas.length} programada${citas.length > 1 ? 's' : ''}`;
+                badge.style.display = 'inline-flex';
+            } else {
+                badge.textContent = 'Al día';
+                badge.style.display = 'inline-flex';
+            }
+        }
 
         if (!citas || citas.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="4" class="text-center py-4" style="color:#555">
-                        Sin citas para hoy
+                    <td colspan="4" class="p-0">
+                        <div class="citas-empty-state">
+                            <div class="citas-empty-icon">
+                                <i class="bi bi-calendar2-check"></i>
+                            </div>
+                            <div class="citas-empty-title">Agenda al día</div>
+                            <p class="citas-empty-desc">No hay citas pendientes programadas para hoy.</p>
+                        </div>
                     </td>
                 </tr>`;
             return;
@@ -50,12 +67,18 @@ async function cargarCitasHoy() {
         tbody.innerHTML = citas.map(c => `
             <tr>
                 <td>
-                    <span style="color:var(--primary);font-weight:600">
-                        ${c.hora}
+                    <span class="time-pill">
+                        <i class="bi bi-clock"></i> ${c.hora}
                     </span>
                 </td>
-                <td>${c.cliente}</td>
-                <td style="color:var(--text-secondary)">${c.vehiculo}</td>
+                <td>
+                    <strong style="color:var(--text-primary);font-weight:600">${c.cliente}</strong>
+                </td>
+                <td>
+                    <span style="color:var(--text-secondary)">
+                        <i class="bi bi-car-front text-muted me-1"></i>${c.vehiculo}
+                    </span>
+                </td>
                 <td>${getBadgeEstado(c.estado)}</td>
             </tr>
         `).join('');
