@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zedan Motor's â€” Dashboard</title>
+    <title>Zedan Motor's — Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/global.css">
@@ -11,7 +11,7 @@
 </head>
 <body>
 
-    <!-- â•â•â• SIDEBAR â•â•â• -->
+    <!-- ════════ SIDEBAR ════════ -->
     <aside class="sidebar">
         <div class="sidebar-logo">
             <div class="logo-image-container"><img src="../assets/icons/Logo.png" alt="Logo"></div>
@@ -28,14 +28,14 @@
                 Dashboard
             </a>
 
-            <div class="nav-section-label">GestiÃ³n</div>
+            <div class="nav-section-label">Gestión</div>
             <a href="clientes.html" class="nav-item" id="nav-clientes">
                 <i class="bi bi-people-fill"></i>
                 Clientes
             </a>
             <a href="vehiculos.html" class="nav-item" id="nav-vehiculos">
                 <i class="bi bi-car-front-fill"></i>
-                Vehiculos
+                Vehículos
             </a>
             <a href="empleados.html" class="nav-item" id="nav-empleados">
                 <i class="bi bi-person-badge-fill"></i>
@@ -53,7 +53,7 @@
             </a>
             <a href="ordenes.html" class="nav-item" id="nav-ordenes">
                 <i class="bi bi-clipboard2-check-fill"></i>
-                Ordenes
+                Órdenes
             </a>
             <a href="inventario.html" class="nav-item" id="nav-inventario">
                 <i class="bi bi-box-seam-fill"></i>
@@ -61,7 +61,7 @@
             </a>
             <a href="facturacion.html" class="nav-item" id="nav-facturacion">
                 <i class="bi bi-receipt-cutoff"></i>
-                FacturaciÃ³n
+                Facturación
             </a>
             <a href="historial.html" class="nav-item" id="nav-historial">
                 <i class="bi bi-clock-history"></i>
@@ -83,7 +83,7 @@
             </div>
             <button class="btn-logout" onclick="logout()">
                 <i class="bi bi-box-arrow-right"></i>
-                Cerrar sesion
+                Cerrar sesión
             </button>
         </div>
     </aside>
@@ -108,123 +108,160 @@
         <!-- Page content -->
         <div class="page-content">
 
-            <!-- â”€â”€ KPIs â”€â”€ -->
+            <!-- ── Hero / Banner de Bienvenida ── -->
+            <div class="dashboard-hero mb-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            <h2 class="hero-greeting mb-0">Panel de Control Operativo</h2>
+                            <span class="hero-pill">
+                                <span class="pulse-dot"></span> Taller en Operación
+                            </span>
+                        </div>
+                        <p class="hero-subtitle mb-0">Métricas en tiempo real, gestión de flota vehicular y citas de Zedan Motor's</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn-hero-refresh" onclick="cargarKPIs(); cargarCitasHoy();" title="Actualizar métricas">
+                            <i class="bi bi-arrow-clockwise"></i> Actualizar
+                        </button>
+                        <a href="citas.html" class="btn-hero-primary">
+                            <i class="bi bi-calendar-plus"></i> Nueva Cita
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Primera fila KPIs ── -->
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
-                    <div class="card-stat">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="stat-label">Clientes</div>
-                            <div class="stat-icon" style="background:rgba(232,104,26,0.1);color:#E8681A">
+                    <div class="card-stat stat-orange">
+                        <div class="stat-header">
+                            <span class="stat-label">Clientes</span>
+                            <div class="stat-icon" style="background:rgba(232,104,26,0.12);color:#E8681A">
                                 <i class="bi bi-people-fill"></i>
                             </div>
                         </div>
-                        <div class="stat-value" id="kpiClientes">â€”</div>
+                        <div class="stat-value" id="kpiClientes">—</div>
                         <div class="stat-delta up">
                             <i class="bi bi-arrow-up-short"></i>
                             Registrados en total
                         </div>
                     </div>
                 </div>
+
                 <div class="col-md-3">
-                    <div class="card-stat">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="stat-label">VehÃ­culos</div>
-                            <div class="stat-icon" style="background:rgba(74,144,217,0.1);color:#4A90D9">
+                    <div class="card-stat stat-blue">
+                        <div class="stat-header">
+                            <span class="stat-label">Vehículos</span>
+                            <div class="stat-icon" style="background:rgba(74,144,217,0.12);color:#4A90D9">
                                 <i class="bi bi-car-front-fill"></i>
                             </div>
                         </div>
-                        <div class="stat-value" id="kpiVehiculos">â€”</div>
+                        <div class="stat-value" id="kpiVehiculos">—</div>
                         <div class="stat-delta">
-                            <i class="bi bi-dash"></i>
-                            Registrados en total
+                            <i class="bi bi-check2"></i>
+                            Flota registrada
                         </div>
                     </div>
                 </div>
+
                 <div class="col-md-3">
-                    <div class="card-stat">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="stat-label">Citas hoy</div>
-                            <div class="stat-icon" style="background:rgba(39,174,96,0.1);color:#27AE60">
+                    <div class="card-stat stat-green">
+                        <div class="stat-header">
+                            <span class="stat-label">Citas hoy</span>
+                            <div class="stat-icon" style="background:rgba(39,174,96,0.12);color:#27AE60">
                                 <i class="bi bi-calendar-check-fill"></i>
                             </div>
                         </div>
-                        <div class="stat-value" id="kpiCitas">â€”</div>
+                        <div class="stat-value" id="kpiCitas">—</div>
                         <div class="stat-delta warn">
                             <i class="bi bi-clock"></i>
-                            Pendientes hoy
+                            Programadas hoy
                         </div>
                     </div>
                 </div>
+
                 <div class="col-md-3">
-                    <div class="card-stat">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="stat-label">Ã“rdenes activas</div>
-                            <div class="stat-icon" style="background:rgba(245,166,35,0.1);color:#F5A623">
+                    <div class="card-stat stat-amber">
+                        <div class="stat-header">
+                            <span class="stat-label">Órdenes activas</span>
+                            <div class="stat-icon" style="background:rgba(245,166,35,0.12);color:#F5A623">
                                 <i class="bi bi-clipboard2-check-fill"></i>
                             </div>
                         </div>
-                        <div class="stat-value" id="kpiOrdenes">â€”</div>
+                        <div class="stat-value" id="kpiOrdenes">—</div>
                         <div class="stat-delta warn">
-                            <i class="bi bi-arrow-right"></i>
+                            <i class="bi bi-gear-wide-connected"></i>
                             En proceso
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- â”€â”€ Segunda fila KPIs â”€â”€ -->
+            <!-- ── Segunda fila KPIs ── -->
             <div class="row g-3 mb-4">
                 <div class="col-md-4">
-                    <div class="card-stat">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="stat-label">Empleados</div>
-                            <div class="stat-icon" style="background:rgba(155,89,182,0.1);color:#9B59B6">
+                    <div class="card-stat stat-purple">
+                        <div class="stat-header">
+                            <span class="stat-label">Empleados</span>
+                            <div class="stat-icon" style="background:rgba(155,89,182,0.12);color:#9B59B6">
                                 <i class="bi bi-person-badge-fill"></i>
                             </div>
                         </div>
-                        <div class="stat-value" id="kpiEmpleados">â€”</div>
-                        <div class="stat-delta">Activos en el taller</div>
+                        <div class="stat-value" id="kpiEmpleados">—</div>
+                        <div class="stat-delta">
+                            <i class="bi bi-shield-check"></i>
+                            Equipo técnico activo
+                        </div>
                     </div>
                 </div>
+
                 <div class="col-md-4">
-                    <div class="card-stat">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="stat-label">Stock bajo</div>
-                            <div class="stat-icon" style="background:rgba(231,76,60,0.1);color:#E74C3C">
+                    <div class="card-stat stat-red">
+                        <div class="stat-header">
+                            <span class="stat-label">Stock bajo</span>
+                            <div class="stat-icon" style="background:rgba(231,76,60,0.12);color:#E74C3C">
                                 <i class="bi bi-exclamation-triangle-fill"></i>
                             </div>
                         </div>
-                        <div class="stat-value" id="kpiStock">â€”</div>
+                        <div class="stat-value" id="kpiStock">—</div>
                         <div class="stat-delta down">
-                            <i class="bi bi-exclamation-circle"></i>
-                            Repuestos crÃ­ticos
+                            <i class="bi bi-box-seam"></i>
+                            Repuestos críticos
                         </div>
                     </div>
                 </div>
+
                 <div class="col-md-4">
-                    <div class="card-stat">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="stat-label">Facturas este mes</div>
-                            <div class="stat-icon" style="background:rgba(39,174,96,0.1);color:#27AE60">
+                    <div class="card-stat stat-emerald">
+                        <div class="stat-header">
+                            <span class="stat-label">Facturas este mes</span>
+                            <div class="stat-icon" style="background:rgba(22,163,74,0.12);color:#16A34A">
                                 <i class="bi bi-receipt-cutoff"></i>
                             </div>
                         </div>
-                        <div class="stat-value" id="kpiFacturas">â€”</div>
+                        <div class="stat-value" id="kpiFacturas">—</div>
                         <div class="stat-delta up">
                             <i class="bi bi-arrow-up-short"></i>
-                            Generadas este mes
+                            Emitidas este mes
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- â”€â”€ Acceso rÃ¡pido + Citas hoy â”€â”€ -->
+            <!-- ── Acceso rápido + Citas de hoy ── -->
             <div class="row g-3">
 
-                <!-- Acceso rÃ¡pido -->
-                <div class="col-md-5">
+                <!-- Acceso rápido -->
+                <div class="col-lg-5">
                     <div class="card-custom h-100">
-                        <div class="section-title mb-3">Acceso rÃ¡pido</div>
+                        <div class="section-header">
+                            <div class="section-title">
+                                <i class="bi bi-lightning-charge-fill"></i>
+                                Acceso rápido
+                            </div>
+                            <span style="font-size:11px;color:var(--text-muted);font-weight:600">Atajos directos</span>
+                        </div>
                         <div class="row g-2">
                             <div class="col-6">
                                 <a href="clientes.html" class="quick-card">
@@ -232,7 +269,10 @@
                                         <i class="bi bi-people-fill"></i>
                                     </div>
                                     <div class="quick-label">Clientes</div>
-                                    <div class="quick-sub">Ver â†’</div>
+                                    <div class="quick-sub">
+                                        <span>Administrar</span>
+                                        <i class="bi bi-chevron-right"></i>
+                                    </div>
                                 </a>
                             </div>
                             <div class="col-6">
@@ -241,7 +281,10 @@
                                         <i class="bi bi-calendar-check-fill"></i>
                                     </div>
                                     <div class="quick-label">Citas</div>
-                                    <div class="quick-sub">Ver â†’</div>
+                                    <div class="quick-sub">
+                                        <span>Gestionar</span>
+                                        <i class="bi bi-chevron-right"></i>
+                                    </div>
                                 </a>
                             </div>
                             <div class="col-6">
@@ -249,8 +292,11 @@
                                     <div class="quick-icon" style="background:rgba(245,166,35,0.12);color:#F5A623">
                                         <i class="bi bi-clipboard2-check-fill"></i>
                                     </div>
-                                    <div class="quick-label">Ã“rdenes</div>
-                                    <div class="quick-sub">Ver â†’</div>
+                                    <div class="quick-label">Órdenes</div>
+                                    <div class="quick-sub">
+                                        <span>Seguimiento</span>
+                                        <i class="bi bi-chevron-right"></i>
+                                    </div>
                                 </a>
                             </div>
                             <div class="col-6">
@@ -259,7 +305,10 @@
                                         <i class="bi bi-box-seam-fill"></i>
                                     </div>
                                     <div class="quick-label">Inventario</div>
-                                    <div class="quick-sub">Ver â†’</div>
+                                    <div class="quick-sub">
+                                        <span>Control de stock</span>
+                                        <i class="bi bi-chevron-right"></i>
+                                    </div>
                                 </a>
                             </div>
                         </div>
@@ -267,31 +316,46 @@
                 </div>
 
                 <!-- Citas de hoy -->
-                <div class="col-md-7">
+                <div class="col-lg-7">
                     <div class="card-custom h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="section-title">Citas de hoy</div>
-                            <a href="citas.html" class="btn-link-custom">Ver todas â†’</a>
+                        <div class="section-header">
+                            <div class="d-flex align-items-center">
+                                <div class="section-title mb-0">
+                                    <i class="bi bi-calendar-event-fill"></i>
+                                    Citas de hoy
+                                </div>
+                                <span class="badge-custom badge-proceso ms-2" id="badgeCitasHoy" style="display:none">0 hoy</span>
+                            </div>
+                            <a href="citas.html" class="btn-link-custom">
+                                Ver todas <i class="bi bi-arrow-right"></i>
+                            </a>
                         </div>
-                        <div id="tablaCitasHoy">
-                            <table class="table-custom w-100">
-                                <thead>
-                                    <tr>
-                                        <th>Hora</th>
-                                        <th>Cliente</th>
-                                        <th>VehÃ­culo</th>
-                                        <th>Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="bodyCitasHoy">
-                                    <tr>
-                                        <td colspan="4" class="text-center py-4"
-                                            style="color: var(--text-muted)">
-                                            Sin citas para hoy
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div id="tablaCitasHoy" class="table-citas-wrapper">
+                            <div class="table-responsive">
+                                <table class="table-custom w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>Hora</th>
+                                            <th>Cliente</th>
+                                            <th>Vehículo</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bodyCitasHoy">
+                                        <tr>
+                                            <td colspan="4" class="p-0">
+                                                <div class="citas-empty-state">
+                                                    <div class="citas-empty-icon">
+                                                        <i class="bi bi-calendar2-check"></i>
+                                                    </div>
+                                                    <div class="citas-empty-title">Cargando citas...</div>
+                                                    <p class="citas-empty-desc">Consultando la base de datos de Zedan Motor's</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -305,4 +369,3 @@
     <script src="../js/dashboard.js"></script>
 </body>
 </html>
-
