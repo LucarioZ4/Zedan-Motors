@@ -3,19 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zedan Motor's — Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>GestorPro — Zedan Motor's</title>
+    <meta name="description" content="Sistema Integral de Gestión para Talleres Automotrices — Zedan Motor's">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
 
-    <!-- ═══ PANEL IZQUIERDO ═══ -->
+    <!-- ═══════════════════════════════════════ -->
+    <!-- ═══   PANEL IZQUIERDO — FORMULARIO  ═══ -->
+    <!-- ═══════════════════════════════════════ -->
     <div class="panel-login">
 
-        <!-- Logo -->
-        <div class="d-flex align-items-center gap-3 mb-5">
-            <div class="logo-box">Z</div>
+        <!-- Logo + Marca -->
+        <div class="brand-wrap">
+            <div class="logo-img-wrap">
+                <img src="assets/icons/Logo.png" alt="Zedan Motor's" class="brand-logo">
+            </div>
             <div>
                 <div class="brand-name">Zedan Motor's</div>
                 <div class="brand-sub">Taller Automotriz</div>
@@ -23,80 +29,112 @@
         </div>
 
         <!-- Título -->
-        <h2 class="mb-2">Iniciar sesión</h2>
-        <p class="sub-text mb-4">Ingresa tus credenciales para continuar</p>
+        <h1 class="login-title">Iniciar sesión</h1>
+        <p class="login-sub">Ingresa tus credenciales para continuar</p>
 
         <!-- Formulario -->
-        <form id="loginForm" onsubmit="handleLogin(event); return false;">
+        <form id="loginForm" onsubmit="handleLogin(event); return false;" autocomplete="off">
 
-            <div class="mb-3">
-                <label class="form-label">Usuario</label>
-                <input type="text" class="form-control" id="usuario"
-                       placeholder="Tu usuario" autocomplete="off">
+            <!-- Usuario -->
+            <div class="field-group">
+                <label class="field-label" for="usuario">Usuario</label>
+                <div class="input-wrap">
+                    <span class="input-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                            <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+                        </svg>
+                    </span>
+                    <input type="text" id="usuario" class="field-input"
+                           placeholder="Ingresa tu usuario">
+                </div>
             </div>
 
-            <div class="mb-4">
-                <label class="form-label">Contraseña</label>
-                <div class="input-group">
-                    <input type="password" class="form-control password-input"
-                           id="password" placeholder="Tu contraseña">
-                    <span class="input-group-text" onclick="togglePassword()">
-                        <i class="bi bi-eye" id="eyeIcon"></i>
+            <!-- Contraseña -->
+            <div class="field-group">
+                <label class="field-label" for="password">Contraseña</label>
+                <div class="input-wrap">
+                    <span class="input-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                            <path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/>
+                        </svg>
                     </span>
+                    <input type="password" id="password" class="field-input"
+                           placeholder="Contraseña">
+                    <button type="button" class="eye-btn" onclick="togglePassword()" id="eyeBtn">
+                        <i class="bi bi-eye" id="eyeIcon"></i>
+                    </button>
                 </div>
             </div>
 
             <!-- Error -->
             <div class="error-box" id="errorBox">
-                <i class="bi bi-exclamation-circle me-2"></i>
+                <i class="bi bi-exclamation-triangle-fill"></i>
                 <span id="errorMsg"></span>
             </div>
 
-            <button type="submit" class="btn-login mb-4" id="btnLogin">
-                INGRESAR
+            <!-- Botón -->
+            <button type="submit" class="btn-login" id="btnLogin">
+                <span id="btnText">INGRESAR</span>
+                <span id="btnSpinner" class="btn-spinner" style="display:none">
+                    <i class="bi bi-arrow-repeat spin"></i>
+                </span>
             </button>
 
         </form>
 
-        <div class="version-text">v1.0.0 — © 2026 Zedan Motor's</div>
+        <div class="version-text">v2.4.1 — © 2025 Zedan Motor's</div>
     </div>
 
-    <!-- ═══ PANEL DERECHO ═══ -->
+    <!-- ═══════════════════════════════════════ -->
+    <!-- ═══   PANEL DERECHO — DECORATIVO    ═══ -->
+    <!-- ═══════════════════════════════════════ -->
     <div class="panel-deco">
-        <div class="deco-circle-1"></div>
-        <div class="deco-circle-2"></div>
 
+        <!-- Imagen de fondo -->
+        <img src="assets/icons/fondo derecho.png" alt="" class="deco-bg-img">
+
+        <!-- Overlay degradado azul -->
+        <div class="deco-overlay"></div>
+
+        <!-- Separador izquierdo -->
+        <div class="deco-separator"></div>
+
+        <!-- Contenido central -->
         <div class="deco-content">
-            <div class="deco-icon-box">
-                <i class="bi bi-gear-wide-connected"></i>
+
+            <!-- Logo grande -->
+            <div class="deco-logo-wrap">
+                <img src="assets/icons/Logo.png" alt="Zedan Motor's" class="deco-logo">
             </div>
 
-            <div class="deco-title">Zedan Motor's</div>
+            <!-- Nombre -->
+            <div class="deco-brand">Zedan Motor's</div>
             <div class="deco-divider"></div>
-            <p class="deco-sub">Sistema Integral de Gestión<br>para Talleres Automotrices</p>
+            <div class="deco-tagline">Taller Automotriz de Alto Rendimiento</div>
 
-            <div style="display: inline-block; text-align: left;">
+            <!-- Features -->
+            <div class="features-list">
                 <div class="feature-item">
-                    <i class="bi bi-check-circle-fill feature-icon"></i>
-                    <span class="feature-text">Gestión de clientes y vehículos</span>
+                    <div class="feature-check"><i class="bi bi-check-lg"></i></div>
+                    <span>Gestión de clientes y vehículos</span>
                 </div>
                 <div class="feature-item">
-                    <i class="bi bi-check-circle-fill feature-icon"></i>
-                    <span class="feature-text">Control de órdenes y citas</span>
+                    <div class="feature-check"><i class="bi bi-check-lg"></i></div>
+                    <span>Control de órdenes y citas</span>
                 </div>
                 <div class="feature-item">
-                    <i class="bi bi-check-circle-fill feature-icon"></i>
-                    <span class="feature-text">Inventario y facturación integrada</span>
+                    <div class="feature-check"><i class="bi bi-check-lg"></i></div>
+                    <span>Inventario y facturación integrada</span>
                 </div>
                 <div class="feature-item">
-                    <i class="bi bi-check-circle-fill feature-icon"></i>
-                    <span class="feature-text">Historial completo por vehículo</span>
+                    <div class="feature-check"><i class="bi bi-check-lg"></i></div>
+                    <span>Historial completo por vehículo</span>
                 </div>
             </div>
+
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/login.js"></script>
 </body>
 </html>

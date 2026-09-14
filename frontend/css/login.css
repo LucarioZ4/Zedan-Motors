@@ -1,3 +1,9 @@
+/* ═══════════════════════════════════════════════
+   ZEDAN MOTOR'S — Login  (Azul)
+   ═══════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -6,228 +12,384 @@
 
 body {
     min-height: 100vh;
-    background: #121212;
-    font-family: 'Segoe UI', sans-serif;
+    background: #ffffff;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
     display: flex;
-}
-
-/* ═══ PANEL IZQUIERDO ═══ */
-.panel-login {
-    width: 420px;
-    min-height: 100vh;
-    background: #1a1a1a;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 60px 48px;
-}
-
-.logo-box {
-    width: 44px;
-    height: 44px;
-    background: linear-gradient(135deg, #E8681A, #F5A623);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    font-weight: 700;
-    color: white;
-}
-
-.brand-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: white;
-}
-
-.brand-sub {
-    font-size: 11px;
-    color: #555;
-}
-
-h2 {
-    font-size: 26px;
-    font-weight: 700;
-    color: white;
-}
-
-.sub-text {
-    color: #555;
-    font-size: 13px;
-}
-
-.form-label {
-    font-size: 10px;
-    font-weight: 600;
-    color: #666;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-}
-
-.form-control {
-    background: #121212 !important;
-    border: 1px solid #2a2a2a !important;
-    color: #e0e0e0 !important;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 13px;
-}
-
-.form-control:focus {
-    border-color: #E8681A !important;
-    box-shadow: 0 0 0 3px rgba(232, 104, 26, 0.15) !important;
-}
-
-.form-control::placeholder {
-    color: #444;
-}
-
-.input-group-text {
-    background: #121212 !important;
-    border: 1px solid #2a2a2a !important;
-    border-left: none !important;
-    color: #555 !important;
-    border-radius: 0 8px 8px 0 !important;
-    cursor: pointer;
-}
-
-.password-input {
-    border-right: none !important;
-    border-radius: 8px 0 0 8px !important;
-}
-
-.btn-login {
-    background: linear-gradient(90deg, #E8681A, #F5A623);
-    border: none;
-    border-radius: 8px;
-    height: 46px;
-    font-size: 13px;
-    font-weight: 700;
-    color: white;
-    letter-spacing: 0.05em;
-    transition: opacity 0.2s;
-    width: 100%;
-}
-
-.btn-login:hover {
-    opacity: 0.88;
-    color: white;
-}
-
-.error-box {
-    background: rgba(255, 82, 82, 0.1);
-    border: 1px solid rgba(255, 82, 82, 0.3);
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: #ff5252;
-    font-size: 12px;
-    display: none;
-    margin-bottom: 12px;
-}
-
-.version-text {
-    font-size: 10px;
-    color: #333;
-    text-align: center;
-    margin-top: 24px;
-}
-
-/* ═══ PANEL DERECHO ═══ */
-.panel-deco {
-    flex: 1;
-    background: linear-gradient(135deg, #1a1208 0%, #121212 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
     overflow: hidden;
 }
 
-.deco-circle-1 {
-    position: absolute;
-    width: 400px;
-    height: 400px;
-    border-radius: 50%;
-    background: rgba(232, 104, 26, 0.04);
-    top: -100px;
-    right: -100px;
+/* ══════════════════════════════
+   PANEL IZQUIERDO — FORMULARIO
+   ══════════════════════════════ */
+.panel-login {
+    width: 460px;
+    min-width: 400px;
+    min-height: 100vh;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 56px;
+    position: relative;
+    z-index: 2;
 }
 
-.deco-circle-2 {
-    position: absolute;
-    width: 250px;
-    height: 250px;
-    border-radius: 50%;
-    background: rgba(232, 104, 26, 0.04);
-    bottom: -60px;
-    left: -60px;
+/* ── Marca ── */
+.brand-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 52px;
 }
 
-.deco-content {
-    text-align: center;
+.logo-img-wrap {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    overflow: hidden;
+    flex-shrink: 0;
+    filter: drop-shadow(0 4px 16px rgba(59,130,246,0.35));
+}
+
+.brand-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.brand-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1E3A8A;
+    line-height: 1.2;
+}
+
+.brand-sub {
+    font-size: 12px;
+    color: #94A3B8;
+    margin-top: 2px;
+}
+
+/* ── Título ── */
+.login-title {
+    font-size: 40px;
+    font-weight: 800;
+    color: #1E3A8A;
+    line-height: 1.1;
+    margin-bottom: 10px;
+}
+
+.login-sub {
+    font-size: 14px;
+    color: #64748B;
+    margin-bottom: 44px;
+}
+
+/* ── Campos ── */
+.field-group {
+    margin-bottom: 22px;
+}
+
+.field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748B;
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+}
+
+.input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 16px;
+    color: #3B82F6;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
     z-index: 1;
 }
 
-.deco-icon-box {
-    width: 100px;
-    height: 100px;
-    background: linear-gradient(135deg, #E8681A, #C04800);
-    border-radius: 24px;
+.field-input {
+    width: 100%;
+    height: 54px;
+    background: #EFF6FF;
+    border: 1.5px solid #DBE4F0;
+    border-radius: 12px;
+    padding: 0 44px 0 46px;
+    font-size: 14px;
+    color: #1E3A8A;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+    outline: none;
+}
+
+.field-input::placeholder {
+    color: #94A3B8;
+    font-size: 14px;
+}
+
+.field-input:focus {
+    border-color: #3B82F6;
+    border-width: 2px;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+/* ── Eye button ── */
+.eye-btn {
+    position: absolute;
+    right: 14px;
+    background: none;
+    border: none;
+    color: #94A3B8;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    transition: color 0.15s;
+}
+
+.eye-btn:hover {
+    color: #3B82F6;
+}
+
+/* ── Error ── */
+.error-box {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #DC2626;
+    margin-bottom: 16px;
+}
+
+.error-box.visible {
+    display: flex;
+}
+
+/* ── Botón Login ── */
+.btn-login {
+    width: 100%;
+    height: 54px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #3B82F6 0%, #1E3A8A 100%);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    margin-top: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 24px rgba(59, 130, 246, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 28px;
-    font-size: 44px;
-    color: white;
+    gap: 8px;
 }
 
-.deco-title {
-    font-size: 24px;
+.btn-login::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #60A5FA 0%, #3B82F6 100%);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.btn-login:hover::before {
+    opacity: 1;
+}
+
+.btn-login:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 32px rgba(59, 130, 246, 0.5);
+}
+
+.btn-login:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-login span {
+    position: relative;
+    z-index: 1;
+}
+
+.spin {
+    display: inline-block;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ── Versión ── */
+.version-text {
+    font-size: 11px;
+    color: #CBD5E1;
+    text-align: center;
+    margin-top: 28px;
+}
+
+/* ══════════════════════════════
+   PANEL DERECHO — DECORATIVO
+   ══════════════════════════════ */
+.panel-deco {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.deco-bg-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.deco-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(30, 58, 138, 0.88) 0%,
+        rgba(30, 58, 138, 0.72) 45%,
+        rgba(15, 31, 74, 0.82)  100%
+    );
+}
+
+/* Separador izquierdo con glow azul */
+.deco-separator {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        #60A5FA     40%,
+        #3B82F6     60%,
+        transparent 100%
+    );
+    z-index: 2;
+}
+
+.deco-content {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    padding: 60px 80px;
+    width: 100%;
+    max-width: 620px;
+}
+
+/* ── Logo grande ── */
+.deco-logo-wrap {
+    width: 340px;
+    height: 200px;
+    margin: 0 auto 32px;
+    filter: drop-shadow(0 0 60px rgba(96, 165, 250, 0.6));
+}
+
+.deco-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* ── Texto ── */
+.deco-brand {
+    font-size: 52px;
     font-weight: 300;
-    color: white;
-    margin-bottom: 8px;
+    color: #EFF6FF;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.6);
 }
 
 .deco-divider {
-    width: 40px;
-    height: 2px;
-    background: #E8681A;
-    margin: 0 auto 16px;
+    width: 70px;
+    height: 3px;
+    background: linear-gradient(90deg, #60A5FA, #3B82F6);
+    border-radius: 4px;
+    margin: 0 auto 18px;
 }
 
-.deco-sub {
-    font-size: 12px;
-    color: #444;
-    line-height: 1.7;
-    margin-bottom: 28px;
+.deco-tagline {
+    font-size: 15px;
+    color: #DBEAFE;
+    margin-bottom: 52px;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+    letter-spacing: 0.01em;
+}
+
+/* ── Features ── */
+.features-list {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
 }
 
 .feature-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    text-align: left;
+    gap: 14px;
+    color: #EFF6FF;
+    font-size: 15px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
 }
 
-.feature-icon {
-    color: #E8681A;
+.feature-check {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #3B82F6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 16px;
+    font-weight: 700;
     flex-shrink: 0;
+    box-shadow: 0 0 14px rgba(96, 165, 250, 0.55);
 }
 
-.feature-text {
-    font-size: 12px;
-    color: #666;
-}
-
-/* ═══ RESPONSIVE ═══ */
-@media (max-width: 768px) {
+/* ══════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════ */
+@media (max-width: 900px) {
     .panel-deco { display: none; }
     .panel-login {
         width: 100%;
-        padding: 40px 28px;
+        min-width: unset;
+        padding: 40px 32px;
     }
+    .login-title { font-size: 32px; }
+}
+
+@media (max-width: 480px) {
+    .panel-login { padding: 32px 24px; }
 }
