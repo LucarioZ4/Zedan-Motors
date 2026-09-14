@@ -678,3 +678,60 @@ select.field-input option {
 ::-webkit-scrollbar-thumb:hover {
     background: #94A3B8;
 }
+
+/* ═══════════════════════════════════════
+   IMPORTACIÓN MASIVA (CSV / EXCEL)
+═══════════════════════════════════════ */
+.drop-zone {
+    border: 2px dashed rgba(59, 130, 246, 0.35);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    background: #F8FAFC;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--primary);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.drop-zone-icon {
+    font-size: 34px;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.drop-zone-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.drop-zone-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.preview-table-wrapper {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #FFFFFF;
+}
+
+.import-nav-pills .nav-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-radius: 8px;
+    padding: 6px 14px;
+}
+
+.import-nav-pills .nav-link.active {
+    background: var(--primary);
+    color: #FFFFFF;
+}
