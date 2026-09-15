@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zedan Motor's — Servicios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/servicios.css">
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-box">Z</div>
+            <div>
+                <div class="logo-text">Zedan Motor's</div>
+                <div class="logo-sub">Taller Automotriz</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Principal</div>
+            <a href="dashboard.html" class="nav-item">
+                <i class="bi bi-grid-1x2-fill"></i> Dashboard
+            </a>
+            <div class="nav-section-label">Gestión</div>
+            <a href="clientes.html" class="nav-item">
+                <i class="bi bi-people-fill"></i> Clientes
+            </a>
+            <a href="vehiculos.html" class="nav-item">
+                <i class="bi bi-car-front-fill"></i> Vehículos
+            </a>
+            <a href="empleados.html" class="nav-item">
+                <i class="bi bi-person-badge-fill"></i> Empleados
+            </a>
+            <a href="servicios.html" class="nav-item active">
+                <i class="bi bi-tools"></i> Servicios
+            </a>
+            <div class="nav-section-label">Operaciones</div>
+            <a href="citas.html" class="nav-item">
+                <i class="bi bi-calendar-check-fill"></i> Citas
+            </a>
+            <a href="ordenes.html" class="nav-item">
+                <i class="bi bi-clipboard2-check-fill"></i> Órdenes
+            </a>
+            <a href="inventario.html" class="nav-item">
+                <i class="bi bi-box-seam-fill"></i> Inventario
+            </a>
+            <a href="facturacion.html" class="nav-item">
+                <i class="bi bi-receipt-cutoff"></i> Facturación
+            </a>
+            <a href="historial.html" class="nav-item">
+                <i class="bi bi-clock-history"></i> Historial
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="sidebarAvatar">A</div>
+                <div>
+                    <div class="user-name" id="sidebarUsuario">Admin</div>
+                    <div class="user-role" id="sidebarRol">Administrador</div>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="logout()">
+                <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-content">
+        <div class="topbar">
+            <div>
+                <div class="topbar-title">Servicios</div>
+                <div class="topbar-sub" id="topbarFecha"></div>
+            </div>
+            <div class="ms-auto">
+                <button class="btn-primary-custom" onclick="abrirModalNuevo()">
+                    <i class="bi bi-plus-lg"></i> Nuevo servicio
+                </button>
+            </div>
+        </div>
+
+        <div class="page-content">
+
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="search-bar">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="inputBuscar"
+                           placeholder="Buscar por nombre o descripción..."
+                           oninput="buscarServicios()">
+                </div>
+                <div class="stat-pill">
+                    <span id="totalServicios">0</span> servicios
+                </div>
+            </div>
+
+            <!-- Cards de servicios -->
+            <div class="row g-3" id="gridServicios">
+                <div class="col-12 text-center py-5" style="color:#555">
+                    Cargando...
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal fade modal-dark" id="modalServicio" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitulo">Nuevo servicio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert-custom alert-error" id="modalError" style="display:none">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <span id="modalErrorMsg"></span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="field-label">Nombre del servicio *</label>
+                            <input type="text" class="field-input" id="fNombre"
+                                   placeholder="Ej: Cambio de aceite">
+                        </div>
+                        <div class="col-12">
+                            <label class="field-label">Descripción</label>
+                            <textarea class="field-input" id="fDescripcion"
+                                      rows="3"
+                                      placeholder="Descripción del servicio..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="field-label">Costo ($) *</label>
+                            <input type="number" class="field-input" id="fCosto"
+                                   placeholder="0.00" min="0" step="0.01">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn-primary-custom" onclick="guardarServicio()">
+                        <i class="bi bi-check-lg"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ELIMINAR -->
+    <div class="modal fade modal-dark" id="modalEliminar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-3">
+                    <i class="bi bi-exclamation-triangle-fill"
+                       style="font-size:36px;color:#E74C3C"></i>
+                    <p class="mt-3" style="color:#ccc">
+                        ¿Eliminar el servicio
+                        <strong id="nombreEliminar"></strong>?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn-danger-custom" onclick="confirmarEliminar()">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/global.js"></script>
+    <script src="../js/servicios.js"></script>
+</body>
+</html>
