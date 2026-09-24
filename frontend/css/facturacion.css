@@ -33,6 +33,11 @@
     color: var(--info);
 }
 
+.btn-accion.dian:hover {
+    border-color: #2196F3;
+    color: #2196F3;
+}
+
 .btn-accion.eliminar:hover {
     border-color: var(--danger);
     color: var(--danger);

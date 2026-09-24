@@ -1,4 +1,5 @@
 const pool = require('../../config/database');
+const factusService = require('./factus.service');
 
 const getAll = async (req, res) => {
     try {
@@ -110,7 +111,28 @@ const create = async (req, res) => {
             RETURNING *
         `, [total, metodo_pago, id_orden]);
 
-        res.status(201).json(result.rows[0]);
+        let factura = result.rows[0];
+
+        // Integración con Factus (Mock)
+        try {
+            // Preparamos los datos básicos para Factus (Estructura de ejemplo)
+            const datosFactus = {
+                referencia: factura.id_factura.toString(),
+                fecha: new Date().toISOString().split('T')[0],
+                total: total,
+                metodo_pago: metodo_pago
+            };
+            
+            const respuestaFactus = await factusService.emitirFactura(datosFactus);
+            
+            // Adjuntamos la respuesta de Factus a la respuesta del servidor
+            factura.factus = respuestaFactus.data;
+        } catch (factusError) {
+            console.error('Error enviando a Factus, pero la factura se guardó localmente:', factusError);
+            factura.factusError = 'No se pudo emitir la factura electrónica';
+        }
+
+        res.status(201).json(factura);
 
     } catch (err) {
         if (err.code === '23505')
