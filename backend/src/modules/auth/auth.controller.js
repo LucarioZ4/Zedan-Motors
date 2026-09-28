@@ -1,13 +1,7 @@
-const jwt  = require('jsonwebtoken');
+const jwt    = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const pool   = require('../../config/database');
 const { jwtSecret, jwtExpires } = require('../../config/env');
-
-// TODO: Temporal para la demo, mover a la base de datos
-const USUARIOS = [
-    { id: 1, usuario: 'admin',     passwordHash: '$2a$10$fklA676wn628NDubTeKP6ObJMqocZKEZrV4D.bUrbO/QY8zQZoItG', rol: 'Administrador', nombre: 'Admin' },
-    { id: 2, usuario: 'mecanico',  passwordHash: '$2a$10$fklA676wn628NDubTeKP6ObJMqocZKEZrV4D.bUrbO/QY8zQZoItG', rol: 'Mecánico',      nombre: 'Mecánico' },
-    { id: 3, usuario: 'recepcion', passwordHash: '$2a$10$fklA676wn628NDubTeKP6ObJMqocZKEZrV4D.bUrbO/QY8zQZoItG', rol: 'Recepcionista', nombre: 'Recepción' },
-];
 
 const login = async (req, res) => {
     try {
@@ -16,23 +10,36 @@ const login = async (req, res) => {
         if (!usuario || !password)
             return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
 
-        const encontrado = USUARIOS.find(
-            u => u.usuario === usuario && bcrypt.compareSync(password, u.passwordHash)
-        );
+        const result = await pool.query(`
+            SELECT u.id_usuario, u.nombre_usuario, u.password_hash, u.activo,
+                   e.id_empleado, e.nombre, c.nombre_cargo AS rol
+            FROM usuario u
+            JOIN empleado e ON u.id_empleado = e.id_empleado
+            LEFT JOIN cargo c ON e.id_cargo = c.id_cargo
+            WHERE u.nombre_usuario = $1
+        `, [usuario]);
 
-        if (!encontrado)
+        const fila = result.rows[0];
+
+        // Mismo mensaje si el usuario no existe, está inactivo o la clave es incorrecta
+        if (!fila || !fila.activo || !(await bcrypt.compare(password, fila.password_hash)))
             return res.status(401).json({ error: 'Credenciales incorrectas' });
 
-        const token = jwt.sign(
-            { id: encontrado.id, usuario: encontrado.usuario, rol: encontrado.rol, nombre: encontrado.nombre },
-            jwtSecret,
-            { expiresIn: jwtExpires }
-        );
+        const datos = {
+            id: fila.id_usuario,
+            id_empleado: fila.id_empleado,
+            usuario: fila.nombre_usuario,
+            rol: fila.rol,
+            nombre: fila.nombre
+        };
 
-        res.json({ token, usuario: encontrado });
+        const token = jwt.sign(datos, jwtSecret, { expiresIn: jwtExpires });
+
+        res.json({ token, usuario: datos });
 
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
