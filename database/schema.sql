@@ -1,6 +1,8 @@
 -- ============================================================
--- Zedan Motors - SCRIPT COMPLETO (creación desde cero)
--- Ejecutar sobre una base de datos vacía.
+-- Zedan Motors - SCHEMA
+-- Estructura de la base de datos: tablas, funciones y catálogos.
+-- Seguro de correr en CUALQUIER ambiente, incluida producción.
+-- No contiene usuarios ni datos de prueba (ver seed.sql).
 -- ============================================================
 
 -- Extensión para hashes bcrypt (usada por la tabla usuario)
@@ -312,7 +314,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ------------------------------------------------------------
--- DATOS INICIALES
+-- CATÁLOGOS (datos reales del negocio, no son "de prueba")
 -- ------------------------------------------------------------
 
 INSERT INTO estado (nombre_estado) VALUES
@@ -329,33 +331,3 @@ INSERT INTO cargo (nombre_cargo) VALUES
 ('Jefe de taller'),
 ('Recepcionista'),
 ('Administrador');
-
--- Empleados de prueba (uno por rol del sistema)
-insert into empleado (nombre, apellido, telefono, correo, id_cargo) values
-('Admin',     'Sistema', '3000000001', 'admin@zedanmotors.com',
-	(select id_cargo from cargo where nombre_cargo = 'Administrador')),
-('Mecánico',  'Prueba',  '3000000002', 'mecanico@zedanmotors.com',
-	(select id_cargo from cargo where nombre_cargo = 'Mecánico')),
-('Recepción', 'Prueba',  '3000000003', 'recepcion@zedanmotors.com',
-	(select id_cargo from cargo where nombre_cargo = 'Recepcionista'));
-
--- Usuarios de prueba (contraseña: 1234, se guarda hasheada con bcrypt)
-insert into usuario (id_empleado, nombre_usuario, password_hash)
-select e.id_empleado, 'admin', crypt('1234', gen_salt('bf', 10))
-from empleado e where e.correo = 'admin@zedanmotors.com';
-
-insert into usuario (id_empleado, nombre_usuario, password_hash)
-select e.id_empleado, 'mecanico', crypt('1234', gen_salt('bf', 10))
-from empleado e where e.correo = 'mecanico@zedanmotors.com';
-
-insert into usuario (id_empleado, nombre_usuario, password_hash)
-select e.id_empleado, 'recepcion', crypt('1234', gen_salt('bf', 10))
-from empleado e where e.correo = 'recepcion@zedanmotors.com';
-
--- ------------------------------------------------------------
--- VERIFICACIÓN (opcional): deben salir 3 usuarios con hash $2a$10$
--- ------------------------------------------------------------
--- select u.nombre_usuario, c.nombre_cargo as rol, left(u.password_hash, 7) as inicio_hash
--- from usuario u
--- join empleado e on u.id_empleado = e.id_empleado
--- join cargo c on e.id_cargo = c.id_cargo;
