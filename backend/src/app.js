@@ -32,6 +32,7 @@ app.use('/api/servicios',    require('./modules/servicios/servicios.routes'));
 app.use('/api/inventario',   require('./modules/inventario/inventario.routes'));
 app.use('/api/facturacion',  require('./modules/facturacion/facturacion.routes'));
 app.use('/api/cargos',     require('./modules/cargos/cargos.routes'));
+app.use('/api/historial',  require('./modules/historial/historial.routes'));
 
 // Servir frontend
 app.use(express.static(path.join(__dirname, '../../frontend')));
