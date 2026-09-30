@@ -1,6 +1,7 @@
 const express = require('express');
 const router  = express.Router();
 const auth    = require('../../middleware/auth');
+const roles = require('../../middleware/roles');
 const pool    = require('../../config/database');
 
 router.get('/', auth, async (req, res) => {
