@@ -6,6 +6,14 @@
     font-size: 12px;
     color: var(--text-secondary);
     white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    transition: all 0.3s ease;
+}
+
+.stat-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
 }
 
 .stat-pill span {
@@ -20,18 +28,24 @@
     padding: 5px 10px;
     font-size: 13px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     color: var(--text-secondary);
+}
+
+.btn-accion:hover {
+    transform: translateY(-2px) scale(1.05);
 }
 
 .btn-accion.editar:hover {
     border-color: var(--primary);
     color: var(--primary);
+    background: rgba(59, 130, 246, 0.05);
 }
 
 .btn-accion.eliminar:hover {
     border-color: var(--danger);
     color: var(--danger);
+    background: rgba(220, 38, 38, 0.05);
 }
 
 .empleado-avatar {
@@ -46,6 +60,13 @@
     font-weight: 700;
     color: white;
     flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.table-custom tbody tr:hover .empleado-avatar {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
 }
 
 .cargo-badge {
@@ -54,7 +75,30 @@
     color: var(--primary);
     border: 1px solid rgba(232,104,26,0.2);
     border-radius: 20px;
-    padding: 3px 12px;
+    padding: 4px 14px;
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
+    transition: all 0.2s;
 }
+
+.table-custom tbody tr:hover .cargo-badge {
+    background: rgba(59,130,246,0.1);
+    border-color: rgba(59,130,246,0.3);
+}
+
+/* Animations for table rows */
+.table-custom tbody tr {
+    animation: fadeInRow 0.4s ease forwards;
+    opacity: 0;
+}
+
+@keyframes fadeInRow {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.table-custom tbody tr:nth-child(1) { animation-delay: 0.05s; }
+.table-custom tbody tr:nth-child(2) { animation-delay: 0.1s; }
+.table-custom tbody tr:nth-child(3) { animation-delay: 0.15s; }
+.table-custom tbody tr:nth-child(4) { animation-delay: 0.2s; }
+.table-custom tbody tr:nth-child(5) { animation-delay: 0.25s; }
