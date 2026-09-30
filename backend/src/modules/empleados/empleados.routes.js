@@ -1,6 +1,7 @@
 const express = require('express');
 const router  = express.Router();
 const auth    = require('../../middleware/auth');
+const roles = require('../../middleware/roles');
 const pool    = require('../../config/database');
 
 // GET all empleados
@@ -51,7 +52,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // POST create
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, roles('Administrador'), async (req, res) => {
     try {
         const { nombre, apellido, telefono, correo, id_cargo } = req.body;
         if (!nombre || !apellido || !telefono)
@@ -70,7 +71,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // PUT update
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, roles('Administrador'), async (req, res) => {
     try {
         const { nombre, apellido, telefono, correo, id_cargo } = req.body;
         if (!nombre || !apellido || !telefono)
@@ -92,7 +93,7 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 // DELETE
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', auth, roles('Administrador'), async (req, res) => {
     try {
         const result = await pool.query(
             'DELETE FROM empleado WHERE id_empleado = $1 RETURNING *',
