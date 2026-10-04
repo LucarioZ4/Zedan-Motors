@@ -25,7 +25,8 @@ const getAll = async (req, res) => {
         `);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -57,7 +58,8 @@ const getById = async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -79,7 +81,8 @@ const create = async (req, res) => {
 
         res.status(201).json(result.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -104,7 +107,8 @@ const update = async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -119,7 +123,8 @@ const remove = async (req, res) => {
 
         res.json({ mensaje: 'Orden eliminada correctamente' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -134,7 +139,8 @@ const getServicios = async (req, res) => {
         `, [req.params.id]);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -152,7 +158,8 @@ const addServicio = async (req, res) => {
 
         res.status(201).json({ mensaje: 'Servicio agregado' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -164,7 +171,8 @@ const removeServicio = async (req, res) => {
         );
         res.json({ mensaje: 'Servicio eliminado' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -181,7 +189,8 @@ const getRepuestos = async (req, res) => {
         `, [req.params.id]);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -200,7 +209,8 @@ const addRepuesto = async (req, res) => {
 
         res.status(201).json({ mensaje: 'Repuesto agregado' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -212,7 +222,8 @@ const removeRepuesto = async (req, res) => {
         );
         res.json({ mensaje: 'Repuesto eliminado' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
