@@ -19,7 +19,8 @@ router.get('/', auth, async (req, res) => {
         `);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
 
@@ -29,7 +30,8 @@ router.get('/cargos', auth, async (req, res) => {
         const result = await pool.query('SELECT id_cargo, nombre_cargo FROM cargo ORDER BY nombre_cargo');
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
 
@@ -47,7 +49,8 @@ router.get('/:id', auth, async (req, res) => {
             return res.status(404).json({ error: 'Empleado no encontrado' });
         res.json(result.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
 
@@ -66,7 +69,8 @@ router.post('/', auth, roles('Administrador'), async (req, res) => {
 
         res.status(201).json(result.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
 
@@ -88,7 +92,8 @@ router.put('/:id', auth, roles('Administrador'), async (req, res) => {
             return res.status(404).json({ error: 'Empleado no encontrado' });
         res.json(result.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
 
@@ -103,7 +108,8 @@ router.delete('/:id', auth, roles('Administrador'), async (req, res) => {
             return res.status(404).json({ error: 'Empleado no encontrado' });
         res.json({ mensaje: 'Empleado eliminado correctamente' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
 
