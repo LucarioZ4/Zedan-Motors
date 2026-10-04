@@ -1,5 +1,17 @@
 const pool = require('../../config/database');
 
+const getCargos = async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id_cargo, nombre_cargo FROM cargo ORDER BY nombre_cargo'
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+};
+
 const getAll = async (req, res) => {
     try {
         const result = await pool.query(`
@@ -129,4 +141,4 @@ const remove = async (req, res) => {
     }
 };
 
-module.exports = { getAll, getById, create, update, remove };
+module.exports = { getAll, getById, create, update, remove, getCargos };
