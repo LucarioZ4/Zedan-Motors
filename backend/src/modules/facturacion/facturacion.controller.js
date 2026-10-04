@@ -21,7 +21,8 @@ const getAll = async (req, res) => {
         `);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -69,7 +70,8 @@ const getById = async (req, res) => {
         });
 
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -137,7 +139,8 @@ const create = async (req, res) => {
     } catch (err) {
         if (err.code === '23505')
             return res.status(400).json({ error: 'Esta orden ya tiene una factura generada' });
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -151,7 +154,8 @@ const remove = async (req, res) => {
             return res.status(404).json({ error: 'Factura no encontrada' });
         res.json({ mensaje: 'Factura eliminada correctamente' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 

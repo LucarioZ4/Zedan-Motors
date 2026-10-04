@@ -21,7 +21,8 @@ const getAll = async (req, res) => {
         res.json(result.rows);
 
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -36,7 +37,8 @@ const getById = async (req, res) => {
             return res.status(404).json({ error: 'Servicio no encontrado' });
         res.json(result.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -59,7 +61,8 @@ const create = async (req, res) => {
     } catch (err) {
         if (err.code === '23505')
             return res.status(400).json({ error: 'Ya existe un servicio con ese nombre' });
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -87,7 +90,8 @@ const update = async (req, res) => {
     } catch (err) {
         if (err.code === '23505')
             return res.status(400).json({ error: 'Ya existe un servicio con ese nombre' });
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -101,7 +105,8 @@ const remove = async (req, res) => {
             return res.status(404).json({ error: 'Servicio no encontrado' });
         res.json({ mensaje: 'Servicio eliminado correctamente' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
