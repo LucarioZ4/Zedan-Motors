@@ -1,5 +1,17 @@
 const pool = require('../../config/database');
 
+const getCargos = async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id_cargo, nombre_cargo FROM cargo ORDER BY nombre_cargo'
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+};
+
 const getAll = async (req, res) => {
     try {
         const result = await pool.query(`
@@ -18,7 +30,8 @@ const getAll = async (req, res) => {
         `);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -39,7 +52,8 @@ const getById = async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -68,7 +82,8 @@ const create = async (req, res) => {
             return res.status(400).json({
                 error: 'El teléfono o correo ya está registrado'
             });
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -105,7 +120,8 @@ const update = async (req, res) => {
             return res.status(400).json({
                 error: 'El teléfono o correo ya está registrado'
             });
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -120,8 +136,9 @@ const remove = async (req, res) => {
 
         res.json({ mensaje: 'Empleado eliminado correctamente' });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
-module.exports = { getAll, getById, create, update, remove };
+module.exports = { getAll, getById, create, update, remove, getCargos };

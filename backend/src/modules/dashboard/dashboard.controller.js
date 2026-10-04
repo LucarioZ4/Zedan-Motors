@@ -35,7 +35,8 @@ const getKPIs = async (req, res) => {
         });
 
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
@@ -59,7 +60,8 @@ const getCitasHoy = async (req, res) => {
         res.json(result.rows);
 
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 
