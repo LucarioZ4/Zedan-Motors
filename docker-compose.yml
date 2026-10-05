@@ -1,0 +1,116 @@
+services:
+  # ========================================================
+  # Base de Datos PostgreSQL 16
+  # ========================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: zedan-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-zedan_motors}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_secure_pass}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Inicializa el schema y seed automáticamente en la primera ejecución
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-zedan_motors}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - zedan-net
+
+  # ========================================================
+  # Backend API & Frontend (Node.js + Express)
+  # ========================================================
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: zedan-backend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-zedan_motors}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres_secure_pass}
+      JWT_SECRET: ${JWT_SECRET:-super_secret_jwt_key_zedan_2026_change_me}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      FACTUS_API_URL: ${FACTUS_API_URL:-}
+      FACTUS_API_TOKEN: ${FACTUS_API_TOKEN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - zedan-net
+
+  # ========================================================
+  # n8n - Motor de Automatización y Agente IA
+  # ========================================================
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: zedan-n8n
+    restart: unless-stopped
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-America/Bogota}
+      - TZ=${TZ:-America/Bogota}
+      - N8N_COMMUNITY_PACKAGES_ENABLED=true
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n:/n8n-workflows:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - zedan-net
+
+  # ========================================================
+  # OpenWA - API WhatsApp & Dashboard para n8n
+  # (Gateway oficial para @rmyndharis/n8n-nodes-openwa)
+  # ========================================================
+  openwa:
+    image: ghcr.io/rmyndharis/openwa:latest
+    container_name: zedan-openwa
+    restart: unless-stopped
+    ports:
+      - "${OPENWA_PORT:-2785}:2785"
+    environment:
+      - PORT=2785
+      - NODE_ENV=development
+      - DATABASE_TYPE=sqlite
+      - DATABASE_SYNCHRONIZE=true
+      - AUTO_START_SESSIONS=true
+      - CSP_UPGRADE_INSECURE_REQUESTS=false
+    volumes:
+      # Persistencia de base de datos SQLite, sesiones de WhatsApp y tokens
+      - ./openwa-data:/app/data
+    networks:
+      - zedan-net
+
+# ========================================================
+# Volúmenes y Redes
+# ========================================================
+volumes:
+  postgres_data:
+  n8n_data:
+
+networks:
+  zedan-net:
+    driver: bridge
