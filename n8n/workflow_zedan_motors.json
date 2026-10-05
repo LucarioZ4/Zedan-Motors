@@ -1,0 +1,285 @@
+{
+  "name": "Zedan Motors - OpenWA & Web AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zedan-web-chat",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-160, 100],
+      "id": "web-webhook-trigger",
+      "name": "Web Chat Webhook"
+    },
+    {
+      "parameters": {
+        "event": "message.received"
+      },
+      "type": "@rmyndharis/n8n-nodes-openwa.openWaTrigger",
+      "typeVersion": 1,
+      "position": [-160, 300],
+      "id": "openwa-trigger",
+      "name": "OpenWA Trigger",
+      "credentials": {
+        "openWaApi": {
+          "id": "OPENWA_CREDENTIAL_ID",
+          "name": "OpenWA Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "1", "name": "sessionId", "value": "={{ $json.body.sessionId }}", "type": "string" },
+            { "id": "2", "name": "messageText", "value": "={{ $json.body.message }}", "type": "string" },
+            { "id": "3", "name": "channel", "value": "web", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [80, 100],
+      "id": "format-web-input",
+      "name": "Format Web Input"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "1", "name": "sessionId", "value": "={{ $json.data.from }}", "type": "string" },
+            { "id": "2", "name": "messageText", "value": "={{ $json.data.body }}", "type": "string" },
+            { "id": "3", "name": "channel", "value": "whatsapp", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [80, 300],
+      "id": "format-openwa-input",
+      "name": "Format OpenWA Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messageText }}",
+        "options": {
+          "systemMessage": "Eres el asistente inteligente de Zedan Motor´s encargado de agendar citas de taller de forma estrictamente secuencial.\n\nDebes analizar TODO el historial de la conversación antes de responder o usar una herramienta para saber en qué paso te encuentras:\n\nPASO 1: REGISTRO DE CLIENTE\n- Si el usuario NO ha sido registrado en este chat, pídele Nombre, Apellido, Teléfono, Correo y Dirección.\n- Usa la herramienta de Postgres de la tabla 'cliente'. Al terminar con éxito, dile al usuario: \"¡Cliente registrado exitosamente! El ID del cliente es X.\" (donde X es el id_cliente real devuelto por la base de datos).\n\nPASO 2: REGISTRO DE VEHÍCULO\n- Si en los mensajes anteriores de este chat YA le dijiste al usuario que el cliente fue registrado con un ID, significa que estás en el PASO 2.\n- Busca en los mensajes anteriores de la memoria el número del \"ID del cliente\" que mencionaste.\n- Cuando el usuario te entregue los datos del vehículo (Placa, Marca, Modelo, Año, Color), utiliza de inmediato la herramienta de Postgres configurada para la tabla 'vehiculo'.\n- OBLIGATORIO: Pasa los datos del auto y asócialos al 'id_cliente' que encontraste en el historial.\n\nPASO 3: REGISTRO DE LA CITA\n- Una vez guardado el vehículo con éxito, pídele el motivo técnico y la fecha/hora para insertar en la tabla 'cita'.\n\nREGLAS CRÍTICAS:\n- Jamás reinicies el flujo ni vuelvas a pedir datos del cliente si en el historial de chat ya dice \"¡Cliente registrado exitosamente!\".\n- Si el usuario te manda los datos del vehículo y ya tienes el ID del cliente en el historial, procesa el INSERT en la tabla 'vehiculo' de inmediato sin preguntar nada más."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [360, 200],
+      "id": "ai-agent-zedan",
+      "name": "AI Agent Zedan"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [240, 420],
+      "id": "deepseek-lm",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "KXYNPnSuBmdBIZvN",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [380, 420],
+      "id": "simple-memory",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Úsala ÚNICAMENTE cuando el usuario te esté dando sus datos personales por primera vez (Nombre, Apellido, Teléfono) para registrarse como cliente.",
+        "schema": { "__rl": true, "mode": "list", "value": "public" },
+        "table": { "__rl": true, "value": "cliente", "mode": "list", "cachedResultName": "cliente" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nombre": "={{ $fromAI('nombre', '', 'string') }}",
+            "apellido": "={{ $fromAI('apellido', '', 'string') }}",
+            "telefono": "={{ $fromAI('telefono', '', 'string') }}",
+            "correo": "={{ $fromAI('correo', '', 'string') }}",
+            "direccion": "={{ $fromAI('direccion', '', 'string') }}"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [520, 420],
+      "id": "postgres-cliente",
+      "name": "Insert cliente",
+      "credentials": {
+        "postgres": {
+          "id": "Fqcc2wAXSEq8KNIx",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Úsala ÚNICAMENTE cuando el usuario te entregue los datos de su vehículo (Placa, Marca, Modelo, Año). Requiere 'id_cliente' del historial.",
+        "schema": { "__rl": true, "mode": "list", "value": "public" },
+        "table": { "__rl": true, "value": "vehiculo", "mode": "list", "cachedResultName": "vehiculo" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "anio": "={{ $fromAI('anio', '', 'number') }}",
+            "id_cliente": "={{ $fromAI('id_cliente', '', 'number') }}",
+            "placa": "={{ $fromAI('placa', '', 'string') }}",
+            "modelo": "={{ $fromAI('modelo', '', 'string') }}",
+            "marca": "={{ $fromAI('marca', '', 'string') }}",
+            "color": "={{ $fromAI('color', '', 'string') }}"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [660, 420],
+      "id": "postgres-vehiculo",
+      "name": "Insert vehiculo",
+      "credentials": {
+        "postgres": {
+          "id": "Fqcc2wAXSEq8KNIx",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utiliza esta herramienta para registrar una cita. Campos requeridos: fecha (YYYY-MM-DD), hora (HH:MM) y motivo.",
+        "schema": { "__rl": true, "mode": "list", "value": "public" },
+        "table": { "__rl": true, "value": "cita", "mode": "list", "cachedResultName": "cita" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_vehiculo": "={{ $fromAI('id_vehiculo', '', 'number') }}",
+            "id_estado": "={{ $fromAI('id_estado', '', 'number') }}",
+            "fecha": "={{ $fromAI('fecha', '', 'string') }}",
+            "hora": "={{ $fromAI('hora', '', 'string') }}",
+            "motivo": "={{ $fromAI('motivo', '', 'string') }}"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [800, 420],
+      "id": "postgres-cita",
+      "name": "Insert cita",
+      "credentials": {
+        "postgres": {
+          "id": "Fqcc2wAXSEq8KNIx",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Format Web Input').item ? $('Format Web Input').item.json.channel : ($('Format OpenWA Input').item ? $('Format OpenWA Input').item.json.channel : '') }}",
+                    "rightValue": "whatsapp",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": "To WhatsApp"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Format Web Input').item ? $('Format Web Input').item.json.channel : ($('Format OpenWA Input').item ? $('Format OpenWA Input').item.json.channel : '') }}",
+                    "rightValue": "web",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": "To Web"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [640, 200],
+      "id": "channel-switch",
+      "name": "Route Response"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Format OpenWA Input').json.sessionId }}",
+        "text": "={{ $json.output }}"
+      },
+      "type": "@rmyndharis/n8n-nodes-openwa.openWa",
+      "typeVersion": 1,
+      "position": [880, 100],
+      "id": "openwa-send",
+      "name": "Send WhatsApp Message",
+      "credentials": {
+        "openWaApi": {
+          "id": "OPENWA_CREDENTIAL_ID",
+          "name": "OpenWA Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"reply\": \"{{ $json.output }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [880, 300],
+      "id": "respond-web",
+      "name": "Respond to Web"
+    }
+  ],
+  "connections": {
+    "Web Chat Webhook": { "main": [[ { "node": "Format Web Input", "type": "main", "index": 0 } ]] },
+    "OpenWA Trigger": { "main": [[ { "node": "Format OpenWA Input", "type": "main", "index": 0 } ]] },
+    "Format Web Input": { "main": [[ { "node": "AI Agent Zedan", "type": "main", "index": 0 } ]] },
+    "Format OpenWA Input": { "main": [[ { "node": "AI Agent Zedan", "type": "main", "index": 0 } ]] },
+    "DeepSeek Chat Model": { "ai_languageModel": [[ { "node": "AI Agent Zedan", "type": "ai_languageModel", "index": 0 } ]] },
+    "Simple Memory": { "ai_memory": [[ { "node": "AI Agent Zedan", "type": "ai_memory", "index": 0 } ]] },
+    "Insert cliente": { "ai_tool": [[ { "node": "AI Agent Zedan", "type": "ai_tool", "index": 0 } ]] },
+    "Insert vehiculo": { "ai_tool": [[ { "node": "AI Agent Zedan", "type": "ai_tool", "index": 0 } ]] },
+    "Insert cita": { "ai_tool": [[ { "node": "AI Agent Zedan", "type": "ai_tool", "index": 0 } ]] },
+    "AI Agent Zedan": { "main": [[ { "node": "Route Response", "type": "main", "index": 0 } ]] },
+    "Route Response": {
+      "main": [
+        [ { "node": "Send WhatsApp Message", "type": "main", "index": 0 } ],
+        [ { "node": "Respond to Web", "type": "main", "index": 0 } ]
+      ]
+    }
+  }
+}

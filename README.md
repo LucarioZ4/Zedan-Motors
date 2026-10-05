@@ -5,9 +5,12 @@ Sistema de gestión para taller mecánico: clientes, vehículos, citas, órdenes
 ## Tecnologías
 
 - **Backend:** Node.js + Express
-- **Base de datos:** PostgreSQL
+- **Base de datos:** PostgreSQL (con extensión `pgcrypto`)
 - **Autenticación:** JWT + bcrypt
 - **Frontend:** HTML, CSS y JavaScript (sin framework), servido directamente por Express
+- **Automatización y Agente IA:** n8n + LangChain + DeepSeek
+- **Integración WhatsApp:** OpenWA (WA-Automate)
+- **Contenedores:** Docker & Docker Compose
 
 ## Estructura del proyecto
 
@@ -19,6 +22,7 @@ Zedan-Motors/
 │   │   ├── middleware/     # Middleware de autenticación (JWT)
 │   │   ├── modules/         # Un módulo por entidad (rutas + controlador)
 │   │   └── app.js           # Punto de entrada de la API
+│   ├── Dockerfile
 │   ├── .template.env       # Plantilla de variables de entorno
 │   └── package.json
 ├── database/
@@ -28,8 +32,14 @@ Zedan-Motors/
 │   ├── css/
 │   ├── js/
 │   └── pages/
-└── docs/
-    └── documentacion_proyecto_ZedanMotors.md
+├── n8n/
+│   ├── README.md            # Guía detallada del agente IA y OpenWA
+│   └── workflow_zedan_motors.json # Flujo importable de n8n
+├── docs/
+│   └── documentacion_proyecto_ZedanMotors.md
+├── docker-compose.yml       # Orquestación de PostgreSQL, Backend, n8n y OpenWA
+├── .env.example             # Variables de entorno globales para Docker
+└── README.md
 ```
 
 ## Módulos de la API
@@ -50,13 +60,43 @@ Zedan-Motors/
 | Facturación | `/api/facturacion` | Facturas (integración con Factus) |
 | Historial | `/api/historial` | Historial de eventos por vehículo |
 
-## Requisitos previos
+## Despliegue con Docker Compose (Recomendado)
 
-- [Node.js](https://nodejs.org/) (v18 o superior recomendado)
-- [PostgreSQL](https://www.postgresql.org/download/) con la extensión `pgcrypto` disponible
-- Un cliente de base de datos como [pgAdmin](https://www.pgadmin.org/) (opcional, pero recomendado)
+La forma más rápida y completa de levantar todo el ecosistema (PostgreSQL, Backend, n8n y OpenWA) en una sola red aislada:
 
-## Instalación y ejecución local
+### 1. Requisitos
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado y corriendo.
+
+### 2. Configurar variables de entorno
+Copia la plantilla `.env.example` a `.env`:
+```bash
+cp .env.example .env
+```
+*(En Windows PowerShell: `Copy-Item .env.example .env`)*
+
+### 3. Iniciar todos los servicios
+```bash
+docker compose up -d
+```
+
+Esto iniciará automáticamente:
+| Servicio | Contenedor | Puerto local | Descripción |
+|---|---|---|---|
+| **PostgreSQL 16** | `zedan-postgres` | `5432` | DB inicializada con tablas y datos de prueba (`schema.sql` y `seed.sql`) |
+| **Backend & Frontend** | `zedan-backend` | `3000` | [http://localhost:3000](http://localhost:3000) |
+| **n8n (Agente IA)** | `zedan-n8n` | `5678` | [http://localhost:5678](http://localhost:5678) |
+| **OpenWA (WhatsApp API)** | `zedan-openwa` | `8080` | [http://localhost:8080](http://localhost:8080) |
+
+Para ver el código QR de vinculación de WhatsApp:
+```bash
+docker logs -f zedan-openwa
+```
+
+Para más detalles sobre la importación del flujo de n8n y su configuración, consulta [n8n/README.md](n8n/README.md).
+
+---
+
+## Instalación y ejecución manual (sin Docker)
 
 ### 1. Clonar el repositorio
 
