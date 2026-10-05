@@ -16,6 +16,8 @@ on conflict do nothing;
 
 -- Usuarios de prueba (contraseña: 1234, se guarda hasheada con bcrypt)
 -- ADVERTENCIA: credenciales débiles a propósito, solo para desarrollo.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 insert into usuario (id_empleado, nombre_usuario, password_hash)
 select e.id_empleado, 'admin', crypt('1234', gen_salt('bf', 10))
 from empleado e where e.correo = 'admin@zedanmotors.com'
