@@ -67,11 +67,6 @@ const create = async (req, res) => {
     try {
         const { fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado } = req.body;
 
-        if (!fecha_inicio || !id_cita || !id_empleado)
-            return res.status(400).json({
-                error: 'Fecha inicio, cita y empleado son obligatorios'
-            });
-
         const result = await pool.query(`
             INSERT INTO orden_trabajo
                 (fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado)
@@ -147,8 +142,6 @@ const getServicios = async (req, res) => {
 const addServicio = async (req, res) => {
     try {
         const { id_servicio } = req.body;
-        if (!id_servicio)
-            return res.status(400).json({ error: 'Seleccione un servicio' });
 
         await pool.query(`
             INSERT INTO orden_servicio (id_orden, id_servicio)
@@ -197,8 +190,6 @@ const getRepuestos = async (req, res) => {
 const addRepuesto = async (req, res) => {
     try {
         const { id_repuesto, cantidad } = req.body;
-        if (!id_repuesto || !cantidad)
-            return res.status(400).json({ error: 'Repuesto y cantidad son obligatorios' });
 
         await pool.query(`
             INSERT INTO orden_inventario (id_orden, id_repuesto, cantidad)

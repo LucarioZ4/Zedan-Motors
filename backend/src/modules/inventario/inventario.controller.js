@@ -48,13 +48,6 @@ const create = async (req, res) => {
     try {
         const { nombre, marca, precio, stock } = req.body;
 
-        if (!nombre)
-            return res.status(400).json({ error: 'El nombre es obligatorio' });
-        if (!precio || precio <= 0)
-            return res.status(400).json({ error: 'El precio debe ser mayor a cero' });
-        if (stock < 0)
-            return res.status(400).json({ error: 'El stock no puede ser negativo' });
-
         const result = await pool.query(
             `INSERT INTO inventario (nombre, marca, precio, stock)
              VALUES ($1, $2, $3, $4) RETURNING *`,
@@ -71,13 +64,6 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { nombre, marca, precio, stock } = req.body;
-
-        if (!nombre)
-            return res.status(400).json({ error: 'El nombre es obligatorio' });
-        if (!precio || precio <= 0)
-            return res.status(400).json({ error: 'El precio debe ser mayor a cero' });
-        if (stock < 0)
-            return res.status(400).json({ error: 'El stock no puede ser negativo' });
 
         const result = await pool.query(
             `UPDATE inventario SET
@@ -164,7 +150,8 @@ const importar = async (req, res) => {
 
     } catch (err) {
         await client.query('ROLLBACK');
-        res.status(500).json({ error: 'Error al importar repuestos: ' + err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error al importar repuestos' });
     } finally {
         client.release();
     }

@@ -224,7 +224,8 @@ const importar = async (req, res) => {
 
     } catch (err) {
         await client.query('ROLLBACK');
-        res.status(500).json({ error: 'Error al importar vehículos: ' + err.message });
+        console.error(err);
+        res.status(500).json({ error: 'Error al importar vehículos' });
     } finally {
         client.release();
     }
