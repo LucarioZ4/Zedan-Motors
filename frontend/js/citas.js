@@ -11,10 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     modalEliminar = new bootstrap.Modal(document.getElementById('modalEliminar'));
     cargarCitas();
     cargarClientes();
-
-    // Fecha mínima hoy
-    document.getElementById('fFecha').min =
-        new Date().toISOString().split('T')[0];
 });
 
 // ── Cargar citas ──
@@ -155,6 +151,8 @@ function buscarCitas() {
 function abrirModalNuevo() {
     citaIdEditar = null;
     document.getElementById('modalTitulo').textContent = 'Nueva cita';
+    document.getElementById('fFecha').min =
+        new Date().toISOString().split('T')[0];
     limpiarModal();
     modalCita.show();
 }
@@ -168,6 +166,7 @@ async function abrirModalEditar(id) {
 
         citaIdEditar = id;
         document.getElementById('modalTitulo').textContent = 'Editar cita';
+        document.getElementById('fFecha').removeAttribute('min');
 
         // Cargar cliente y vehículo
         document.getElementById('fCliente').value = data.id_cliente;
