@@ -51,15 +51,6 @@ const create = async (req, res) => {
     try {
         const { nombre, apellido, telefono, correo, direccion } = req.body;
 
-        if (!nombre || !apellido || !telefono)
-            return res.status(400).json({ error: 'Nombre, apellido y teléfono son obligatorios' });
-
-        if (telefono.length < 7)
-            return res.status(400).json({ error: 'El teléfono debe tener al menos 7 dígitos' });
-
-        if (correo && !correo.includes('@'))
-            return res.status(400).json({ error: 'El correo no es válido' });
-
         const result = await pool.query(
             `INSERT INTO cliente (nombre, apellido, telefono, correo, direccion)
              VALUES ($1, $2, $3, $4, $5)
@@ -80,9 +71,6 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { nombre, apellido, telefono, correo, direccion } = req.body;
-
-        if (!nombre || !apellido || !telefono)
-            return res.status(400).json({ error: 'Nombre, apellido y teléfono son obligatorios' });
 
         const result = await pool.query(
             `UPDATE cliente SET

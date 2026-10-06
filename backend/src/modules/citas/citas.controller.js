@@ -74,12 +74,6 @@ const create = async (req, res) => {
     try {
         const { fecha, hora, motivo, id_vehiculo, id_estado } = req.body;
 
-        if (!fecha || !hora || !id_vehiculo)
-            return res.status(400).json({ error: 'Fecha, hora y vehículo son obligatorios' });
-
-        if (new Date(fecha) < new Date().setHours(0,0,0,0))
-            return res.status(400).json({ error: 'No puede agendar citas en fechas pasadas' });
-
         const result = await pool.query(
             `INSERT INTO cita (fecha, hora, motivo, id_vehiculo, id_estado)
              VALUES ($1, $2, $3, $4, $5)
@@ -98,9 +92,6 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { fecha, hora, motivo, id_vehiculo, id_estado } = req.body;
-
-        if (!fecha || !hora || !id_vehiculo)
-            return res.status(400).json({ error: 'Fecha, hora y vehículo son obligatorios' });
 
         const result = await pool.query(
             `UPDATE cita SET

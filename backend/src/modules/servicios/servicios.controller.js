@@ -46,11 +46,6 @@ const create = async (req, res) => {
     try {
         const { nombre_servicio, descripcion, costo } = req.body;
 
-        if (!nombre_servicio)
-            return res.status(400).json({ error: 'El nombre es obligatorio' });
-        if (!costo || costo <= 0)
-            return res.status(400).json({ error: 'El costo debe ser mayor a cero' });
-
         const result = await pool.query(
             `INSERT INTO servicio (nombre_servicio, descripcion, costo)
              VALUES ($1, $2, $3) RETURNING *`,
@@ -69,11 +64,6 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { nombre_servicio, descripcion, costo } = req.body;
-
-        if (!nombre_servicio)
-            return res.status(400).json({ error: 'El nombre es obligatorio' });
-        if (!costo || costo <= 0)
-            return res.status(400).json({ error: 'El costo debe ser mayor a cero' });
 
         const result = await pool.query(
             `UPDATE servicio SET

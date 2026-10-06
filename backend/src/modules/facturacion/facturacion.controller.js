@@ -79,11 +79,6 @@ const create = async (req, res) => {
     try {
         const { id_orden, metodo_pago } = req.body;
 
-        if (!id_orden)
-            return res.status(400).json({ error: 'Debe seleccionar una orden' });
-        if (!metodo_pago)
-            return res.status(400).json({ error: 'Debe seleccionar un método de pago' });
-
         // Calcular total desde servicios y repuestos
         const resServ = await pool.query(`
             SELECT COALESCE(SUM(s.costo), 0) AS total
