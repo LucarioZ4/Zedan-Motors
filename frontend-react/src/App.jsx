@@ -4,6 +4,7 @@ import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
+import Clientes from './pages/Clientes/Clientes';
 
 function ModulePlaceholder({ title }) {
   return (
@@ -37,7 +38,7 @@ export default function App() {
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="clientes" element={<ModulePlaceholder title="Clientes" />} />
+          <Route path="clientes" element={<Clientes />} />
           <Route path="vehiculos" element={<ModulePlaceholder title="Vehículos" />} />
           <Route path="empleados" element={<ModulePlaceholder title="Empleados" />} />
           <Route path="servicios" element={<ModulePlaceholder title="Servicios" />} />
