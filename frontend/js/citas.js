@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     modalEliminar = new bootstrap.Modal(document.getElementById('modalEliminar'));
     cargarCitas();
     cargarClientes();
+
+    // Fecha mínima hoy
+    document.getElementById('fFecha').min =
+        new Date().toISOString().split('T')[0];
 });
 
 // ── Cargar citas ──
@@ -48,7 +52,7 @@ async function cargarClientes() {
         sel.innerHTML = '<option value="">Seleccionar cliente...</option>';
         data.forEach(c => {
             sel.innerHTML +=
-                `<option value="${c.id_cliente}">${c.nombre} ${c.apellido}</option>`;
+                `<option value="${c.id_cliente}">${escapeHtml(c.nombre)} ${escapeHtml(c.apellido)}</option>`;
         });
     } catch (err) {
         console.error('Error cargando clientes:', err);
@@ -71,7 +75,7 @@ async function cargarVehiculosCliente() {
         const data = await res.json();
         data.forEach(v => {
             sel.innerHTML +=
-                `<option value="${v.id_vehiculo}">${v.placa} - ${v.marca} ${v.modelo}</option>`;
+                `<option value="${v.id_vehiculo}">${escapeHtml(v.placa)} - ${escapeHtml(v.marca)} ${escapeHtml(v.modelo)}</option>`;
         });
     } catch (err) {
         console.error('Error cargando vehículos:', err);
@@ -101,13 +105,13 @@ function renderTabla(citas) {
             </td>
             <td>
                 <span style="color:var(--primary);font-weight:600">
-                    ${c.hora}
+                    ${escapeHtml(c.hora)}
                 </span>
             </td>
-            <td>${c.cliente}</td>
-            <td style="color:var(--text-secondary)">${c.vehiculo}</td>
+            <td>${escapeHtml(c.cliente)}</td>
+            <td style="color:var(--text-secondary)">${escapeHtml(c.vehiculo)}</td>
             <td style="color:var(--text-secondary)">
-                ${c.motivo || '<span style="color:#444">—</span>'}
+                ${c.motivo ? escapeHtml(c.motivo) : '<span style="color:#444">—</span>'}
             </td>
             <td>${getBadgeEstado(c.estado)}</td>
             <td>
@@ -117,7 +121,8 @@ function renderTabla(citas) {
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn-accion eliminar"
-                            onclick="abrirModalEliminar(${c.id_cita}, '${c.cliente}')">
+                            data-nombre="${escapeHtml(c.cliente)}"
+                            onclick="abrirModalEliminar(${c.id_cita}, this.dataset.nombre)">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -135,7 +140,7 @@ function getBadgeEstado(estado) {
         'Completada': 'badge-completada',
         'Cancelada':  'badge-cancelada',
     };
-    return `<span class="badge-custom ${clases[estado] || 'badge-pendiente'}">${estado}</span>`;
+    return `<span class="badge-custom ${clases[estado] || 'badge-pendiente'}">${escapeHtml(estado)}</span>`;
 }
 
 // ── Buscar ──
@@ -151,8 +156,6 @@ function buscarCitas() {
 function abrirModalNuevo() {
     citaIdEditar = null;
     document.getElementById('modalTitulo').textContent = 'Nueva cita';
-    document.getElementById('fFecha').min =
-        new Date().toISOString().split('T')[0];
     limpiarModal();
     modalCita.show();
 }
@@ -166,7 +169,6 @@ async function abrirModalEditar(id) {
 
         citaIdEditar = id;
         document.getElementById('modalTitulo').textContent = 'Editar cita';
-        document.getElementById('fFecha').removeAttribute('min');
 
         // Cargar cliente y vehículo
         document.getElementById('fCliente').value = data.id_cliente;

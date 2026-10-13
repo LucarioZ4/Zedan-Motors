@@ -46,7 +46,7 @@ async function cargarOrdenesSinFactura() {
         sinFactura.forEach(o => {
             sel.innerHTML += `
                 <option value="${o.id_orden}">
-                    #${o.id_orden} — ${o.cliente} | ${o.vehiculo}
+                    #${o.id_orden} — ${escapeHtml(o.cliente)} | ${escapeHtml(o.vehiculo)}
                 </option>`;
         });
 
@@ -131,12 +131,12 @@ function renderTabla(facturas) {
                 </span>
             </td>
             <td>${formatearFecha(f.fecha)}</td>
-            <td>${f.cliente}</td>
-            <td style="color:var(--text-secondary)">${f.vehiculo}</td>
+            <td>${escapeHtml(f.cliente)}</td>
+            <td style="color:var(--text-secondary)">${escapeHtml(f.vehiculo)}</td>
             <td>
                 <span class="metodo-badge">
                     <i class="bi bi-${getIconMetodo(f.metodo_pago)}"></i>
-                    ${f.metodo_pago}
+                    ${escapeHtml(f.metodo_pago)}
                 </span>
             </td>
             <td>
@@ -239,10 +239,10 @@ async function verDetalle(id, silent = false) {
                     <div>
                         <div style="font-size:11px;color:var(--text-muted)">CLIENTE</div>
                         <div style="font-weight:600;color:var(--text-primary)">
-                            ${data.cliente || 'Desconocido'}
+                            ${escapeHtml(data.cliente || 'Desconocido')}
                         </div>
                         <div style="font-size:12px;color:var(--text-secondary)">
-                            ${data.telefono || ''}
+                            ${escapeHtml(data.telefono || '')}
                         </div>
                     </div>
                     <div style="text-align:right">
@@ -251,13 +251,13 @@ async function verDetalle(id, silent = false) {
                             ${data.fecha ? formatearFecha(data.fecha) : ''}
                         </div>
                         <span class="metodo-badge mt-1">
-                            ${data.metodo_pago || ''}
+                            ${escapeHtml(data.metodo_pago || '')}
                         </span>
                     </div>
                 </div>
 
                 <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">
-                    <i class="bi bi-car-front"></i> ${data.vehiculo || ''}
+                    <i class="bi bi-car-front"></i> ${escapeHtml(data.vehiculo || '')}
                 </div>
 
                 ${serviciosSeguros.length > 0 ? `
@@ -265,7 +265,7 @@ async function verDetalle(id, silent = false) {
                     <div class="factura-seccion-title">Servicios</div>
                     ${serviciosSeguros.map(s => `
                         <div class="factura-item">
-                            <span>${s.nombre_servicio || 'Servicio'}</span>
+                            <span>${escapeHtml(s.nombre_servicio || 'Servicio')}</span>
                             <span>$${(parseFloat(s.costo) || 0).toLocaleString('es-CO')}</span>
                         </div>`).join('')}
                 </div>` : ''}
@@ -275,7 +275,7 @@ async function verDetalle(id, silent = false) {
                     <div class="factura-seccion-title">Repuestos</div>
                     ${repuestosSeguros.map(r => `
                         <div class="factura-item">
-                            <span>${r.nombre || 'Repuesto'} (${r.marca || ''}) x${r.cantidad || 1}</span>
+                            <span>${escapeHtml(r.nombre || 'Repuesto')} (${escapeHtml(r.marca || '')}) x${escapeHtml(r.cantidad || 1)}</span>
                             <span>$${(parseFloat(r.total) || 0).toLocaleString('es-CO')}</span>
                         </div>`).join('')}
                 </div>` : ''}
@@ -354,8 +354,7 @@ const FACTURA_EMPRESA = {
 // 0 = los precios ya incluyen IVA o no se discrimina. Usa 0.19 para sumar IVA aparte.
 const FACTURA_IVA = 0;
 
-const fEsc    = v => String(v ?? '').replace(/[&<>"']/g,
-                  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fEsc    = escapeHtml;   // alias: la función real vive en global.js
 const fMoneda = n => `$${(parseFloat(n) || 0).toLocaleString('es-CO')}`;
 
 async function descargarFacturaPDF(idFactura) {

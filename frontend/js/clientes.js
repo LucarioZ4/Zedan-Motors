@@ -51,11 +51,11 @@ function renderTabla(clientes) {
             <td>
                 <div class="d-flex align-items-center gap-2">
                     <div class="cliente-avatar">
-                        ${c.nombre[0]}${c.apellido[0]}
+                        ${escapeHtml(c.nombre[0])}${escapeHtml(c.apellido[0])}
                     </div>
                     <div>
                         <div style="font-weight:500;color:var(--text-primary)">
-                            ${c.nombre} ${c.apellido}
+                            ${escapeHtml(c.nombre)} ${escapeHtml(c.apellido)}
                         </div>
                         <div style="font-size:11px;color:var(--text-muted)">
                             ID #${c.id_cliente}
@@ -63,16 +63,16 @@ function renderTabla(clientes) {
                     </div>
                 </div>
             </td>
-            <td>${c.nombre}</td>
+            <td>${escapeHtml(c.nombre)}</td>
             <td>
                 <i class="bi bi-telephone" style="color:var(--primary);margin-right:6px"></i>
-                ${c.telefono}
+                ${escapeHtml(c.telefono)}
             </td>
             <td style="color:var(--text-secondary)">
-                ${c.correo || '<span style="color:#444">—</span>'}
+                ${c.correo ? escapeHtml(c.correo) : '<span style="color:#444">—</span>'}
             </td>
             <td style="color:var(--text-secondary)">
-                ${c.direccion || '<span style="color:#444">—</span>'}
+                ${c.direccion ? escapeHtml(c.direccion) : '<span style="color:#444">—</span>'}
             </td>
             <td>
                 <div class="d-flex gap-2">
@@ -81,7 +81,8 @@ function renderTabla(clientes) {
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn-accion eliminar"
-                            onclick="abrirModalEliminar(${c.id_cliente}, '${c.nombre} ${c.apellido}')">
+                            data-nombre="${escapeHtml(c.nombre)} ${escapeHtml(c.apellido)}"
+                            onclick="abrirModalEliminar(${c.id_cliente}, this.dataset.nombre)">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>

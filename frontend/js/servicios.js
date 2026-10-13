@@ -51,9 +51,9 @@ function renderGrid(servicios) {
                 <div class="servicio-icon">
                     <i class="bi bi-tools"></i>
                 </div>
-                <div class="servicio-nombre">${s.nombre_servicio}</div>
+                <div class="servicio-nombre">${escapeHtml(s.nombre_servicio)}</div>
                 <div class="servicio-desc">
-                    ${s.descripcion || '<span style="color:#444">Sin descripción</span>'}
+                    ${s.descripcion ? escapeHtml(s.descripcion) : '<span style="color:#444">Sin descripción</span>'}
                 </div>
                 <div class="servicio-costo">
                     $${parseFloat(s.costo).toLocaleString('es-CO')}
@@ -64,8 +64,8 @@ function renderGrid(servicios) {
                         <i class="bi bi-pencil"></i> Editar
                     </button>
                     <button class="btn-accion eliminar"
-                            onclick="abrirModalEliminar(${s.id_servicio},
-                            '${s.nombre_servicio}')">
+                            data-nombre="${escapeHtml(s.nombre_servicio)}"
+                            onclick="abrirModalEliminar(${s.id_servicio}, this.dataset.nombre)">
                         <i class="bi bi-trash"></i> Eliminar
                     </button>
                 </div>

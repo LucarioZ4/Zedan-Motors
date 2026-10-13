@@ -4,6 +4,13 @@
 
 const API_URL = 'http://localhost:3000';
 
+// ── Escapar HTML (previene XSS al armar HTML con datos de usuario) ──
+function escapeHtml(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+
 // ── Headers con token ──
 function getHeaders() {
     const token = sessionStorage.getItem('token');
@@ -86,7 +93,10 @@ function mostrarToast(mensaje, tipo = 'success') {
         box-shadow: 0 4px 20px rgba(0,0,0,0.4);
         max-width: 320px;
     `;
-    toast.innerHTML = `<span style="color:${colores[tipo]}">●</span> ${mensaje}`;
+    const punto = document.createElement('span');
+    punto.style.color = colores[tipo];
+    punto.textContent = '●';
+    toast.append(punto, ' ' + mensaje);   // texto plano: nunca se interpreta como HTML
     document.body.appendChild(toast);
 
     setTimeout(() => {

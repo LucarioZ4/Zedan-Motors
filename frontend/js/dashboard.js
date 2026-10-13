@@ -68,15 +68,15 @@ async function cargarCitasHoy() {
             <tr>
                 <td>
                     <span class="time-pill">
-                        <i class="bi bi-clock"></i> ${c.hora}
+                        <i class="bi bi-clock"></i> ${escapeHtml(c.hora)}
                     </span>
                 </td>
                 <td>
-                    <strong style="color:var(--text-primary);font-weight:600">${c.cliente}</strong>
+                    <strong style="color:var(--text-primary);font-weight:600">${escapeHtml(c.cliente)}</strong>
                 </td>
                 <td>
                     <span style="color:var(--text-secondary)">
-                        <i class="bi bi-car-front text-muted me-1"></i>${c.vehiculo}
+                        <i class="bi bi-car-front text-muted me-1"></i>${escapeHtml(c.vehiculo)}
                     </span>
                 </td>
                 <td>${getBadgeEstado(c.estado)}</td>
@@ -97,7 +97,7 @@ function getBadgeEstado(estado) {
         'Cancelada':  'badge-cancelada',
     };
     const clase = clases[estado] || 'badge-pendiente';
-    return `<span class="badge-custom ${clase}">${estado}</span>`;
+    return `<span class="badge-custom ${clase}">${escapeHtml(estado)}</span>`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

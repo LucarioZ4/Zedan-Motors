@@ -18,7 +18,7 @@ async function cargarClientes() {
         sel.innerHTML = '<option value="">Seleccionar cliente...</option>';
         data.forEach(c => {
             sel.innerHTML +=
-                `<option value="${c.id_cliente}">${c.nombre} ${c.apellido}</option>`;
+                `<option value="${c.id_cliente}">${escapeHtml(c.nombre)} ${escapeHtml(c.apellido)}</option>`;
         });
     } catch (err) {
         mostrarToast('Error al cargar clientes', 'error');
@@ -50,9 +50,9 @@ async function cargarVehiculosCliente() {
         data.forEach(v => {
             sel.innerHTML +=
                 `<option value="${v.id_vehiculo}"
-                         data-nombre="${v.marca} ${v.modelo}"
-                         data-placa="${v.placa}">
-                    ${v.placa} — ${v.marca} ${v.modelo}
+                         data-nombre="${escapeHtml(v.marca)} ${escapeHtml(v.modelo)}"
+                         data-placa="${escapeHtml(v.placa)}">
+                    ${escapeHtml(v.placa)} — ${escapeHtml(v.marca)} ${escapeHtml(v.modelo)}
                 </option>`;
         });
     } catch (err) {
@@ -161,18 +161,18 @@ function renderTimeline(eventos) {
             <div class="timeline-evento">
                 <div class="timeline-evento-left">
                     <div class="timeline-icono"
-                         style="background:${ev.color}20;
-                                color:${ev.color};
-                                border-color:${ev.color}60">
-                        <i class="bi ${ev.icono}"></i>
+                         style="background:${escapeHtml(ev.color)}20;
+                                color:${escapeHtml(ev.color)};
+                                border-color:${escapeHtml(ev.color)}60">
+                        <i class="bi ${escapeHtml(ev.icono)}"></i>
                     </div>
                     ${!esUltimo ? '<div class="timeline-linea"></div>' : ''}
                 </div>
                 <div class="timeline-card">
                     <div class="timeline-card-header">
                         <span class="timeline-badge"
-                              style="background:${ev.color}20;color:${ev.color}">
-                            ${ev.tipo_evento.toUpperCase()}
+                              style="background:${escapeHtml(ev.color)}20;color:${escapeHtml(ev.color)}">
+                            ${escapeHtml(ev.tipo_evento.toUpperCase())}
                         </span>
                         <span class="timeline-fecha">
                             ${fecha.toLocaleDateString('es-ES', {
@@ -186,11 +186,11 @@ function renderTimeline(eventos) {
                             })}
                         </span>
                     </div>
-                    <div class="timeline-desc">${ev.descripcion}</div>
+                    <div class="timeline-desc">${escapeHtml(ev.descripcion)}</div>
                     ${ev.empleado ? `
                     <div class="timeline-empleado">
                         <i class="bi bi-person"></i>
-                        ${ev.empleado}
+                        ${escapeHtml(ev.empleado)}
                     </div>` : ''}
                 </div>
             </div>`;
