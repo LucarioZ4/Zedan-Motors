@@ -25,8 +25,7 @@ const getAll = async (req, res) => {
         `);
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        res.status(500).json({ error: err.message });
     }
 };
 
@@ -58,14 +57,18 @@ const getById = async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        res.status(500).json({ error: err.message });
     }
 };
 
 const create = async (req, res) => {
     try {
         const { fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado } = req.body;
+
+        if (!fecha_inicio || !id_cita || !id_empleado)
+            return res.status(400).json({
+                error: 'Fecha inicio, cita y empleado son obligatorios'
+            });
 
         const result = await pool.query(`
             INSERT INTO orden_trabajo
@@ -76,8 +79,7 @@ const create = async (req, res) => {
 
         res.status(201).json(result.rows[0]);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        res.status(500).json({ error: err.message });
     }
 };
 
@@ -102,8 +104,7 @@ const update = async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        res.status(500).json({ error: err.message });
     }
 };
 
@@ -118,8 +119,7 @@ const remove = async (req, res) => {
 
         res.json({ mensaje: 'Orden eliminada correctamente' });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        res.status(500).json({ error: err.message });
     }
 };
 
@@ -134,14 +134,15 @@ const getServicios = async (req, res) => {
         `, [req.params.id]);
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        res.status(500).json({ error: err.message });
     }
 };
 
 const addServicio = async (req, res) => {
     try {
         const { id_servicio } = req.body;
+        if (!id_servicio)
+            return res.status(400).json({ error: 'Seleccione un servicio' });
 
         await pool.query(`
             INSERT INTO orden_servicio (id_orden, id_servicio)
@@ -151,8 +152,7 @@ const addServicio = async (req, res) => {
 
         res.status(201).json({ mensaje: 'Servicio agregado' });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        res.status(500).json({ error: err.message });
     }
 };
 
@@ -164,8 +164,7 @@ const removeServicio = async (req, res) => {
         );
         res.json({ mensaje: 'Servicio eliminado' });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        res.status(500).json({ error: err.message });
     }
 };
 
@@ -182,39 +181,134 @@ const getRepuestos = async (req, res) => {
         `, [req.params.id]);
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        res.status(500).json({ error: err.message });
     }
 };
 
-const addRepuesto = async (req, res) => {
-    try {
-        const { id_repuesto, cantidad } = req.body;
+// Error de negocio con código HTTP (permite hacer ROLLBACK y responder en un solo catch)
+class ErrorNegocio extends Error {
+    constructor(status, message) {
+        super(message);
+        this.status = status;
+    }
+}
 
-        await pool.query(`
+const addRepuesto = async (req, res) => {
+    const idOrden    = Number(req.params.id);
+    const idRepuesto = Number(req.body.id_repuesto);
+    const cantidad   = Number(req.body.cantidad);
+
+    if (!Number.isInteger(idRepuesto) || idRepuesto <= 0 ||
+        !Number.isInteger(cantidad)   || cantidad   <= 0)
+        return res.status(400).json({
+            error: 'Repuesto y cantidad son obligatorios (la cantidad debe ser un entero mayor a cero)'
+        });
+
+    if (!Number.isInteger(idOrden))
+        return res.status(404).json({ error: 'Orden no encontrada' });
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        const orden = await client.query(
+            'SELECT 1 FROM orden_trabajo WHERE id_orden = $1', [idOrden]
+        );
+        if (orden.rows.length === 0)
+            throw new ErrorNegocio(404, 'Orden no encontrada');
+
+        // FOR UPDATE bloquea la fila del repuesto hasta el COMMIT:
+        // dos usuarios no pueden descontar el mismo stock al mismo tiempo.
+        const rep = await client.query(
+            'SELECT nombre, stock FROM inventario WHERE id_repuesto = $1 FOR UPDATE',
+            [idRepuesto]
+        );
+        if (rep.rows.length === 0)
+            throw new ErrorNegocio(404, 'Repuesto no encontrado');
+
+        // Si el repuesto ya estaba en la orden, solo se descuenta la diferencia
+        // (ej.: tenía 2 y ahora pide 5 → descuenta 3; si pide 1 → devuelve 1).
+        const previo = await client.query(
+            'SELECT cantidad FROM orden_inventario WHERE id_orden = $1 AND id_repuesto = $2',
+            [idOrden, idRepuesto]
+        );
+        const cantidadPrevia = previo.rows.length ? previo.rows[0].cantidad : 0;
+        const diferencia     = cantidad - cantidadPrevia;
+        const { nombre, stock } = rep.rows[0];
+
+        if (diferencia > stock)
+            throw new ErrorNegocio(409,
+                `Stock insuficiente para "${nombre}": máximo permitido para esta orden ` +
+                `${stock + cantidadPrevia}, solicitado ${cantidad}`);
+
+        if (diferencia !== 0)
+            await client.query(
+                'UPDATE inventario SET stock = stock - $1 WHERE id_repuesto = $2',
+                [diferencia, idRepuesto]
+            );
+
+        await client.query(`
             INSERT INTO orden_inventario (id_orden, id_repuesto, cantidad)
             VALUES ($1, $2, $3)
             ON CONFLICT (id_orden, id_repuesto)
-            DO UPDATE SET cantidad = $3
-        `, [req.params.id, id_repuesto, cantidad]);
+            DO UPDATE SET cantidad = EXCLUDED.cantidad
+        `, [idOrden, idRepuesto, cantidad]);
 
-        res.status(201).json({ mensaje: 'Repuesto agregado' });
+        await client.query('COMMIT');
+
+        res.status(201).json({
+            mensaje: 'Repuesto agregado',
+            stock_restante: stock - diferencia
+        });
+
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        await client.query('ROLLBACK').catch(() => {});
+        if (err instanceof ErrorNegocio)
+            return res.status(err.status).json({ error: err.message });
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
     }
 };
 
 const removeRepuesto = async (req, res) => {
+    const idOrden    = Number(req.params.id);
+    const idRepuesto = Number(req.params.rid);
+
+    if (!Number.isInteger(idOrden) || !Number.isInteger(idRepuesto))
+        return res.status(404).json({ error: 'Repuesto no encontrado en la orden' });
+
+    const client = await pool.connect();
     try {
-        await pool.query(
-            'DELETE FROM orden_inventario WHERE id_orden=$1 AND id_repuesto=$2',
-            [req.params.id, req.params.rid]
+        await client.query('BEGIN');
+
+        // Mismo orden de bloqueo que addRepuesto (inventario → orden_inventario) para evitar deadlocks
+        await client.query(
+            'SELECT 1 FROM inventario WHERE id_repuesto = $1 FOR UPDATE', [idRepuesto]
         );
+
+        const borrado = await client.query(
+            `DELETE FROM orden_inventario
+             WHERE id_orden = $1 AND id_repuesto = $2
+             RETURNING cantidad`,
+            [idOrden, idRepuesto]
+        );
+
+        // Al quitar el repuesto de la orden, las unidades vuelven al inventario
+        if (borrado.rows.length > 0)
+            await client.query(
+                'UPDATE inventario SET stock = stock + $1 WHERE id_repuesto = $2',
+                [borrado.rows[0].cantidad, idRepuesto]
+            );
+
+        await client.query('COMMIT');
         res.json({ mensaje: 'Repuesto eliminado' });
+
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        await client.query('ROLLBACK').catch(() => {});
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
     }
 };
 
