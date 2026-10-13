@@ -83,14 +83,14 @@ function renderTabla(repuestos) {
         <tr>
             <td>
                 <div style="font-weight:500;color:var(--text-primary)">
-                    ${r.nombre}
+                    ${escapeHtml(r.nombre)}
                 </div>
                 <div style="font-size:11px;color:var(--text-muted)">
                     ID #${r.id_repuesto}
                 </div>
             </td>
             <td style="color:var(--text-secondary)">
-                ${r.marca || '—'}
+                ${escapeHtml(r.marca || '—')}
             </td>
             <td>
                 <span style="color:var(--primary);font-weight:600">
@@ -119,7 +119,8 @@ function renderTabla(repuestos) {
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn-accion eliminar"
-                            onclick="abrirModalEliminar(${r.id_repuesto}, '${r.nombre}')">
+                            data-nombre="${escapeHtml(r.nombre)}"
+                            onclick="abrirModalEliminar(${r.id_repuesto}, this.dataset.nombre)">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -396,10 +397,10 @@ function renderPreviewRepuestos(items) {
     tbody.innerHTML = items.map((it, idx) => `
         <tr style="${it.valido ? '' : 'background:rgba(220,38,38,0.06)'}">
             <td>${idx + 1}</td>
-            <td><strong>${it.nombre || '<span class="text-danger">Falta nombre</span>'}</strong></td>
-            <td>${it.marca || '<span class="text-muted">—</span>'}</td>
+            <td><strong>${it.nombre ? escapeHtml(it.nombre) : '<span class="text-danger">Falta nombre</span>'}</strong></td>
+            <td>${it.marca ? escapeHtml(it.marca) : '<span class="text-muted">—</span>'}</td>
             <td>${it.precio > 0 ? '$' + it.precio.toFixed(2) : '<span class="text-danger">Inválido</span>'}</td>
-            <td>${it.stock}</td>
+            <td>${escapeHtml(it.stock)}</td>
             <td>
                 ${it.valido 
                     ? '<span class="badge-custom badge-completada"><i class="bi bi-check"></i> Válido</span>' 

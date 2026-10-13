@@ -51,7 +51,7 @@ async function cargarCargos() {
         sel.innerHTML = '<option value="">Seleccionar cargo...</option>';
         cargos.forEach(c => {
             sel.innerHTML +=
-                `<option value="${c.id_cargo}">${c.nombre_cargo}</option>`;
+                `<option value="${c.id_cargo}">${escapeHtml(c.nombre_cargo)}</option>`;
         });
     } catch (err) {
         console.error('Error cargando cargos:', err);
@@ -77,11 +77,11 @@ function renderTabla(empleados) {
             <td>
                 <div class="d-flex align-items-center gap-2">
                     <div class="empleado-avatar">
-                        ${e.nombre[0]}${e.apellido[0]}
+                        ${escapeHtml(e.nombre[0])}${escapeHtml(e.apellido[0])}
                     </div>
                     <div>
                         <div style="font-weight:500;color:var(--text-primary)">
-                            ${e.nombre} ${e.apellido}
+                            ${escapeHtml(e.nombre)} ${escapeHtml(e.apellido)}
                         </div>
                         <div style="font-size:11px;color:var(--text-muted)">
                             ID #${e.id_empleado}
@@ -92,13 +92,13 @@ function renderTabla(empleados) {
             <td>
                 <i class="bi bi-telephone"
                    style="color:var(--primary);margin-right:6px"></i>
-                ${e.telefono}
+                ${escapeHtml(e.telefono)}
             </td>
             <td style="color:var(--text-secondary)">
-                ${e.correo || '<span style="color:#444">—</span>'}
+                ${e.correo ? escapeHtml(e.correo) : '<span style="color:#444">—</span>'}
             </td>
             <td>
-                <span class="cargo-badge">${e.cargo || '—'}</span>
+                <span class="cargo-badge">${escapeHtml(e.cargo || '—')}</span>
             </td>
             <td>
                 <div class="d-flex gap-2">
@@ -107,8 +107,8 @@ function renderTabla(empleados) {
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn-accion eliminar"
-                            onclick="abrirModalEliminar(${e.id_empleado},
-                            '${e.nombre} ${e.apellido}')">
+                            data-nombre="${escapeHtml(e.nombre)} ${escapeHtml(e.apellido)}"
+                            onclick="abrirModalEliminar(${e.id_empleado}, this.dataset.nombre)">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>

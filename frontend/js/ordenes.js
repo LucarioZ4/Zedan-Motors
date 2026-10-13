@@ -37,7 +37,7 @@ async function cargarCombos() {
         citas.filter(c => c.id_estado <= 2).forEach(c => {
             sel.innerHTML +=
                 `<option value="${c.id_cita}">
-                    #${c.id_cita} — ${c.cliente} | ${formatearFecha(c.fecha)} ${c.hora}
+                    #${c.id_cita} — ${escapeHtml(c.cliente)} | ${formatearFecha(c.fecha)} ${escapeHtml(c.hora)}
                 </option>`;
         });
 
@@ -48,7 +48,7 @@ async function cargarCombos() {
         selEmp.innerHTML = '<option value="">Seleccionar empleado...</option>';
         emps.forEach(e => {
             selEmp.innerHTML +=
-                `<option value="${e.id_empleado}">${e.nombre_completo} — ${e.cargo}</option>`;
+                `<option value="${e.id_empleado}">${escapeHtml(e.nombre_completo)} — ${escapeHtml(e.cargo)}</option>`;
         });
 
         // Servicios
@@ -59,25 +59,30 @@ async function cargarCombos() {
         srvs.forEach(s => {
             selSrv.innerHTML +=
                 `<option value="${s.id_servicio}" data-costo="${s.costo}">
-                    ${s.nombre_servicio} — $${s.costo}
+                    ${escapeHtml(s.nombre_servicio)} — $${s.costo}
                 </option>`;
         });
 
         // Repuestos
-        const resRep  = await fetch(`${API_URL}/api/inventario`, { headers: getHeaders() });
-        const reps    = await resRep.json();
-        const selRep  = document.getElementById('selRepuesto');
-        selRep.innerHTML = '<option value="">Seleccionar repuesto...</option>';
-        reps.forEach(r => {
-            selRep.innerHTML +=
-                `<option value="${r.id_repuesto}" data-precio="${r.precio}">
-                    ${r.nombre} (${r.marca}) — Stock: ${r.stock}
-                </option>`;
-        });
+        await cargarComboRepuestos();
 
     } catch (err) {
         console.error('Error cargando combos:', err);
     }
+}
+
+// ── Combo de repuestos (se vuelve a llamar al agregar/quitar para refrescar el stock) ──
+async function cargarComboRepuestos() {
+    const resRep = await fetch(`${API_URL}/api/inventario`, { headers: getHeaders() });
+    const reps   = await resRep.json();
+    const selRep = document.getElementById('selRepuesto');
+    selRep.innerHTML = '<option value="">Seleccionar repuesto...</option>';
+    reps.forEach(r => {
+        selRep.innerHTML +=
+            `<option value="${r.id_repuesto}" data-precio="${r.precio}">
+                ${escapeHtml(r.nombre)} (${escapeHtml(r.marca)}) — Stock: ${r.stock}
+            </option>`;
+    });
 }
 
 // ── Renderizar tabla ──
@@ -99,9 +104,9 @@ function renderTabla(ordenes) {
             <td>
                 <span style="color:var(--primary);font-weight:700">#${o.id_orden}</span>
             </td>
-            <td>${o.cliente}</td>
-            <td style="color:var(--text-secondary)">${o.vehiculo}</td>
-            <td>${o.empleado || '—'}</td>
+            <td>${escapeHtml(o.cliente)}</td>
+            <td style="color:var(--text-secondary)">${escapeHtml(o.vehiculo)}</td>
+            <td>${escapeHtml(o.empleado || '—')}</td>
             <td>${formatearFecha(o.fecha_inicio)}</td>
             <td>${getBadgeEstado(o.estado)}</td>
             <td>
@@ -130,7 +135,7 @@ function getBadgeEstado(estado) {
         'Completada': 'badge-completada',
         'Cancelada':  'badge-cancelada',
     };
-    return `<span class="badge-custom ${clases[estado] || 'badge-pendiente'}">${estado || '—'}</span>`;
+    return `<span class="badge-custom ${clases[estado] || 'badge-pendiente'}">${escapeHtml(estado || '—')}</span>`;
 }
 
 // ── Modal nuevo ──
@@ -185,7 +190,7 @@ async function cargarDetalleOrden(id) {
             ? '<p style="color:#555;font-size:12px;padding:8px">Sin servicios</p>'
             : servicios.map(s => `
                 <div class="detalle-item">
-                    <span>${s.nombre_servicio}</span>
+                    <span>${escapeHtml(s.nombre_servicio)}</span>
                     <div class="d-flex align-items-center gap-2">
                         <span class="precio">$${s.costo}</span>
                         <button class="btn-quitar"
@@ -201,7 +206,7 @@ async function cargarDetalleOrden(id) {
             ? '<p style="color:#555;font-size:12px;padding:8px">Sin repuestos</p>'
             : repuestos.map(r => `
                 <div class="detalle-item">
-                    <span>${r.nombre} x${r.cantidad}</span>
+                    <span>${escapeHtml(r.nombre)} x${escapeHtml(r.cantidad)}</span>
                     <div class="d-flex align-items-center gap-2">
                         <span class="precio">$${r.total}</span>
                         <button class="btn-quitar"
@@ -313,6 +318,7 @@ async function agregarRepuesto() {
         sel.value = '';
         document.getElementById('cantRepuesto').value = 1;
         await cargarDetalleOrden(ordenIdEditar);
+        await cargarComboRepuestos();
         mostrarToast('Repuesto agregado', 'success');
     } catch (err) {
         mostrarToast('Error: ' + err.message, 'error');
@@ -322,11 +328,13 @@ async function agregarRepuesto() {
 // ── Quitar repuesto ──
 async function quitarRepuesto(idRepuesto) {
     try {
-        await fetch(`${API_URL}/api/ordenes/${ordenIdEditar}/repuestos/${idRepuesto}`, {
+        const res = await fetch(`${API_URL}/api/ordenes/${ordenIdEditar}/repuestos/${idRepuesto}`, {
             method:  'DELETE',
             headers: getHeaders()
         });
+        if (!res.ok) throw new Error((await res.json()).error);
         await cargarDetalleOrden(ordenIdEditar);
+        await cargarComboRepuestos();
         mostrarToast('Repuesto eliminado', 'success');
     } catch (err) {
         mostrarToast('Error: ' + err.message, 'error');

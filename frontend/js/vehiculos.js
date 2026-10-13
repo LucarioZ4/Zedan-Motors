@@ -49,7 +49,7 @@ async function cargarClientes() {
         data.forEach(c => {
             select.innerHTML += `
                 <option value="${c.id_cliente}">
-                    ${c.nombre} ${c.apellido}
+                    ${escapeHtml(c.nombre)} ${escapeHtml(c.apellido)}
                 </option>`;
         });
 
@@ -59,7 +59,7 @@ async function cargarClientes() {
             data.forEach(c => {
                 selectDefecto.innerHTML += `
                     <option value="${c.id_cliente}">
-                        ${c.nombre} ${c.apellido} (ID #${c.id_cliente})
+                        ${escapeHtml(c.nombre)} ${escapeHtml(c.apellido)} (ID #${c.id_cliente})
                     </option>`;
             });
         }
@@ -92,7 +92,7 @@ function renderTabla(vehiculos) {
                     </div>
                     <div>
                         <div style="font-weight:500;color:var(--text-primary)">
-                            ${v.marca} ${v.modelo}
+                            ${escapeHtml(v.marca)} ${escapeHtml(v.modelo)}
                         </div>
                         <div style="font-size:11px;color:var(--text-muted)">
                             ID #${v.id_vehiculo}
@@ -104,17 +104,17 @@ function renderTabla(vehiculos) {
                 <span style="background:rgba(232,104,26,0.1);color:var(--primary);
                              padding:3px 10px;border-radius:6px;font-weight:600;
                              font-size:12px">
-                    ${v.placa}
+                    ${escapeHtml(v.placa)}
                 </span>
             </td>
-            <td style="color:var(--text-secondary)">${v.anio || '—'}</td>
+            <td style="color:var(--text-secondary)">${escapeHtml(v.anio || '—')}</td>
             <td>
                 <span class="color-dot"></span>
-                ${v.color || '—'}
+                ${escapeHtml(v.color || '—')}
             </td>
             <td>
                 <div style="font-size:13px;color:var(--text-primary)">
-                    ${v.cliente}
+                    ${escapeHtml(v.cliente)}
                 </div>
             </td>
             <td>
@@ -124,8 +124,8 @@ function renderTabla(vehiculos) {
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn-accion eliminar"
-                            onclick="abrirModalEliminar(${v.id_vehiculo},
-                            '${v.marca} ${v.modelo} - ${v.placa}')">
+                            data-nombre="${escapeHtml(v.marca)} ${escapeHtml(v.modelo)} - ${escapeHtml(v.placa)}"
+                            onclick="abrirModalEliminar(${v.id_vehiculo}, this.dataset.nombre)">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -443,14 +443,14 @@ function renderPreviewVehiculos(items) {
     tbody.innerHTML = items.map((it, idx) => `
         <tr style="${it.valido ? '' : 'background:rgba(220,38,38,0.06)'}">
             <td>${idx + 1}</td>
-            <td><strong>${it.placa || '<span class="text-danger">Falta placa</span>'}</strong></td>
-            <td>${it.marca || '<span class="text-danger">Falta marca</span>'}</td>
-            <td>${it.modelo || '<span class="text-danger">Falta modelo</span>'}</td>
-            <td>${it.anio || '—'}</td>
-            <td>${it.color || '—'}</td>
+            <td><strong>${it.placa ? escapeHtml(it.placa) : '<span class="text-danger">Falta placa</span>'}</strong></td>
+            <td>${it.marca ? escapeHtml(it.marca) : '<span class="text-danger">Falta marca</span>'}</td>
+            <td>${it.modelo ? escapeHtml(it.modelo) : '<span class="text-danger">Falta modelo</span>'}</td>
+            <td>${escapeHtml(it.anio || '—')}</td>
+            <td>${escapeHtml(it.color || '—')}</td>
             <td>
                 <span class="${it.id_cliente ? 'text-primary' : 'text-danger'}">
-                    ${it.clienteNombre}
+                    ${escapeHtml(it.clienteNombre)}
                 </span>
             </td>
             <td>
