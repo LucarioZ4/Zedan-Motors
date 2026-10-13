@@ -6,18 +6,37 @@ const cors    = require('cors');
 const helmet  = require('helmet');
 const morgan  = require('morgan');
 
-const app  = express();
-const port = process.env.PORT || 3000;
+// Se carga primero: si JWT_SECRET falta o es débil, el servidor no arranca.
+const { port, corsOrigins } = require('./config/env');
+const apiLimiter = require('./middleware/apiLimiter');
+
+const app = express();
+
+// Si despliegas detrás de un proxy (Nginx, Render, Railway...) descomenta esta línea,
+// para que el rate limiting vea la IP real del cliente y no la del proxy:
+// app.set('trust proxy', 1);
 
 // ── Middleware ──
 app.use(helmet({
     contentSecurityPolicy: false,
 }));
-app.use(cors());
-app.use(morgan('dev'));
+app.use(cors({
+    origin(origin, callback) {
+        // Sin header Origin = mismo origen, Postman o curl: se permite.
+        // Origen no listado: se responde sin cabeceras CORS y el navegador lo bloquea.
+        if (!origin || corsOrigins.includes(origin)) return callback(null, true);
+        return callback(null, false);
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.use(morgan('dev', { skip: () => process.env.NODE_ENV === 'test' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
+// ── Rate limiting general de la API ──
+app.use('/api', apiLimiter);
 
 // ── Rutas ──
 app.use('/api/auth',      require('./modules/auth/auth.routes'));
@@ -63,9 +82,12 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-app.listen(port, () => {
-    console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
-    console.log(`📦 Base de datos: ${process.env.DB_NAME}`);
-});
+// Solo escucha si se ejecuta directamente (node src/app.js); los tests importan `app` sin abrir puerto.
+if (require.main === module) {
+    app.listen(port, () => {
+        console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
+        console.log(`📦 Base de datos: ${process.env.DB_NAME}`);
+    });
+}
 
 module.exports = app;
