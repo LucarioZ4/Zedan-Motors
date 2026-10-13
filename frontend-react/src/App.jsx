@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Clientes from './pages/Clientes/Clientes';
 import Vehiculos from './pages/Vehiculos/Vehiculos';
 import Empleados from './pages/Empleados/Empleados';
+import Servicios from './pages/Servicios/Servicios';
 
 function ModulePlaceholder({ title }) {
   return (
@@ -43,7 +44,7 @@ export default function App() {
           <Route path="clientes" element={<Clientes />} />
           <Route path="vehiculos" element={<Vehiculos />} />
           <Route path="empleados" element={<Empleados />} />
-          <Route path="servicios" element={<ModulePlaceholder title="Servicios" />} />
+          <Route path="servicios" element={<Servicios />} />
           <Route path="citas" element={<ModulePlaceholder title="Citas" />} />
           <Route path="ordenes" element={<ModulePlaceholder title="Órdenes" />} />
           <Route path="inventario" element={<ModulePlaceholder title="Inventario" />} />
