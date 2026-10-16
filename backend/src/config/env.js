@@ -14,7 +14,7 @@ if (!jwtSecret || jwtSecret.trim().length < JWT_SECRET_MIN_LENGTH) {
 
 // Orígenes permitidos por CORS, separados por coma.
 // Como Express ya sirve el frontend, el origen normal es el mismo servidor.
-const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000')
+const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173')
     .split(',')
     .map(o => o.trim())
     .filter(Boolean);
