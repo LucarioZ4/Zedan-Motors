@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../../services/api';
+import ZedanLogo from '../../components/common/ZedanLogo';
 import './Login.css';
 
 export default function Login() {
@@ -58,15 +59,9 @@ export default function Login() {
       {/* ═══════════════════════════════════════ */}
       <div className="panel-login">
 
-        {/* Logo + Marca */}
-        <div className="brand-wrap">
-          <div className="logo-img-wrap">
-            <img src="/assets/icons/Logo.png" alt="Zedan Motor's" className="brand-logo" />
-          </div>
-          <div>
-            <div className="brand-name">Zedan Motor's</div>
-            <div className="brand-sub">Taller Automotriz</div>
-          </div>
+        {/* Logo oficial ensamblado */}
+        <div style={{ marginBottom: '36px', display: 'flex', justifyContent: 'flex-start' }}>
+          <ZedanLogo variant="login-header" width={220} />
         </div>
 
         {/* Título */}
@@ -170,15 +165,14 @@ export default function Login() {
         {/* Contenido central */}
         <div className="deco-content">
 
-          {/* Logo grande */}
-          <div className="deco-logo-wrap">
-            <img src="/assets/icons/Logo.png" alt="Zedan Motor's" className="deco-logo" />
+          {/* Logo insignia grande */}
+          <div style={{ marginBottom: '28px', display: 'flex', justifyContent: 'center' }}>
+            <ZedanLogo variant="hero" width={420} />
           </div>
 
-          {/* Nombre */}
-          <div className="deco-brand">Zedan Motor's</div>
-          <div className="deco-divider"></div>
-          <div className="deco-tagline">Taller Automotriz de Alto Rendimiento</div>
+          <div className="deco-tagline" style={{ fontSize: '15px', color: '#cbd5e1', marginBottom: '28px' }}>
+            Taller Automotriz de Alto Rendimiento
+          </div>
 
           {/* Features */}
           <div className="features-list">

@@ -1,0 +1,114 @@
+/* ═══════════════════════════════════════════════════════════
+   ZEDAN LOGO — Ensamble oficial de las 3 partes gráficas
+   ═══════════════════════════════════════════════════════════ */
+
+.zedan-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
+}
+
+/* 1. Silueta del carro (Top) */
+.zedan-logo-car-wrap {
+  width: 62.9%; /* Proporción matemática exacta (1040 / 1654) */
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  /* El auto reposa sobre el borde superior del badge */
+  margin-bottom: -3.6%;
+  z-index: 2;
+  position: relative;
+}
+
+.zedan-logo-car {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* 2. Badge ZEDAN MOTORS (Centro) */
+.zedan-logo-badge-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+  position: relative;
+}
+
+.zedan-logo-badge {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* 3. Taller Automotriz (Bottom) */
+.zedan-logo-subtitle-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1.8%;
+  z-index: 1;
+}
+
+.zedan-logo-subtitle {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Variantes de uso
+   ═══════════════════════════════════════════════════════════ */
+
+/* Variante para el Sidebar */
+.zedan-logo-sidebar {
+  max-width: 205px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.zedan-logo-sidebar:hover {
+  transform: translateY(-1px);
+  filter: drop-shadow(0 6px 14px rgba(37, 99, 235, 0.12));
+}
+
+/* Variante para cabecera de Login */
+.zedan-logo-login-header {
+  max-width: 220px;
+}
+
+/* Variante Hero para fondo oscuro / decorativo */
+.zedan-logo-hero {
+  max-width: 440px;
+  filter: drop-shadow(0 12px 28px rgba(30, 58, 138, 0.25));
+  background: rgba(255, 255, 255, 0.95);
+  padding: 24px 28px 20px;
+  border-radius: 20px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12),
+              0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  backdrop-filter: blur(10px);
+}
+
+.zedan-logo-hero:hover {
+  transform: translateY(-2px);
+  filter: drop-shadow(0 16px 36px rgba(30, 58, 138, 0.3));
+}
+
+/* Variante compacta sin subtítulo */
+.zedan-logo-compact .zedan-logo-car-wrap {
+  margin-bottom: -3.8%;
+}
