@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import ZedanLogo from '../common/ZedanLogo';
 import './Sidebar.css';
 
 const navItems = [
@@ -36,14 +37,8 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo">
-        <div className="logo-image-container">
-          <img src="/assets/icons/Logo.png" alt="Zedan Motors" />
-        </div>
-        <div>
-          <div className="logo-text">Zedan Motor's</div>
-          <div className="logo-sub">Taller Automotriz</div>
-        </div>
+      <div className="sidebar-logo" onClick={() => navigate('/dashboard')} title="Ir al Dashboard">
+        <ZedanLogo variant="sidebar" />
       </div>
 
       <nav className="sidebar-nav">
