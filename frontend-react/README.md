@@ -1,19 +1,41 @@
-# React + Vite
+# Zedan Motors - Frontend (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Cliente web (SPA) para el sistema de gestión del taller mecánico **Zedan Motors**, desarrollado con React 19 y Vite.
 
-Currently, two official plugins are available:
+## Tecnologías
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Framework:** [React 19](https://react.dev/)
+- **Bundler / Servidor dev:** [Vite](https://vite.dev/)
+- **Enrutamiento:** [React Router v7](https://reactrouter.com/)
+- **Estilos:** CSS modular y temas por componentes
+- **Compilador:** React Compiler integrado con preset de Babel
 
-## React Compiler
+## Módulos implementados
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+1. **Autenticación y Sesión:** `/login` (manejo de tokens JWT y expiración)
+2. **Dashboard:** `/dashboard` (indicadores y métricas operativas)
+3. **Clientes:** `/clientes` (gestión de clientes)
+4. **Vehículos:** `/vehiculos` (gestión vehicular y asociación con clientes)
+5. **Citas:** `/citas` (calendario y agendamiento)
+6. **Órdenes de Trabajo:** `/ordenes` (servicios, repuestos, diagnósticos)
+7. **Empleados:** `/empleados` (equipo de trabajo y cargos)
+8. **Servicios:** `/servicios` (catálogo de servicios y precios)
+9. **Inventario:** `/inventario` (control de repuestos, stock e importación CSV)
+10. **Facturación:** `/facturacion` (emisión de facturas y generación de comprobantes PDF)
+11. **Historial Vehicular:** `/historial` (timeline de eventos por placa)
 
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
+## Instalación y ejecución
 
-## Expanding the ESLint configuration
+```bash
+# 1. Instalar dependencias
+npm install
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# 2. Iniciar en modo desarrollo
+npm run dev
+
+# 3. Construir para producción
+npm run build
+```
+
+La aplicación se ejecutará por defecto en `http://localhost:5173`.
+Requiere que el backend esté ejecutándose en `http://localhost:3000`.

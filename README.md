@@ -7,7 +7,8 @@ Sistema de gestión para taller mecánico: clientes, vehículos, citas, órdenes
 - **Backend:** Node.js + Express
 - **Base de datos:** PostgreSQL (con extensión `pgcrypto`)
 - **Autenticación:** JWT + bcrypt
-- **Frontend:** HTML, CSS y JavaScript (sin framework), servido directamente por Express
+- **Frontend (React - SPA):** React 19 + Vite + React Router v7
+- **Frontend (Legacy / Vanilla):** HTML, CSS y JavaScript (sin framework), servido directamente por Express
 - **Automatización y Agente IA:** n8n + LangChain + DeepSeek
 - **Integración WhatsApp:** OpenWA (WA-Automate)
 - **Contenedores:** Docker & Docker Compose
@@ -19,26 +20,35 @@ Zedan-Motors/
 ├── backend/
 │   ├── src/
 │   │   ├── config/        # Configuración de entorno y conexión a la BD
-│   │   ├── middleware/     # Middleware de autenticación (JWT)
-│   │   ├── modules/         # Un módulo por entidad (rutas + controlador)
-│   │   └── app.js           # Punto de entrada de la API
+│   │   ├── middleware/    # Middleware de autenticación (JWT) y rate limiting
+│   │   ├── modules/       # Un módulo por entidad (rutas + controlador)
+│   │   └── app.js         # Punto de entrada de la API
 │   ├── Dockerfile
-│   ├── .template.env       # Plantilla de variables de entorno
+│   ├── .template.env      # Plantilla de variables de entorno
 │   └── package.json
 ├── database/
-│   ├── schema.sql           # Estructura de la base de datos (tablas, funciones, catálogos)
-│   └── seed.sql              # Datos de prueba (solo para desarrollo local)
-├── frontend/
+│   ├── schema.sql         # Estructura de la base de datos (tablas, funciones, catálogos)
+│   └── seed.sql           # Datos de prueba (solo para desarrollo local)
+├── frontend-react/        # SPA moderna en React + Vite
+│   ├── src/
+│   │   ├── components/    # Layout (Sidebar, Navbar) y componentes protegidos
+│   │   ├── pages/         # Vistas de los 11 módulos del sistema
+│   │   ├── services/      # Cliente HTTP y llamadas a la API REST
+│   │   ├── App.jsx        # Enrutador principal y rutas protegidas
+│   │   └── main.jsx       # Punto de entrada de React
+│   ├── package.json
+│   └── vite.config.js
+├── frontend/              # Frontend clásico (HTML/CSS/JS vanilla)
 │   ├── css/
 │   ├── js/
 │   └── pages/
 ├── n8n/
-│   ├── README.md            # Guía detallada del agente IA y OpenWA
+│   ├── README.md          # Guía detallada del agente IA y OpenWA
 │   └── workflow_zedan_motors.json # Flujo importable de n8n
 ├── docs/
 │   └── documentacion_proyecto_ZedanMotors.md
-├── docker-compose.yml       # Orquestación de PostgreSQL, Backend, n8n y OpenWA
-├── .env.example             # Variables de entorno globales para Docker
+├── docker-compose.yml     # Orquestación de PostgreSQL, Backend, n8n y OpenWA
+├── .env.example           # Variables de entorno globales para Docker
 └── README.md
 ```
 
@@ -59,6 +69,24 @@ Zedan-Motors/
 | Inventario | `/api/inventario` | Repuestos y stock |
 | Facturación | `/api/facturacion` | Facturas (integración con Factus) |
 | Historial | `/api/historial` | Historial de eventos por vehículo |
+
+## Módulos del Frontend (React)
+
+La aplicación web moderna (`frontend-react`) cuenta con 11 módulos integrados y protegidos mediante roles y sesión JWT:
+
+| Módulo | Ruta Frontend | Descripción y Funcionalidades |
+|---|---|---|
+| **Login** | `/login` | Inicio de sesión con JWT y redirección inteligente según sesión activa |
+| **Dashboard** | `/dashboard` | Resumen operativo, indicadores clave (KPIs), contadores de citas y accesos rápidos |
+| **Clientes** | `/clientes` | Alta, edición, filtrado y listado de clientes del taller |
+| **Vehículos** | `/vehiculos` | Registro vehicular, vinculación con clientes por documento y consulta por placa |
+| **Citas** | `/citas` | Agendamiento de citas, asignación horaria y actualización de estados |
+| **Órdenes de Trabajo** | `/ordenes` | Gestión de órdenes de servicio, diagnósticos, repuestos utilizados y costos |
+| **Empleados** | `/empleados` | Control del equipo de trabajo, asignación de cargos y roles de acceso |
+| **Servicios** | `/servicios` | Catálogo de servicios mecánicos, descripciones y tarifas |
+| **Inventario** | `/inventario` | Control de repuestos y stock, alertas de agotamiento e importación masiva vía CSV |
+| **Facturación** | `/facturacion` | Emisión y consulta de facturas, integración Factus y generación/descarga de comprobantes PDF |
+| **Historial Vehicular** | `/historial` | Línea de tiempo cronológica de servicios, reparaciones y kilometrajes por vehículo |
 
 ## Despliegue con Docker Compose (Recomendado)
 
@@ -105,11 +133,20 @@ git clone https://github.com/LucarioZ4/Zedan-Motors.git
 cd Zedan-Motors
 ```
 
-### 2. Instalar dependencias del backend
+### 2. Instalar dependencias
 
+**Backend:**
 ```bash
 cd backend
 npm install
+cd ..
+```
+
+**Frontend (React):**
+```bash
+cd frontend-react
+npm install
+cd ..
 ```
 
 ### 3. Configurar variables de entorno
@@ -150,13 +187,25 @@ Esto crea 3 usuarios de prueba, todos con contraseña `1234`:
 
 > ⚠️ `seed.sql` es solo para desarrollo local. En un ambiente de producción, ejecutar únicamente `schema.sql` y crear los usuarios reales manualmente.
 
-### 5. Levantar el servidor
+### 5. Levantar el Backend
 
 ```bash
+cd backend
 npm run dev
 ```
 
-El servidor queda disponible en [http://localhost:3000](http://localhost:3000), que sirve tanto la API como el frontend.
+El servidor API queda disponible en [http://localhost:3000](http://localhost:3000) (también sirve el frontend legacy en la raíz).
+
+### 6. Levantar el Frontend (React)
+
+En una terminal separada:
+
+```bash
+cd frontend-react
+npm run dev
+```
+
+La aplicación SPA en React queda disponible en [http://localhost:5173](http://localhost:5173), comunicándose de forma transparente con el backend en el puerto 3000.
 
 ## Seguridad
 
