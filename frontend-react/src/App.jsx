@@ -8,6 +8,11 @@ import Clientes from './pages/Clientes/Clientes';
 import Vehiculos from './pages/Vehiculos/Vehiculos';
 import Empleados from './pages/Empleados/Empleados';
 import Servicios from './pages/Servicios/Servicios';
+import Citas from './pages/Citas/Citas';
+import Ordenes from './pages/Ordenes/Ordenes';
+import Inventario from './pages/Inventario/Inventario';
+import Facturacion from './pages/Facturacion/Facturacion';
+import Historial from './pages/Historial/Historial';
 
 function ModulePlaceholder({ title }) {
   return (
@@ -45,11 +50,11 @@ export default function App() {
           <Route path="vehiculos" element={<Vehiculos />} />
           <Route path="empleados" element={<Empleados />} />
           <Route path="servicios" element={<Servicios />} />
-          <Route path="citas" element={<ModulePlaceholder title="Citas" />} />
-          <Route path="ordenes" element={<ModulePlaceholder title="Órdenes" />} />
-          <Route path="inventario" element={<ModulePlaceholder title="Inventario" />} />
-          <Route path="facturacion" element={<ModulePlaceholder title="Facturación" />} />
-          <Route path="historial" element={<ModulePlaceholder title="Historial" />} />
+          <Route path="citas" element={<Citas />} />
+          <Route path="ordenes" element={<Ordenes />} />
+          <Route path="inventario" element={<Inventario />} />
+          <Route path="facturacion" element={<Facturacion />} />
+          <Route path="historial" element={<Historial />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
