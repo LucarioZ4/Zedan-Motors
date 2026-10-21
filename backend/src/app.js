@@ -2,9 +2,9 @@ require('dotenv').config();
 const path = require('path');
 
 const express = require('express');
-const cors    = require('cors');
-const helmet  = require('helmet');
-const morgan  = require('morgan');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
 
 // Se carga primero: si JWT_SECRET falta o es débil, el servidor no arranca.
 const { port, corsOrigins } = require('./config/env');
@@ -39,19 +39,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', apiLimiter);
 
 // ── Rutas ──
-app.use('/api/auth',      require('./modules/auth/auth.routes'));
+app.use('/api/auth', require('./modules/auth/auth.routes'));
 app.use('/api/dashboard', require('./modules/dashboard/dashboard.routes'));
 app.use('/api/clientes', require('./modules/clientes/clientes.routes'));
 app.use('/api/vehiculos', require('./modules/vehiculos/vehiculos.routes'));
-app.use('/api/citas',     require('./modules/citas/citas.routes'));
-app.use('/api/estados',   require('./modules/estados/estados.routes'));
-app.use('/api/ordenes',   require('./modules/ordenes/ordenes.routes'));
-app.use('/api/empleados',    require('./modules/empleados/empleados.routes'));
-app.use('/api/servicios',    require('./modules/servicios/servicios.routes'));
-app.use('/api/inventario',   require('./modules/inventario/inventario.routes'));
-app.use('/api/facturacion',  require('./modules/facturacion/facturacion.routes'));
-app.use('/api/cargos',     require('./modules/cargos/cargos.routes'));
-app.use('/api/historial',  require('./modules/historial/historial.routes'));
+app.use('/api/citas', require('./modules/citas/citas.routes'));
+app.use('/api/estados', require('./modules/estados/estados.routes'));
+app.use('/api/ordenes', require('./modules/ordenes/ordenes.routes'));
+app.use('/api/empleados', require('./modules/empleados/empleados.routes'));
+app.use('/api/servicios', require('./modules/servicios/servicios.routes'));
+app.use('/api/inventario', require('./modules/inventario/inventario.routes'));
+app.use('/api/facturacion', require('./modules/facturacion/facturacion.routes'));
+app.use('/api/cargos', require('./modules/cargos/cargos.routes'));
+app.use('/api/historial', require('./modules/historial/historial.routes'));
+app.use('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
 
 // Servir frontend
 app.use(express.static(path.join(__dirname, '../../frontend')));
