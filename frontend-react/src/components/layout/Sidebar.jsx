@@ -18,7 +18,8 @@ const navItems = [
     { label: 'Órdenes', path: '/ordenes', icon: 'bi-clipboard2-check-fill' },
     { label: 'Inventario', path: '/inventario', icon: 'bi-box-seam-fill' },
     { label: 'Facturación', path: '/facturacion', icon: 'bi-receipt-cutoff' },
-    { label: 'Historial', path: '/historial', icon: 'bi-clock-history' }
+    { label: 'Historial', path: '/historial', icon: 'bi-clock-history' },
+    { label: 'Mensajes', path: '/mensajes', icon: 'bi-chat-dots-fill' }
   ]}
 ];
 
