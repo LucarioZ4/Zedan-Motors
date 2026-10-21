@@ -60,7 +60,7 @@ export default function Login() {
       <div className="panel-login">
 
         {/* Logo oficial ensamblado */}
-        <div style={{ marginBottom: '36px', display: 'flex', justifyContent: 'flex-start' }}>
+        <div style={{ marginBottom: '36px', display: 'flex', justifyContent: 'center' }}>
           <ZedanLogo variant="login-header" width={220} />
         </div>
 
