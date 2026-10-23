@@ -113,7 +113,7 @@ Esto iniciará automáticamente:
 | **PostgreSQL 16** | `zedan-postgres` | `5432` | DB inicializada con tablas y datos de prueba (`schema.sql` y `seed.sql`) |
 | **Backend & Frontend** | `zedan-backend` | `3000` | [http://localhost:3000](http://localhost:3000) |
 | **n8n (Agente IA)** | `zedan-n8n` | `5678` | [http://localhost:5678](http://localhost:5678) |
-| **OpenWA (WhatsApp API)** | `zedan-openwa` | `8080` | [http://localhost:8080](http://localhost:8080) |
+| **OpenWA (WhatsApp API)** | `zedan-openwa` | `2785` | [http://localhost:2785](http://localhost:2785) |
 
 Para ver el código QR de vinculación de WhatsApp:
 ```bash

@@ -59,7 +59,7 @@ Esto levantará:
 - **`zedan-postgres`**: Base de datos con las tablas y extensiones (`pgcrypto`) inicializadas en el puerto `5432`.
 - **`zedan-backend`**: API Node.js y Frontend en el puerto `3000`.
 - **`zedan-n8n`**: Plataforma n8n en `http://localhost:5678`.
-- **`zedan-openwa`**: API de WhatsApp en `http://localhost:8080`.
+- **`zedan-openwa`**: API de WhatsApp en `http://localhost:2785`.
 
 ### 2. Vincular WhatsApp en OpenWA (Escanear QR)
 Para conectar tu número de WhatsApp con OpenWA:
@@ -67,7 +67,7 @@ Para conectar tu número de WhatsApp con OpenWA:
    ```bash
    docker logs -f zedan-openwa
    ```
-2. Verás el código QR impreso en la terminal (o ingresa a `http://localhost:8080` si usas la interfaz web).
+2. Verás el código QR impreso en la terminal (o ingresa al dashboard en `http://localhost:2785` si usas la interfaz web).
 3. Abre WhatsApp en tu teléfono > **Dispositivos vinculados** > **Vincular dispositivo** y escanea el código.
 4. Una vez vinculado, la sesión se guardará en la carpeta `./openwa-data/` y no requerirá escanear de nuevo aunque reinicies el contenedor.
 
@@ -103,7 +103,7 @@ Dentro del flujo importado, deberás asociar tres credenciales:
 - **API Key:** Tu API Key de DeepSeek (`sk-...`)
 
 #### C. OpenWA (`OpenWA Account`)
-- **Base URL:** `http://openwa:8080` *(comunicación directa interna en Docker)* o `http://localhost:8080`
+- **Base URL:** `http://openwa:2785` *(comunicación directa interna en Docker)* o `http://localhost:2785`
 - **API Key:** `zedan_openwa_api_secret_key_12345` *(o el configurado en `OPENWA_API_KEY`)*
 
 ---
