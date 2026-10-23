@@ -13,6 +13,7 @@ import Ordenes from './pages/Ordenes/Ordenes';
 import Inventario from './pages/Inventario/Inventario';
 import Facturacion from './pages/Facturacion/Facturacion';
 import Historial from './pages/Historial/Historial';
+import Mensajes from './pages/Mensajes/Mensajes';
 
 function ModulePlaceholder({ title }) {
   return (
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="inventario" element={<Inventario />} />
           <Route path="facturacion" element={<Facturacion />} />
           <Route path="historial" element={<Historial />} />
+          <Route path="mensajes" element={<Mensajes />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
