@@ -2,7 +2,7 @@
 // ZEDAN MOTOR'S — Global JS
 // ═══════════════════════════════════════
 
-const API_URL = 'http://localhost:3000';
+const API_URL = 'http://localhost:5200';
 
 // ── Escapar HTML (previene XSS al armar HTML con datos de usuario) ──
 function escapeHtml(valor) {
@@ -15,7 +15,7 @@ function escapeHtml(valor) {
 function getHeaders() {
     const token = sessionStorage.getItem('token');
     return {
-        'Content-Type':  'application/json',
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
     };
 }
@@ -33,14 +33,14 @@ function verificarSesion() {
 // ── Cargar datos de sesión en sidebar ──
 function cargarSesion() {
     const usuario = sessionStorage.getItem('usuario');
-    const rol     = sessionStorage.getItem('rol');
+    const rol = sessionStorage.getItem('rol');
 
     const elNombre = document.getElementById('sidebarUsuario');
-    const elRol    = document.getElementById('sidebarRol');
+    const elRol = document.getElementById('sidebarRol');
     const elAvatar = document.getElementById('sidebarAvatar');
 
     if (elNombre) elNombre.textContent = usuario || 'Usuario';
-    if (elRol)    elRol.textContent    = rol     || 'Sin rol';
+    if (elRol) elRol.textContent = rol || 'Sin rol';
     if (elAvatar) elAvatar.textContent = (usuario || 'U')[0].toUpperCase();
 }
 
@@ -59,9 +59,9 @@ function cargarFecha() {
     const ahora = new Date();
     el.textContent = ahora.toLocaleDateString('es-ES', {
         weekday: 'long',
-        day:     'numeric',
-        month:   'long',
-        year:    'numeric'
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
     });
 }
 
@@ -69,9 +69,9 @@ function cargarFecha() {
 function mostrarToast(mensaje, tipo = 'success') {
     const colores = {
         success: '#27AE60',
-        error:   '#E74C3C',
+        error: '#E74C3C',
         warning: '#F5A623',
-        info:    '#4A90D9'
+        info: '#4A90D9'
     };
 
     const toast = document.createElement('div');
@@ -100,7 +100,7 @@ function mostrarToast(mensaje, tipo = 'success') {
     document.body.appendChild(toast);
 
     setTimeout(() => {
-        toast.style.opacity    = '0';
+        toast.style.opacity = '0';
         toast.style.transition = 'opacity 0.3s';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
@@ -109,7 +109,7 @@ function mostrarToast(mensaje, tipo = 'success') {
 // ── Formatear moneda ──
 function formatearMoneda(valor) {
     return new Intl.NumberFormat('es-CO', {
-        style:    'currency',
+        style: 'currency',
         currency: 'COP',
         minimumFractionDigits: 0
     }).format(valor);
@@ -119,9 +119,9 @@ function formatearMoneda(valor) {
 function formatearFecha(fecha) {
     if (!fecha) return '—';
     return new Date(fecha).toLocaleDateString('es-ES', {
-        day:   '2-digit',
+        day: '2-digit',
         month: '2-digit',
-        year:  'numeric'
+        year: 'numeric'
     });
 }
 
