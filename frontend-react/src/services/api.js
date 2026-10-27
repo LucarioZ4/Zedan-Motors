@@ -10,8 +10,13 @@ export const getHeaders = () => {
 };
 
 export const apiFetch = async (endpoint, options = {}) => {
-  // Las rutas de autenticación y dashboard van al backend de Node (puerto 3000)
-  const isNodeEndpoint = endpoint.startsWith('/api/auth') || endpoint.startsWith('/api/dashboard');
+  // Rutas que maneja Node (puerto 3000): auth, dashboard, ordenes y facturacion (con DIAN/Factus y subrutas de repuestos/servicios)
+  const isNodeEndpoint = 
+    endpoint.startsWith('/api/auth') || 
+    endpoint.startsWith('/api/dashboard') ||
+    endpoint.startsWith('/api/ordenes') ||
+    endpoint.startsWith('/api/facturacion');
+
   const baseUrl = isNodeEndpoint ? AUTH_API_URL : API_URL;
   const url = `${baseUrl}${endpoint}`;
   const response = await fetch(url, {
