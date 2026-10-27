@@ -10,8 +10,9 @@ export const getHeaders = () => {
 };
 
 export const apiFetch = async (endpoint, options = {}) => {
-  // Las rutas de autenticación van al backend de Node (puerto 3000)
-  const baseUrl = endpoint.startsWith('/api/auth') ? AUTH_API_URL : API_URL;
+  // Las rutas de autenticación y dashboard van al backend de Node (puerto 3000)
+  const isNodeEndpoint = endpoint.startsWith('/api/auth') || endpoint.startsWith('/api/dashboard');
+  const baseUrl = isNodeEndpoint ? AUTH_API_URL : API_URL;
   const url = `${baseUrl}${endpoint}`;
   const response = await fetch(url, {
     ...options,
