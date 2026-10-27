@@ -18,3 +18,12 @@ Thumbs.db
 
 # Datos de n8n locales (si se montan como carpeta)
 n8n-data/
+
+# .NET / C#
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+**/appsettings.json
+**/appsettings.*.json
+!**/appsettings.Example.json
