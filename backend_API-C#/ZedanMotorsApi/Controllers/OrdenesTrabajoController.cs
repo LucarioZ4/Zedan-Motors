@@ -7,6 +7,7 @@ using ZedanMotorsApi.Models;
 namespace ZedanMotorsApi.Controllers
 {
     [Route("api/[controller]")]
+    [Route("api/ordenes")]
     [ApiController]
     public class OrdenesTrabajoController : ControllerBase
     {

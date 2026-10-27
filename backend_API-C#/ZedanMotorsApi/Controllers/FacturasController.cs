@@ -8,6 +8,7 @@ using ZedanMotorsApi.Models;
 namespace ZedanMotorsApi.Controllers
 {
     [Route("api/[controller]")]
+    [Route("api/facturacion")]
     [ApiController]
     public class FacturasController : ControllerBase
     {
