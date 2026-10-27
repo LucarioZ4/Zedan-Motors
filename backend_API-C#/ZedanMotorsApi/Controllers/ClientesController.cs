@@ -65,6 +65,27 @@ namespace ZedanMotorsApi.Controllers
             return cliente;
         }
 
+        // GET: api/Clientes/5/Vehiculos
+        [HttpGet("{id}/Vehiculos")]
+        public async Task<ActionResult<IEnumerable<VehiculoDTO>>> GetVehiculosPorCliente(int id)
+        {
+            var vehiculos = await _context.Vehiculos
+                .Where(v => v.idCliente == id)
+                .Select(v => new VehiculoDTO
+                {
+                    idVehiculo = v.idVehiculo,
+                    placa = v.placa,
+                    modelo = v.modelo,
+                    anio = v.anio,
+                    marca = v.marca,
+                    color = v.color,
+                    idCliente = v.idCliente,
+                    nombreCliente = v.Cliente.nombre + " " + v.Cliente.apellido
+                }).ToListAsync();
+
+            return vehiculos;
+        }
+
         // PUT: api/Clientes/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutCliente(int id, ClienteCreateDTO clienteUpdate)
