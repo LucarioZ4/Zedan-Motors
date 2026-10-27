@@ -1,0 +1,25 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZedanMotorsApi", "ZedanMotorsApi\ZedanMotorsApi.csproj", "{6B1F3C52-8D7A-4E19-A3C4-52F0B7D91E48}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6B1F3C52-8D7A-4E19-A3C4-52F0B7D91E48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B1F3C52-8D7A-4E19-A3C4-52F0B7D91E48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B1F3C52-8D7A-4E19-A3C4-52F0B7D91E48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B1F3C52-8D7A-4E19-A3C4-52F0B7D91E48}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0E4A9D37-5C21-4B86-9F03-A71D2E68B5C0}
+	EndGlobalSection
+EndGlobal

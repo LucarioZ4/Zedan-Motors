@@ -1,0 +1,33 @@
+@ZedanMotorsApi_HostAddress = http://localhost:5200
+
+GET {{ZedanMotorsApi_HostAddress}}/api/clientes
+Accept: application/json
+
+###
+
+POST {{ZedanMotorsApi_HostAddress}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "telefono": "3001234567",
+  "correo": "juan@correo.com",
+  "direccion": "Calle 10 # 5-20"
+}
+
+###
+
+POST {{ZedanMotorsApi_HostAddress}}/api/vehiculos
+Content-Type: application/json
+
+{
+  "placa": "ABC123",
+  "modelo": "Corolla",
+  "anio": 2020,
+  "marca": "Toyota",
+  "color": "Blanco",
+  "idCliente": 1
+}
+
+###

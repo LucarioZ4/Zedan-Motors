@@ -1,0 +1,7 @@
+backend-api/**/bin/
+backend-api/**/obj/
+backend-api/.vs/
+backend-api/**/*.csproj.user
+backend-api/**/appsettings.Development.json
+backend-api/**/appsettings.Production.json
+backend-api/**/appsettings.json
