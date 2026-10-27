@@ -1,7 +1,10 @@
-backend-api/**/bin/
-backend-api/**/obj/
-backend-api/.vs/
-backend-api/**/*.csproj.user
-backend-api/**/appsettings.Development.json
-backend-api/**/appsettings.Production.json
-backend-api/**/appsettings.json
+# Archivos de compilación y temporales de .NET
+bin/
+obj/
+.vs/
+*.user
+
+# Archivos de configuración con credenciales
+appsettings.json
+appsettings.*.json
+!appsettings.Example.json
