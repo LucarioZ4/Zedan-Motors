@@ -8,3 +8,6 @@ obj/
 appsettings.json
 appsettings.*.json
 !appsettings.Example.json
+
+# Documentos privados de defensa y apuntes
+*.docx
