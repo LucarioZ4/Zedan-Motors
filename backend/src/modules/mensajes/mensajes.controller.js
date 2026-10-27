@@ -22,8 +22,8 @@ const getMensajes = async (req, res) => {
             FROM mensajes_cliente m
             LEFT JOIN orden_trabajo o ON m.id_orden = o.id_orden
             LEFT JOIN cita ci ON o.id_cita = ci.id_cita
-            LEFT JOIN cliente c ON ci.id_cliente = c.id_cliente
             LEFT JOIN vehiculo v ON ci.id_vehiculo = v.id_vehiculo
+            LEFT JOIN cliente c ON v.id_cliente = c.id_cliente
             ORDER BY m.fecha DESC
         `;
         const { rows } = await pool.query(query);
