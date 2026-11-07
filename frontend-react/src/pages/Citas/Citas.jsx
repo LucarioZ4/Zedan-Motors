@@ -441,7 +441,7 @@ export default function Citas() {
                   initialDate={fechaSeleccionada}
                   locales={[esLocale]}
                   locale="es"
-                  height="auto"
+                  contentHeight={340}
                   fixedWeekCount={false}
                   showNonCurrentDates={true}
                   headerToolbar={{

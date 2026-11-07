@@ -1,41 +1,686 @@
 /* ==========================================================================
-   citas.css
+   citas.css — Vanilla Frontend Citas con FullCalendar (Zedan Motor's)
    ========================================================================== */
 
+/* ── Selector de Vista (Calendario vs Tabla) ── */
+.vista-toggle-group {
+    display: flex;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-toggle-vista {
+    background: transparent;
+    border: none;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.18s ease;
+}
+
+.btn-toggle-vista:hover {
+    color: #1e293b;
+}
+
+.btn-toggle-vista.active {
+    background: #ffffff;
+    color: #1e3a8a;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LAYOUT DIVIDIDO (CALENDARIO IZQUIERDA + CLIENTES DERECHA)
+   ══════════════════════════════════════════════════════════════ */
+.citas-split-layout {
+    display: grid;
+    grid-template-columns: 470px minmax(0, 1fr);
+    gap: 24px;
+    align-items: flex-start;
+}
+
+@media (min-width: 1500px) {
+    .citas-split-layout {
+        grid-template-columns: 500px minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 1200px) {
+    .citas-split-layout {
+        grid-template-columns: 430px minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .citas-split-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Panel Izquierdo: Calendario ── */
+.citas-calendar-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.calendar-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.calendar-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.calendar-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #1e3a8a;
+}
+
+.calendar-card-title i {
+    color: #2563eb;
+    font-size: 16px;
+}
+
+.btn-hoy-pill {
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+}
+
+.btn-hoy-pill:hover {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+/* Botón verde "+ Agregar cita" bajo el calendario (Estilo Foto) */
+.btn-agregar-cita-dia {
+    width: 100%;
+    margin-top: 14px;
+    background: #059669;
+    border: 1px solid #047857;
+    border-radius: 10px;
+    color: #ffffff;
+    padding: 10px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+
+.btn-agregar-cita-dia:hover {
+    background: #047857;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+}
+
+/* Métricas del calendario */
+.calendar-stats-box {
+    margin-top: 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cal-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.cal-stat-num {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1e3a8a;
+    line-height: 1;
+}
+
+.cal-stat-label {
+    font-size: 10.5px;
+    color: #64748b;
+    margin-top: 3px;
+    font-weight: 600;
+}
+
+.cal-stat-divider {
+    width: 1px;
+    height: 24px;
+    background: #e2e8f0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PERSONALIZACIÓN DE FULLCALENDAR
+   ══════════════════════════════════════════════════════════════ */
+.fullcalendar-wrapper {
+    font-family: inherit;
+}
+
+.fullcalendar-wrapper .fc .fc-toolbar {
+    margin-bottom: 10px !important;
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: #ffffff;
+}
+
+.fullcalendar-wrapper .fc .fc-toolbar-title {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #ffffff !important;
+}
+
+.fullcalendar-wrapper .fc .fc-button {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+    padding: 4px 9px !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-weight: 700;
+    box-shadow: none !important;
+    transition: all 0.15s ease;
+}
+
+.fullcalendar-wrapper .fc .fc-button:hover {
+    background: rgba(255, 255, 255, 0.35) !important;
+    color: #ffffff !important;
+}
+
+.fullcalendar-wrapper .fc th {
+    border-color: #e2e8f0 !important;
+    padding: 6px 0 !important;
+    background: #f8fafc;
+}
+
+.fullcalendar-wrapper .fc .fc-col-header-cell-cushion {
+    color: #475569;
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-decoration: none !important;
+}
+
+.fullcalendar-wrapper .fc td {
+    border-color: #f1f5f9 !important;
+}
+
+.fullcalendar-wrapper .fc .fc-daygrid-day {
+    cursor: pointer;
+    min-height: 48px;
+    transition: background 0.15s ease;
+}
+
+.fullcalendar-wrapper .fc .fc-daygrid-day:hover {
+    background: #f0f7ff !important;
+}
+
+/* Domingo tintado como en la foto */
+.fullcalendar-wrapper .fc .fc-day-sun {
+    background: rgba(254, 226, 226, 0.45);
+}
+
+.fullcalendar-wrapper .fc .fc-day-sun:hover {
+    background: rgba(254, 202, 202, 0.5) !important;
+}
+
+/* Día activo seleccionado */
+.fullcalendar-wrapper .fc .fc-daygrid-day.fc-day-active-selected {
+    background: #dbeafe !important;
+    box-shadow: inset 0 0 0 2px #2563eb;
+    border-radius: 4px;
+}
+
+.fullcalendar-wrapper .fc .fc-daygrid-day.fc-day-active-selected .fc-custom-day-num {
+    background: #2563eb;
+    color: #ffffff !important;
+    font-weight: 800;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+}
+
+.fc-custom-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 2px;
+    position: relative;
+    min-height: 38px;
+}
+
+.fc-custom-day-num {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.fc-citas-indicator {
+    background: #f59e0b;
+    color: #ffffff;
+    font-size: 9.5px;
+    font-weight: 800;
+    border-radius: 10px;
+    padding: 1px 5px;
+    margin-top: 3px;
+    line-height: 1.1;
+    box-shadow: 0 1px 4px rgba(245, 158, 11, 0.3);
+}
+
+.fc-day-active-selected .fc-citas-indicator {
+    background: #1e3a8a;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PANEL DERECHO: CLIENTES Y CITAS DEL DÍA SELECCIONADO
+   ══════════════════════════════════════════════════════════════ */
+.citas-day-main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.day-agenda-header-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 20px 14px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+}
+
+.day-agenda-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.day-agenda-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+}
+
+.day-agenda-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1e3a8a;
+    margin: 2px 0 0;
+    text-transform: capitalize;
+}
+
+.day-agenda-filters {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filtro-select-compact {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #334155;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filtro-select-compact:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.search-bar-compact {
+    position: relative;
+    min-width: 220px;
+}
+
+.search-bar-compact i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.search-bar-compact input {
+    width: 100%;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 12px 8px 34px;
+    font-size: 13px;
+    color: #1e293b;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.search-bar-compact input:focus {
+    background: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Banner Verde de Conteo (Estilo de la foto) */
+.day-count-banner {
+    background: #d1fae5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.day-count-banner strong {
+    color: #047857;
+    font-size: 14.5px;
+    font-weight: 800;
+}
+
+.day-agenda-content-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.table-agenda-custom {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.table-agenda-custom thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    border-bottom: 2px solid #e2e8f0;
+    text-align: left;
+}
+
+.table-agenda-custom tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.15s ease;
+}
+
+.table-agenda-custom tbody tr:hover {
+    background: #f8fafc;
+}
+
+.table-agenda-custom tbody td {
+    padding: 12px 14px;
+    vertical-align: middle;
+}
+
+.turno-hora-box {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.turno-num {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1;
+}
+
+.turno-hora-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #2563eb;
+    background: #eff6ff;
+    padding: 2px 7px;
+    border-radius: 6px;
+}
+
+.turno-hora-text i {
+    font-size: 11px;
+}
+
+.agenda-cliente-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.agenda-cliente-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.agenda-cliente-name i {
+    color: #3b82f6;
+    font-size: 13px;
+}
+
+.agenda-vehiculo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 6px;
+    width: fit-content;
+}
+
+.agenda-vehiculo-badge i {
+    color: #64748b;
+    font-size: 11px;
+}
+
+.agenda-motivo-text {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #334155;
+    font-size: 13px;
+}
+
+.agenda-motivo-text i {
+    color: #94a3b8;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.day-agenda-empty {
+    text-align: center;
+    padding: 60px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+}
+
+.empty-icon-wrap {
+    width: 64px;
+    height: 64px;
+    background: #eff6ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+    font-size: 28px;
+    margin-bottom: 16px;
+}
+
+.day-agenda-empty h4 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 6px;
+}
+
+.day-agenda-empty p {
+    font-size: 13.5px;
+    color: #64748b;
+    max-width: 400px;
+    margin-bottom: 20px;
+}
+
+.day-agenda-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 14px;
+    margin-top: 14px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.agenda-footer-tip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.agenda-footer-tip i {
+    color: #2563eb;
+    font-size: 13px;
+}
+
+.btn-agendar-cta-green {
+    background: #059669;
+    border: 1px solid #047857;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 9px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.btn-agendar-cta-green:hover {
+    background: #047857;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
+}
+
+/* ── Estilos existentes ── */
 .stat-pill {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: #ffffff;
+    border: 1px solid #dbe4f0;
     border-radius: 20px;
     padding: 6px 16px;
     font-size: 12px;
-    color: var(--text-secondary);
+    color: #64748b;
     white-space: nowrap;
 }
 
 .stat-pill span {
-    color: var(--primary);
+    color: #2563eb;
     font-weight: 700;
 }
 
 .btn-accion {
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid #dbe4f0;
     border-radius: 6px;
     padding: 5px 10px;
     font-size: 13px;
     cursor: pointer;
     transition: all 0.15s;
-    color: var(--text-secondary);
+    color: #64748b;
 }
 
 .btn-accion.editar:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #2563eb;
+    color: #2563eb;
+    background: #eff6ff;
 }
 
 .btn-accion.eliminar:hover {
-    border-color: var(--danger);
-    color: var(--danger);
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fef2f2;
 }
 
 textarea.field-input {

@@ -1,13 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zedan Motor's — Citas</title>
+    <title>Zedan Motor's — Citas y Calendario</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../css/citas.css">
+    <!-- FullCalendar CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 </head>
 <body>
 
@@ -74,10 +76,20 @@
 
         <div class="topbar">
             <div>
-                <div class="topbar-title">Citas</div>
+                <div class="topbar-title">Agenda y Calendario de Citas</div>
                 <div class="topbar-sub" id="topbarFecha"></div>
             </div>
-            <div class="ms-auto">
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <!-- Selector de Vista -->
+                <div class="vista-toggle-group">
+                    <button type="button" class="btn-toggle-vista active" id="btnVistaCalendario" onclick="cambiarVista('calendario')">
+                        <i class="bi bi-calendar3"></i> Vista Calendario
+                    </button>
+                    <button type="button" class="btn-toggle-vista" id="btnVistaTabla" onclick="cambiarVista('tabla')">
+                        <i class="bi bi-table"></i> Listado General
+                    </button>
+                </div>
+
                 <button class="btn-primary-custom" onclick="abrirModalNuevo()">
                     <i class="bi bi-plus-lg"></i> Nueva cita
                 </button>
@@ -86,51 +98,183 @@
 
         <div class="page-content">
 
-            <!-- Filtros -->
-            <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
-                <div class="search-bar">
-                    <i class="bi bi-search"></i>
-                    <input type="text" id="inputBuscar"
-                           placeholder="Buscar por cliente, vehículo o motivo..."
-                           oninput="buscarCitas()">
+            <!-- ══════════════════════════════════════════════════════════
+                 VISTA 1: CALENDARIO DIVIDIDO (ESTILO DE LA FOTO)
+                 ══════════════════════════════════════════════════════════ -->
+            <div id="seccionVistaCalendario" class="citas-split-layout">
+                <!-- PANEL IZQUIERDO: FULLCALENDAR -->
+                <aside class="citas-calendar-sidebar">
+                    <div class="calendar-card">
+                        <div class="calendar-card-header">
+                            <div class="calendar-card-title">
+                                <i class="bi bi-calendar-event"></i>
+                                <span>Calendario de Citas</span>
+                            </div>
+                            <button type="button" class="btn-hoy-pill" onclick="irAHoyCalendario()">
+                                <i class="bi bi-clock-history"></i> Hoy
+                            </button>
+                        </div>
+
+                        <!-- FullCalendar DOM Container -->
+                        <div class="fullcalendar-wrapper">
+                            <div id="fullcalendarContainer"></div>
+                        </div>
+
+                        <!-- Botón "+ Agregar cita" bajo el calendario -->
+                        <button type="button" class="btn-agregar-cita-dia" onclick="abrirModalNuevo(fechaSeleccionada)">
+                            <i class="bi bi-plus-circle-fill"></i>
+                            <span id="btnAgregarCitaDiaTexto">+ Agregar cita</span>
+                        </button>
+
+                        <!-- Métricas Rápidas -->
+                        <div class="calendar-stats-box">
+                            <div class="cal-stat-item">
+                                <span class="cal-stat-num" id="statCitasDia">0</span>
+                                <span class="cal-stat-label">Citas este día</span>
+                            </div>
+                            <div class="cal-stat-divider"></div>
+                            <div class="cal-stat-item">
+                                <span class="cal-stat-num" id="statCitasHoy">0</span>
+                                <span class="cal-stat-label">Citas hoy</span>
+                            </div>
+                            <div class="cal-stat-divider"></div>
+                            <div class="cal-stat-item">
+                                <span class="cal-stat-num" id="statCitasPendientes">0</span>
+                                <span class="cal-stat-label">Pendientes</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- PANEL DERECHO: CLIENTES Y CITAS DEL DÍA SELECCIONADO -->
+                <main class="citas-day-main">
+                    <!-- Header del Día con Filtros -->
+                    <div class="day-agenda-header-card">
+                        <div class="day-agenda-top">
+                            <div class="day-agenda-date-info">
+                                <span class="day-agenda-tag">Agenda Diaria</span>
+                                <h3 class="day-agenda-title" id="tituloDiaSeleccionado">
+                                    Cargando fecha...
+                                </h3>
+                            </div>
+
+                            <div class="day-agenda-filters">
+                                <select class="filtro-select-compact" id="filtroEstadoDia" onchange="filtrarCitasDia()">
+                                    <option value="">TODOS LOS ESTADOS</option>
+                                    <option value="1">PENDIENTE</option>
+                                    <option value="2">CONFIRMADA</option>
+                                    <option value="3">EN PROCESO</option>
+                                    <option value="4">COMPLETADA</option>
+                                    <option value="5">CANCELADA</option>
+                                </select>
+
+                                <div class="search-bar-compact">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" id="inputBuscarDia"
+                                           placeholder="Buscar cliente o vehículo..."
+                                           oninput="filtrarCitasDia()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Banner Verde Contador (Estilo Foto) -->
+                        <div class="day-count-banner">
+                            <i class="bi bi-people-fill"></i>
+                            <span>
+                                Cantidad de clientes / citas encontrados: <strong id="contadorCitasDia">0</strong>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Clientes del Día -->
+                    <div class="day-agenda-content-card">
+                        <div class="table-responsive">
+                            <table class="table-agenda-custom">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 110px">TURNO / HORA</th>
+                                        <th>CLIENTE Y VEHÍCULO</th>
+                                        <th>MOTIVO DEL SERVICIO</th>
+                                        <th style="width: 130px">ESTADO</th>
+                                        <th style="width: 100px; text-align: center">ACCIONES</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaAgendaDia">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4" style="color: var(--text-muted)">
+                                            Cargando agenda del día...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Footer con Botón Verde Flotante "Agendar" (Como en la foto) -->
+                        <div class="day-agenda-footer">
+                            <div class="agenda-footer-tip">
+                                <i class="bi bi-info-circle"></i>
+                                <span>Haz clic en cualquier día del calendario para consultar o programar citas.</span>
+                            </div>
+                            <button type="button" class="btn-agendar-cta-green" onclick="abrirModalNuevo(fechaSeleccionada)">
+                                <i class="bi bi-calendar-plus-fill"></i>
+                                <span>Agendar Cita</span>
+                            </button>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════
+                 VISTA 2: LISTADO GENERAL EN TABLA COMPLETA (HISTÓRICO)
+                 ══════════════════════════════════════════════════════════ -->
+            <div id="seccionVistaTabla" class="citas-tabla-completa-wrap" style="display:none">
+                <!-- Filtros Generales -->
+                <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+                    <div class="search-bar">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="inputBuscar"
+                               placeholder="Buscar por cliente, vehículo o motivo..."
+                               oninput="buscarCitas()">
+                    </div>
+                    <select class="field-input" id="filtroEstado"
+                            style="width:180px" onchange="buscarCitas()">
+                        <option value="">Todos los estados</option>
+                        <option value="1">Pendiente</option>
+                        <option value="2">Confirmada</option>
+                        <option value="3">En proceso</option>
+                        <option value="4">Completada</option>
+                        <option value="5">Cancelada</option>
+                    </select>
+                    <div class="stat-pill">
+                        <span id="totalCitas">0</span> citas totales
+                    </div>
                 </div>
-                <select class="field-input" id="filtroEstado"
-                        style="width:180px" onchange="buscarCitas()">
-                    <option value="">Todos los estados</option>
-                    <option value="1">Pendiente</option>
-                    <option value="2">Confirmada</option>
-                    <option value="3">En proceso</option>
-                    <option value="4">Completada</option>
-                    <option value="5">Cancelada</option>
-                </select>
-                <div class="stat-pill">
-                    <span id="totalCitas">0</span> citas
+
+                <div class="card-custom">
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Hora</th>
+                                    <th>Cliente</th>
+                                    <th>Vehículo</th>
+                                    <th>Motivo</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaCitas">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4"
+                                        style="color: var(--text-muted)">Cargando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <div class="card-custom">
-                <div class="table-responsive">
-                    <table class="table-custom">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Hora</th>
-                                <th>Cliente</th>
-                                <th>Vehículo</th>
-                                <th>Motivo</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaCitas">
-                            <tr>
-                                <td colspan="7" class="text-center py-4"
-                                    style="color: var(--text-muted)">Cargando...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -227,4 +371,3 @@
     <script src="../js/citas.js"></script>
 </body>
 </html>
-

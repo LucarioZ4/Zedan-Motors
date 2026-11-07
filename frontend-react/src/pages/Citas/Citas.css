@@ -122,12 +122,24 @@
    ══════════════════════════════════════════════════════════════ */
 .citas-split-layout {
     display: grid;
-    grid-template-columns: 360px 1fr;
-    gap: 22px;
+    grid-template-columns: 470px minmax(0, 1fr);
+    gap: 24px;
     align-items: flex-start;
 }
 
-@media (max-width: 1100px) {
+@media (min-width: 1500px) {
+    .citas-split-layout {
+        grid-template-columns: 500px minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 1200px) {
+    .citas-split-layout {
+        grid-template-columns: 430px minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
     .citas-split-layout {
         grid-template-columns: 1fr;
     }
@@ -320,8 +332,12 @@
 
 .fullcalendar-wrapper .fc .fc-daygrid-day {
     cursor: pointer;
-    min-height: 48px;
+    min-height: 42px;
     transition: background 0.15s ease;
+}
+
+.fullcalendar-wrapper .fc .fc-daygrid-day-frame {
+    min-height: 42px;
 }
 
 .fullcalendar-wrapper .fc .fc-daygrid-day:hover {
@@ -349,8 +365,8 @@
     color: #ffffff !important;
     font-weight: 800;
     border-radius: 50%;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -370,12 +386,12 @@
     justify-content: center;
     padding: 3px 2px;
     position: relative;
-    min-height: 38px;
+    min-height: 36px;
 }
 
 .fc-custom-day-num {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
     color: #1e293b;
     line-height: 1;
 }
