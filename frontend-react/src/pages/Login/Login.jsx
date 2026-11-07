@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, AlertTriangle, RotateCw, Check } from 'lucide-react';
 import { apiFetch } from '../../services/api';
 import ZedanLogo from '../../components/common/ZedanLogo';
 import './Login.css';
@@ -120,7 +121,7 @@ export default function Login() {
                 onClick={togglePassword}
                 aria-label="Mostrar/ocultar contraseña"
               >
-                <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
@@ -128,7 +129,7 @@ export default function Login() {
           {/* Error */}
           {errorMsg && (
             <div className="error-box">
-              <i className="bi bi-exclamation-triangle-fill"></i>
+              <AlertTriangle size={16} />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -138,7 +139,7 @@ export default function Login() {
             <span>{isLoading ? 'Verificando...' : 'INGRESAR'}</span>
             {isLoading && (
               <span className="btn-spinner">
-                <i className="bi bi-arrow-repeat spin"></i>
+                <RotateCw size={16} className="spin" />
               </span>
             )}
           </button>
@@ -177,19 +178,19 @@ export default function Login() {
           {/* Features */}
           <div className="features-list">
             <div className="feature-item">
-              <div className="feature-check"><i className="bi bi-check-lg"></i></div>
+              <div className="feature-check"><Check size={16} /></div>
               <span>Gestión de clientes y vehículos</span>
             </div>
             <div className="feature-item">
-              <div className="feature-check"><i className="bi bi-check-lg"></i></div>
+              <div className="feature-check"><Check size={16} /></div>
               <span>Control de órdenes y citas</span>
             </div>
             <div className="feature-item">
-              <div className="feature-check"><i className="bi bi-check-lg"></i></div>
+              <div className="feature-check"><Check size={16} /></div>
               <span>Inventario y facturación integrada</span>
             </div>
             <div className="feature-item">
-              <div className="feature-check"><i className="bi bi-check-lg"></i></div>
+              <div className="feature-check"><Check size={16} /></div>
               <span>Historial completo por vehículo</span>
             </div>
           </div>

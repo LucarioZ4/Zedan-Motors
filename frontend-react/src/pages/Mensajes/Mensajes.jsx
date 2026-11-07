@@ -1,4 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import {
+  MessageSquare,
+  RotateCw,
+  Mail,
+  Search,
+  MessageCircle,
+  Send,
+  Phone
+} from 'lucide-react';
 import { getMensajes } from '../../services/mensajesService';
 import './Mensajes.css';
 
@@ -56,13 +65,13 @@ export default function Mensajes() {
       <div className="mensajes-hero">
         <div>
           <h2>
-            <i className="bi bi-chat-dots-fill"></i>
+            <MessageSquare size={24} />
             Centro de Mensajes & Notificaciones
           </h2>
           <p>Supervisa el historial de interacciones con clientes enviadas por WhatsApp y Telegram</p>
         </div>
         <button className="btn-primary-action" onClick={fetchMensajes}>
-          <i className="bi bi-arrow-clockwise"></i>
+          <RotateCw size={16} />
           Actualizar
         </button>
       </div>
@@ -71,7 +80,7 @@ export default function Mensajes() {
       <div className="mensajes-stats-grid">
         <div className="stat-card">
           <div className="stat-icon total">
-            <i className="bi bi-envelope-paper-fill"></i>
+            <Mail size={22} />
           </div>
           <div className="stat-info">
             <div className="stat-value">{mensajes.length}</div>
@@ -81,7 +90,7 @@ export default function Mensajes() {
 
         <div className="stat-card">
           <div className="stat-icon whatsapp">
-            <i className="bi bi-whatsapp"></i>
+            <MessageCircle size={22} />
           </div>
           <div className="stat-info">
             <div className="stat-value">{countWhatsApp}</div>
@@ -91,7 +100,7 @@ export default function Mensajes() {
 
         <div className="stat-card">
           <div className="stat-icon telegram">
-            <i className="bi bi-telegram"></i>
+            <Send size={22} />
           </div>
           <div className="stat-info">
             <div className="stat-value">{countTelegram}</div>
@@ -103,7 +112,7 @@ export default function Mensajes() {
       {/* Barra de Búsqueda y Filtros */}
       <div className="mensajes-toolbar">
         <div className="search-box">
-          <i className="bi bi-search text-muted"></i>
+          <Search size={16} className="text-muted" />
           <input
             type="text"
             placeholder="Buscar por teléfono, cliente, placa o contenido..."
@@ -143,14 +152,14 @@ export default function Mensajes() {
               {loading ? (
                 <tr>
                   <td colSpan="6" className="empty-state">
-                    <i className="bi bi-arrow-clockwise spinning"></i>
+                    <RotateCw size={20} className="spinning" />
                     <p>Cargando mensajes...</p>
                   </td>
                 </tr>
               ) : filteredMensajes.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="empty-state">
-                    <i className="bi bi-chat-square-text"></i>
+                    <MessageSquare size={28} />
                     <h4>No se encontraron mensajes</h4>
                     <p>Los mensajes generados o notificaciones enviadas a clientes aparecerán aquí.</p>
                   </td>
@@ -168,7 +177,11 @@ export default function Mensajes() {
                     </td>
                     <td>
                       <span className={`platform-badge ${m.plataforma?.toLowerCase()}`}>
-                        <i className={`bi bi-${m.plataforma?.toLowerCase()}`}></i>
+                        {m.plataforma?.toLowerCase() === 'whatsapp' ? (
+                          <MessageCircle size={14} />
+                        ) : (
+                          <Send size={14} />
+                        )}
                         {m.plataforma}
                       </span>
                     </td>
@@ -176,7 +189,7 @@ export default function Mensajes() {
                       <div>
                         <strong>{m.cliente_nombre ? `${m.cliente_nombre} ${m.cliente_apellido}` : 'Cliente no asociado'}</strong>
                         <div className="text-muted" style={{ fontSize: '0.8rem' }}>
-                          <i className="bi bi-telephone"></i> {m.numero_cliente}
+                          <Phone size={12} /> {m.numero_cliente}
                         </div>
                       </div>
                     </td>

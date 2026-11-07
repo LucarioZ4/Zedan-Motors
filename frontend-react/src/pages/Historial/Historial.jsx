@@ -1,4 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import {
+  CheckCircle2,
+  AlertTriangle,
+  Car,
+  RotateCw,
+  Inbox,
+  User,
+  Wrench,
+  CalendarCheck,
+  Receipt
+} from 'lucide-react';
 import { getHistorialVehiculo } from '../../services/historialService';
 import { getClientes } from '../../services/clientesService';
 import { getVehiculosPorCliente } from '../../services/citasService';
@@ -109,12 +120,11 @@ export default function Historial() {
       {/* Toast Flotante */}
       {toast && (
         <div className={`toast-floating ${toast.type}`}>
-          <i
-            className={`bi ${toast.type === 'success'
-                ? 'bi-check-circle-fill'
-                : 'bi-exclamation-triangle-fill'
-              }`}
-          ></i>
+          {toast.type === 'success' ? (
+            <CheckCircle2 size={18} />
+          ) : (
+            <AlertTriangle size={18} />
+          )}
           <span>{toast.message}</span>
         </div>
       )}
@@ -132,7 +142,7 @@ export default function Historial() {
         {/* Panel lateral: Selección de vehículo y estadísticas */}
         <div className="card-custom selector-panel">
           <div className="selector-titulo">
-            <i className="bi bi-car-front-fill text-primary"></i>
+            <Car size={18} className="text-primary" />
             <span>Seleccionar vehículo</span>
           </div>
 
@@ -172,7 +182,7 @@ export default function Historial() {
           {vehiculoActual && (
             <div className="vehiculo-card">
               <div className="vehiculo-card-icon">
-                <i className="bi bi-car-front"></i>
+                <Car size={22} />
               </div>
               <div>
                 <div className="vehiculo-card-nombre">{vehiculoActual.nombre}</div>
@@ -233,17 +243,17 @@ export default function Historial() {
 
           {loading ? (
             <div className="timeline-vacio">
-              <i className="bi bi-arrow-clockwise spinning loading-icon"></i>
+              <RotateCw size={32} className="spinning loading-icon" />
               <p>Cargando historial del vehículo...</p>
             </div>
           ) : !vehiculoActual ? (
             <div className="timeline-vacio">
-              <i className="bi bi-car-front empty-icon"></i>
+              <Car size={42} className="empty-icon" />
               <p>Selecciona un cliente y un vehículo para ver su historial completo</p>
             </div>
           ) : eventosFiltrados.length === 0 ? (
             <div className="timeline-vacio">
-              <i className="bi bi-inbox empty-icon"></i>
+              <Inbox size={42} className="empty-icon" />
               <p>Sin eventos registrados para este vehículo</p>
             </div>
           ) : (
@@ -259,8 +269,15 @@ export default function Historial() {
                   if (showMes) mesActual = mes;
 
                   const color = ev.color || '#3b82f6';
-                  const icono = ev.icono || 'bi-wrench';
+                  const tipoEvento = (ev.tipo_evento || '').toLowerCase();
                   const esUltimo = idx === eventosFiltrados.length - 1;
+
+                  const getIcono = () => {
+                    if (tipoEvento.includes('servicio')) return <Wrench size={16} />;
+                    if (tipoEvento.includes('cita')) return <CalendarCheck size={16} />;
+                    if (tipoEvento.includes('factura')) return <Receipt size={16} />;
+                    return <Wrench size={16} />;
+                  };
 
                   return (
                     <React.Fragment key={idx}>
@@ -280,7 +297,7 @@ export default function Historial() {
                               borderColor: `${color}40`
                             }}
                           >
-                            <i className={`bi ${icono}`}></i>
+                            {getIcono()}
                           </div>
                           {!esUltimo && <div className="timeline-linea"></div>}
                         </div>
@@ -311,7 +328,7 @@ export default function Historial() {
                           <div className="timeline-desc">{ev.descripcion}</div>
                           {ev.empleado && (
                             <div className="timeline-empleado">
-                              <i className="bi bi-person"></i>
+                              <User size={14} />
                               <span>Atendido por: {ev.empleado}</span>
                             </div>
                           )}

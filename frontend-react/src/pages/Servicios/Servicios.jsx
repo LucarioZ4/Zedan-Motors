@@ -1,5 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
+  Wrench,
+  Plus,
+  Search,
+  RotateCw,
+  Pencil,
+  Trash2,
+  X,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  Check
+} from 'lucide-react';
+import {
   getServicios,
   createServicio,
   updateServicio,
@@ -34,9 +47,7 @@ export default function Servicios() {
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
-    setTimeout(() => {
-      setToast(null);
-    }, 3200);
+    setTimeout(() => setToast(null), 3200);
   };
 
   const fetchServicios = async (buscar = '') => {
@@ -80,28 +91,23 @@ export default function Servicios() {
   };
 
   // Abrir Modal Editar
-  const handleOpenEdit = (s) => {
+  const handleOpenEdit = (servicio) => {
     setServicioActual({
-      id_servicio: s.id_servicio,
-      nombre_servicio: s.nombre_servicio || '',
-      descripcion: s.descripcion || '',
-      costo: s.costo || ''
+      id_servicio: servicio.id_servicio,
+      nombre_servicio: servicio.nombre_servicio || '',
+      descripcion: servicio.descripcion || '',
+      costo: servicio.costo || ''
     });
     setModalError('');
     setModalMode('edit');
     setIsModalOpen(true);
   };
 
-  // Guardar Servicio
+  // Guardar (Crear o Editar)
   const handleSaveServicio = async (e) => {
     e.preventDefault();
-    if (!servicioActual.nombre_servicio.trim()) {
-      setModalError('El nombre del servicio es obligatorio.');
-      return;
-    }
-    const numCosto = parseFloat(servicioActual.costo);
-    if (isNaN(numCosto) || numCosto <= 0) {
-      setModalError('El costo debe ser un valor numérico mayor a cero.');
+    if (!servicioActual.nombre_servicio.trim() || !servicioActual.costo) {
+      setModalError('Nombre y costo son obligatorios.');
       return;
     }
 
@@ -112,7 +118,7 @@ export default function Servicios() {
       const payload = {
         nombre_servicio: servicioActual.nombre_servicio.trim(),
         descripcion: servicioActual.descripcion.trim(),
-        costo: numCosto
+        costo: parseFloat(servicioActual.costo)
       };
 
       if (modalMode === 'edit') {
@@ -120,7 +126,7 @@ export default function Servicios() {
         showToast('Servicio actualizado correctamente', 'success');
       } else {
         await createServicio(payload);
-        showToast('Servicio registrado con éxito', 'success');
+        showToast('Servicio creado con éxito', 'success');
       }
 
       setIsModalOpen(false);
@@ -133,8 +139,8 @@ export default function Servicios() {
   };
 
   // Modal Eliminar
-  const handleOpenDelete = (s) => {
-    setServicioToDelete(s);
+  const handleOpenDelete = (servicio) => {
+    setServicioToDelete(servicio);
     setIsDeleteModalOpen(true);
   };
 
@@ -156,7 +162,11 @@ export default function Servicios() {
       {/* Toast Flotante */}
       {toast && (
         <div className={`toast-floating ${toast.type}`}>
-          <i className={`bi ${toast.type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}`}></i>
+          {toast.type === 'success' ? (
+            <CheckCircle2 size={18} />
+          ) : (
+            <AlertTriangle size={18} />
+          )}
           <span>{toast.message}</span>
         </div>
       )}
@@ -168,7 +178,7 @@ export default function Servicios() {
           <p>Gestiona los servicios y tarifas ofrecidas a tus clientes.</p>
         </div>
         <button className="btn-primary-custom" onClick={handleOpenCreate}>
-          <i className="bi bi-plus-lg"></i>
+          <Plus size={16} />
           <span>Nuevo servicio</span>
         </button>
       </div>
@@ -176,7 +186,7 @@ export default function Servicios() {
       {/* Barra de búsqueda y contador */}
       <div className="servicios-actions-row">
         <div className="search-bar">
-          <i className="bi bi-search"></i>
+          <Search size={16} />
           <input
             type="text"
             placeholder="Buscar por nombre o descripción..."
@@ -193,13 +203,13 @@ export default function Servicios() {
       <div className="servicios-grid">
         {loading ? (
           <div className="servicios-empty">
-            <i className="bi bi-arrow-clockwise spinning"></i>
+            <RotateCw size={32} className="spinning" />
             <h4>Cargando catálogo...</h4>
             <p>Consultando los servicios registrados en el taller.</p>
           </div>
         ) : servicios.length === 0 ? (
           <div className="servicios-empty">
-            <i className="bi bi-tools"></i>
+            <Wrench size={36} />
             <h4>No se encontraron servicios</h4>
             <p>No hay servicios que coincidan con la búsqueda.</p>
           </div>
@@ -207,7 +217,7 @@ export default function Servicios() {
           servicios.map((s) => (
             <div key={s.id_servicio} className="servicio-card">
               <div className="servicio-icon">
-                <i className="bi bi-tools"></i>
+                <Wrench size={22} />
               </div>
               <div className="servicio-nombre">{s.nombre_servicio}</div>
               <div className="servicio-desc">
@@ -223,14 +233,14 @@ export default function Servicios() {
                   className="btn-accion-card editar"
                   onClick={() => handleOpenEdit(s)}
                 >
-                  <i className="bi bi-pencil"></i> Editar
+                  <Pencil size={13} /> <span>Editar</span>
                 </button>
                 <button
                   type="button"
                   className="btn-accion-card eliminar"
                   onClick={() => handleOpenDelete(s)}
                 >
-                  <i className="bi bi-trash"></i> Eliminar
+                  <Trash2 size={13} /> <span>Eliminar</span>
                 </button>
               </div>
             </div>
@@ -251,7 +261,7 @@ export default function Servicios() {
                 className="btn-modal-close"
                 onClick={() => !isSaving && setIsModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
 
@@ -259,7 +269,7 @@ export default function Servicios() {
               <div className="modal-body-custom">
                 {modalError && (
                   <div className="alert-modal-error">
-                    <i className="bi bi-exclamation-circle-fill"></i>
+                    <AlertCircle size={16} />
                     <span>{modalError}</span>
                   </div>
                 )}
@@ -314,7 +324,7 @@ export default function Servicios() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-primary-custom" disabled={isSaving}>
-                  <i className="bi bi-check-lg"></i>
+                  <Check size={16} />
                   <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
                 </button>
               </div>
@@ -334,14 +344,15 @@ export default function Servicios() {
                 className="btn-modal-close"
                 onClick={() => setIsDeleteModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
             <div className="modal-body-custom" style={{ textAlign: 'center', padding: '24px 20px' }}>
-              <i
-                className="bi bi-exclamation-triangle-fill"
-                style={{ fontSize: '38px', color: '#ef4444', marginBottom: '12px', display: 'inline-block' }}
-              ></i>
+              <AlertTriangle
+                size={40}
+                color="#ef4444"
+                style={{ marginBottom: '12px', display: 'inline-block' }}
+              />
               <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
                 ¿Eliminar el servicio <strong style={{ color: '#1e293b' }}>{servicioToDelete.nombre_servicio}</strong>?
                 <br />
@@ -357,7 +368,7 @@ export default function Servicios() {
                 Cancelar
               </button>
               <button type="button" className="btn-danger-custom" onClick={handleConfirmDelete}>
-                <i className="bi bi-trash"></i>
+                <Trash2 size={16} />
                 <span>Eliminar</span>
               </button>
             </div>

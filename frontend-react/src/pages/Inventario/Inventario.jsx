@@ -1,5 +1,20 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
+  FileSpreadsheet,
+  Upload,
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  X,
+  Check,
+  Download,
+  CloudUpload
+} from 'lucide-react';
+import {
   getInventario,
   getRepuestoById,
   createRepuesto,
@@ -313,12 +328,11 @@ export default function Inventario() {
       {/* Toast Flotante */}
       {toast && (
         <div className={`toast-floating ${toast.type}`}>
-          <i
-            className={`bi ${toast.type === 'success'
-                ? 'bi-check-circle-fill'
-                : 'bi-exclamation-triangle-fill'
-              }`}
-          ></i>
+          {toast.type === 'success' ? (
+            <CheckCircle2 size={18} />
+          ) : (
+            <AlertTriangle size={18} />
+          )}
           <span>{toast.message}</span>
         </div>
       )}
@@ -335,7 +349,7 @@ export default function Inventario() {
             onClick={handleOpenImport}
             type="button"
           >
-            <i className="bi bi-file-earmark-arrow-up"></i>
+            <Upload size={16} />
             <span>Importar CSV</span>
           </button>
           <button
@@ -343,7 +357,7 @@ export default function Inventario() {
             onClick={handleOpenCreate}
             type="button"
           >
-            <i className="bi bi-plus-lg"></i>
+            <Plus size={16} />
             <span>Nuevo repuesto</span>
           </button>
         </div>
@@ -352,7 +366,7 @@ export default function Inventario() {
       {/* Alerta de Stock Bajo */}
       {repuestosBajos.length > 0 && (
         <div className="alert-stock">
-          <i className="bi bi-exclamation-triangle-fill"></i>
+          <AlertTriangle size={18} />
           <div>
             <strong>¡Atención! {repuestosBajos.length} repuesto(s) con stock bajo:</strong>{' '}
             {repuestosBajos.map((r) => r.nombre).join(', ')}
@@ -363,7 +377,7 @@ export default function Inventario() {
       {/* Barra de búsqueda, filtro y contador */}
       <div className="inventario-actions-row">
         <div className="search-bar">
-          <i className="bi bi-search"></i>
+          <Search size={16} />
           <input
             type="text"
             placeholder="Buscar por nombre o marca..."
@@ -459,14 +473,14 @@ export default function Inventario() {
                             title="Editar repuesto"
                             onClick={() => handleOpenEdit(r.id_repuesto)}
                           >
-                            <i className="bi bi-pencil"></i>
+                            <Pencil size={15} />
                           </button>
                           <button
                             className="btn-accion eliminar"
                             title="Eliminar repuesto"
                             onClick={() => handleOpenDelete(r)}
                           >
-                            <i className="bi bi-trash"></i>
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       </td>
@@ -492,7 +506,7 @@ export default function Inventario() {
                 className="btn-modal-close"
                 onClick={() => !isSaving && setIsModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
 
@@ -500,7 +514,7 @@ export default function Inventario() {
               <div className="modal-body-custom">
                 {modalError && (
                   <div className="alert-modal-error">
-                    <i className="bi bi-exclamation-circle-fill"></i>
+                    <AlertCircle size={16} />
                     <span>{modalError}</span>
                   </div>
                 )}
@@ -575,7 +589,7 @@ export default function Inventario() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-primary-custom" disabled={isSaving}>
-                  <i className="bi bi-check-lg"></i>
+                  <Check size={16} />
                   <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
                 </button>
               </div>
@@ -595,19 +609,18 @@ export default function Inventario() {
                 className="btn-modal-close"
                 onClick={() => setIsDeleteModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
             <div className="modal-body-custom" style={{ textAlign: 'center', padding: '24px 20px' }}>
-              <i
-                className="bi bi-exclamation-triangle-fill"
+              <AlertTriangle
+                size={38}
+                color="#ef4444"
                 style={{
-                  fontSize: '38px',
-                  color: '#ef4444',
                   marginBottom: '12px',
                   display: 'inline-block'
                 }}
-              ></i>
+              />
               <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
                 ¿Eliminar el repuesto{' '}
                 <strong style={{ color: '#1e293b' }}>{repuestoToDelete.nombre}</strong>?
@@ -626,7 +639,7 @@ export default function Inventario() {
                 Cancelar
               </button>
               <button type="button" className="btn-danger-custom" onClick={handleConfirmDelete}>
-                <i className="bi bi-trash"></i>
+                <Trash2 size={15} />
                 <span>Eliminar</span>
               </button>
             </div>
@@ -640,7 +653,7 @@ export default function Inventario() {
           <div className="modal-dialog-custom modal-lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-custom">
               <h5 className="modal-title-custom">
-                <i className="bi bi-file-earmark-spreadsheet me-2" style={{ color: '#3b82f6' }}></i>
+                <FileSpreadsheet size={18} className="me-2" style={{ color: '#3b82f6', display: 'inline-block', verticalAlign: 'middle' }} />
                 Importación masiva de repuestos
               </h5>
               <button
@@ -648,14 +661,14 @@ export default function Inventario() {
                 className="btn-modal-close"
                 onClick={() => !isImporting && setIsImportModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
 
             <div className="modal-body-custom">
               {importError && (
                 <div className="alert-modal-error">
-                  <i className="bi bi-exclamation-circle-fill"></i>
+                  <AlertCircle size={16} />
                   <span>{importError}</span>
                 </div>
               )}
@@ -669,7 +682,7 @@ export default function Inventario() {
                   className="btn-plantilla"
                   onClick={handleDescargarPlantilla}
                 >
-                  <i className="bi bi-download"></i> Descargar plantilla CSV
+                  <Download size={14} /> Descargar plantilla CSV
                 </button>
               </div>
 
@@ -690,7 +703,7 @@ export default function Inventario() {
                 }}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <i className="bi bi-cloud-arrow-up drop-icon"></i>
+                <CloudUpload size={42} className="drop-icon" />
                 <p>Haz clic para seleccionar un archivo o arrástralo aquí</p>
                 <span className="drop-hint">Formato .csv (Nombre, Marca, Precio, Stock)</span>
                 <input
@@ -759,11 +772,11 @@ export default function Inventario() {
                             <td>
                               {it.valido ? (
                                 <span className="badge-custom badge-completada">
-                                  <i className="bi bi-check"></i> Válido
+                                  <Check size={13} className="me-1" /> Válido
                                 </span>
                               ) : (
                                 <span className="badge-custom badge-cancelada">
-                                  <i className="bi bi-x"></i> Inválido
+                                  <X size={13} className="me-1" /> Inválido
                                 </span>
                               )}
                             </td>
@@ -794,7 +807,7 @@ export default function Inventario() {
                 }
                 onClick={handleEjecutarImportacion}
               >
-                <i className="bi bi-check-circle"></i>
+                <CheckCircle2 size={16} />
                 <span>{isImporting ? 'Importando...' : 'Confirmar Importación'}</span>
               </button>
             </div>

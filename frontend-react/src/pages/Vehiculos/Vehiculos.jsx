@@ -1,5 +1,26 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
+  Upload,
+  Plus,
+  Search,
+  RotateCw,
+  Car,
+  Pencil,
+  Trash2,
+  X,
+  AlertCircle,
+  AlertTriangle,
+  Check,
+  CheckCircle2,
+  Info,
+  Download,
+  UserCheck,
+  FileSpreadsheet,
+  ClipboardPaste,
+  CloudUpload,
+  XCircle
+} from 'lucide-react';
+import {
   getVehiculos,
   createVehiculo,
   updateVehiculo,
@@ -324,7 +345,11 @@ export default function Vehiculos() {
       {/* Toast Flotante */}
       {toast && (
         <div className={`toast-floating ${toast.type}`}>
-          <i className={`bi ${toast.type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}`}></i>
+          {toast.type === 'success' ? (
+            <CheckCircle2 size={18} />
+          ) : (
+            <AlertTriangle size={18} />
+          )}
           <span>{toast.message}</span>
         </div>
       )}
@@ -337,11 +362,11 @@ export default function Vehiculos() {
         </div>
         <div className="vehiculos-header-actions">
           <button className="btn-secondary-custom" onClick={handleOpenImport}>
-            <i className="bi bi-file-earmark-arrow-up"></i>
+            <Upload size={16} />
             <span>Importar vehículos</span>
           </button>
           <button className="btn-primary-custom" onClick={handleOpenCreate}>
-            <i className="bi bi-plus-lg"></i>
+            <Plus size={16} />
             <span>Nuevo vehículo</span>
           </button>
         </div>
@@ -350,7 +375,7 @@ export default function Vehiculos() {
       {/* Barra de búsqueda y contador */}
       <div className="vehiculos-actions-row">
         <div className="search-bar">
-          <i className="bi bi-search"></i>
+          <Search size={16} />
           <input
             type="text"
             placeholder="Buscar por placa, marca, modelo o cliente..."
@@ -381,7 +406,10 @@ export default function Vehiculos() {
               {loading ? (
                 <tr>
                   <td colSpan="6" style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
-                    <i className="bi bi-arrow-clockwise spinning me-2"></i> Cargando flota vehicular...
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <RotateCw size={16} className="spinning" />
+                      <span>Cargando flota vehicular...</span>
+                    </div>
                   </td>
                 </tr>
               ) : vehiculos.length === 0 ? (
@@ -396,7 +424,7 @@ export default function Vehiculos() {
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div className="vehiculo-icon">
-                          <i className="bi bi-car-front-fill"></i>
+                          <Car size={18} />
                         </div>
                         <div>
                           <div className="vehiculo-title">{v.marca} {v.modelo}</div>
@@ -426,14 +454,14 @@ export default function Vehiculos() {
                           title="Editar vehículo"
                           onClick={() => handleOpenEdit(v)}
                         >
-                          <i className="bi bi-pencil"></i>
+                          <Pencil size={14} />
                         </button>
                         <button
                           className="btn-accion eliminar"
                           title="Eliminar vehículo"
                           onClick={() => handleOpenDelete(v)}
                         >
-                          <i className="bi bi-trash"></i>
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -458,7 +486,7 @@ export default function Vehiculos() {
                 className="btn-modal-close"
                 onClick={() => !isSaving && setIsModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
 
@@ -466,7 +494,7 @@ export default function Vehiculos() {
               <div className="modal-body-custom">
                 {modalError && (
                   <div className="alert-modal-error">
-                    <i className="bi bi-exclamation-circle-fill"></i>
+                    <AlertCircle size={16} />
                     <span>{modalError}</span>
                   </div>
                 )}
@@ -557,7 +585,7 @@ export default function Vehiculos() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-primary-custom" disabled={isSaving}>
-                  <i className="bi bi-check-lg"></i>
+                  <Check size={16} />
                   <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
                 </button>
               </div>
@@ -577,14 +605,15 @@ export default function Vehiculos() {
                 className="btn-modal-close"
                 onClick={() => setIsDeleteModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
             <div className="modal-body-custom" style={{ textAlign: 'center', padding: '24px 20px' }}>
-              <i
-                className="bi bi-exclamation-triangle-fill"
-                style={{ fontSize: '38px', color: '#ef4444', marginBottom: '12px', display: 'inline-block' }}
-              ></i>
+              <AlertTriangle
+                size={40}
+                color="#ef4444"
+                style={{ marginBottom: '12px', display: 'inline-block' }}
+              />
               <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
                 ¿Eliminar el vehículo <strong style={{ color: '#1e293b' }}>{vehiculoToDelete.marca} {vehiculoToDelete.modelo} ({vehiculoToDelete.placa})</strong>?
                 <br />
@@ -600,7 +629,7 @@ export default function Vehiculos() {
                 Cancelar
               </button>
               <button type="button" className="btn-danger-custom" onClick={handleConfirmDelete}>
-                <i className="bi bi-trash"></i>
+                <Trash2 size={16} />
                 <span>Eliminar</span>
               </button>
             </div>
@@ -613,23 +642,23 @@ export default function Vehiculos() {
         <div className="modal-overlay" onClick={() => !isImporting && setIsImportModalOpen(false)}>
           <div className="modal-dialog-custom modal-lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-custom">
-              <h5 className="modal-title-custom">
-                <i className="bi bi-file-earmark-arrow-up text-primary"></i>
-                Importación Masiva de Vehículos
+              <h5 className="modal-title-custom" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Upload size={18} className="text-primary" />
+                <span>Importación Masiva de Vehículos</span>
               </h5>
               <button
                 type="button"
                 className="btn-modal-close"
                 onClick={() => !isImporting && setIsImportModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
 
             <div className="modal-body-custom">
               {importError && (
                 <div className="alert-modal-error">
-                  <i className="bi bi-exclamation-circle-fill"></i>
+                  <AlertCircle size={16} />
                   <span>{importError}</span>
                 </div>
               )}
@@ -637,22 +666,22 @@ export default function Vehiculos() {
               {/* Instrucciones y Descarga */}
               <div className="import-instructions">
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#1e3a8a' }}>
-                    <i className="bi bi-info-circle me-1 text-primary"></i> Columnas requeridas:
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Info size={15} className="text-primary" /> Columnas requeridas:
                   </div>
                   <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                     1. <strong>Placa</strong> &bull; 2. <strong>Marca</strong> &bull; 3. <strong>Modelo</strong> &bull; 4. <strong>Año</strong> &bull; 5. <strong>Color</strong> &bull; 6. <strong>ID_Cliente</strong>
                   </div>
                 </div>
                 <button type="button" className="btn-secondary-custom" onClick={descargarPlantilla}>
-                  <i className="bi bi-download"></i> Plantilla CSV
+                  <Download size={15} /> Plantilla CSV
                 </button>
               </div>
 
               {/* Cliente por defecto */}
               <div className="import-client-default-box">
-                <label className="field-label" style={{ color: '#1e3a8a' }}>
-                  <i className="bi bi-person-check me-1"></i> Cliente por defecto (opcional):
+                <label className="field-label" style={{ color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <UserCheck size={15} /> Cliente por defecto (opcional):
                 </label>
                 <select
                   className="field-input"
@@ -682,14 +711,14 @@ export default function Vehiculos() {
                   className={`tab-btn ${importTab === 'file' ? 'active' : ''}`}
                   onClick={() => setImportTab('file')}
                 >
-                  <i className="bi bi-file-earmark-spreadsheet"></i> Subir Archivo (.csv)
+                  <FileSpreadsheet size={15} /> Subir Archivo (.csv)
                 </button>
                 <button
                   type="button"
                   className={`tab-btn ${importTab === 'text' ? 'active' : ''}`}
                   onClick={() => setImportTab('text')}
                 >
-                  <i className="bi bi-clipboard-plus"></i> Copiar y Pegar (Excel / Texto)
+                  <ClipboardPaste size={15} /> Copiar y Pegar (Excel / Texto)
                 </button>
               </div>
 
@@ -708,7 +737,7 @@ export default function Vehiculos() {
                     style={{ display: 'none' }}
                     onChange={handleFileChange}
                   />
-                  <div className="drop-zone-icon"><i className="bi bi-cloud-arrow-up"></i></div>
+                  <div className="drop-zone-icon"><CloudUpload size={32} /></div>
                   <div className="drop-zone-text">Haz clic aquí o arrastra tu archivo CSV</div>
                   <div className="drop-zone-sub">Formato delimitado por comas (,) o punto y coma (;)</div>
                 </div>
@@ -735,13 +764,13 @@ export default function Vehiculos() {
                     </span>
                     <button
                       type="button"
-                      style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '12px', cursor: 'pointer' }}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                       onClick={() => {
                         setVehiculosParaImportar([]);
                         setImportText('');
                       }}
                     >
-                      <i className="bi bi-x-circle me-1"></i> Limpiar
+                      <XCircle size={14} /> Limpiar
                     </button>
                   </div>
                   <div className="preview-table-wrapper">
@@ -772,12 +801,12 @@ export default function Vehiculos() {
                             </td>
                             <td>
                               {it.valido ? (
-                                <span style={{ color: '#16a34a', fontSize: '12px', fontWeight: 600 }}>
-                                  <i className="bi bi-check-circle-fill me-1"></i>Válido
+                                <span style={{ color: '#16a34a', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <CheckCircle2 size={13} /> Válido
                                 </span>
                               ) : (
-                                <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 600 }}>
-                                  <i className="bi bi-exclamation-circle-fill me-1"></i>Incompleto
+                                <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <AlertCircle size={13} /> Incompleto
                                 </span>
                               )}
                             </td>
@@ -805,7 +834,7 @@ export default function Vehiculos() {
                 disabled={isImporting || vehiculosParaImportar.filter(v => v.valido).length === 0}
                 onClick={handleExecuteImport}
               >
-                <i className="bi bi-check-circle"></i>
+                <CheckCircle2 size={16} />
                 <span>{isImporting ? 'Importando...' : 'Confirmar Importación'}</span>
               </button>
             </div>

@@ -1,5 +1,21 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
+  Plus,
+  Search,
+  CreditCard,
+  Landmark,
+  Banknote,
+  Eye,
+  FileDown,
+  Trash2,
+  X,
+  Check,
+  Car
+} from 'lucide-react';
+import {
   getFacturas,
   getFacturaById,
   createFactura,
@@ -320,12 +336,11 @@ export default function Facturacion() {
       {/* Toast Flotante */}
       {toast && (
         <div className={`toast-floating ${toast.type}`}>
-          <i
-            className={`bi ${toast.type === 'success'
-                ? 'bi-check-circle-fill'
-                : 'bi-exclamation-triangle-fill'
-              }`}
-          ></i>
+          {toast.type === 'success' ? (
+            <CheckCircle2 size={18} />
+          ) : (
+            <AlertTriangle size={18} />
+          )}
           <span>{toast.message}</span>
         </div>
       )}
@@ -337,7 +352,7 @@ export default function Facturacion() {
           <p>Comprobantes de pago, liquidación de órdenes y control de recaudación.</p>
         </div>
         <button className="btn-primary-custom" onClick={handleOpenCreate}>
-          <i className="bi bi-plus-lg"></i>
+          <Plus size={16} />
           <span>Nueva factura</span>
         </button>
       </div>
@@ -345,7 +360,7 @@ export default function Facturacion() {
       {/* Barra de búsqueda y contadores */}
       <div className="facturacion-actions-row">
         <div className="search-bar">
-          <i className="bi bi-search"></i>
+          <Search size={16} />
           <input
             type="text"
             placeholder="Buscar por factura #, cliente, vehículo o medio de pago..."
@@ -402,14 +417,13 @@ export default function Facturacion() {
                     <td className="td-muted">{f.vehiculo}</td>
                     <td>
                       <span className="metodo-badge">
-                        <i
-                          className={`bi ${f.metodo_pago === 'Tarjeta'
-                              ? 'bi-credit-card'
-                              : f.metodo_pago === 'Transferencia'
-                                ? 'bi-bank'
-                                : 'bi-cash-coin'
-                            }`}
-                        ></i>
+                        {f.metodo_pago === 'Tarjeta' ? (
+                          <CreditCard size={14} />
+                        ) : f.metodo_pago === 'Transferencia' ? (
+                          <Landmark size={14} />
+                        ) : (
+                          <Banknote size={14} />
+                        )}
                         {f.metodo_pago}
                       </span>
                     </td>
@@ -425,21 +439,21 @@ export default function Facturacion() {
                           title="Ver detalle completo"
                           onClick={() => handleVerDetalle(f.id_factura)}
                         >
-                          <i className="bi bi-eye"></i>
+                          <Eye size={15} />
                         </button>
                         <button
                           className="btn-accion dian"
                           title="Imprimir / Comprobante PDF"
                           onClick={() => handleDescargarPDF(f.id_factura)}
                         >
-                          <i className="bi bi-file-earmark-pdf"></i>
+                          <FileDown size={15} />
                         </button>
                         <button
                           className="btn-accion eliminar"
                           title="Eliminar factura"
                           onClick={() => handleOpenDelete(f)}
                         >
-                          <i className="bi bi-trash"></i>
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>
@@ -462,7 +476,7 @@ export default function Facturacion() {
                 className="btn-modal-close"
                 onClick={() => !isSaving && setIsModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
 
@@ -470,7 +484,7 @@ export default function Facturacion() {
               <div className="modal-body-custom">
                 {modalError && (
                   <div className="alert-modal-error">
-                    <i className="bi bi-exclamation-circle-fill"></i>
+                    <AlertCircle size={16} />
                     <span>{modalError}</span>
                   </div>
                 )}
@@ -550,7 +564,7 @@ export default function Facturacion() {
                   className="btn-primary-custom"
                   disabled={isSaving || !selectedOrdenId || !selectedMetodoPago}
                 >
-                  <i className="bi bi-check-lg"></i>
+                  <Check size={16} />
                   <span>{isSaving ? 'Emitiendo...' : 'Emitir factura'}</span>
                 </button>
               </div>
@@ -572,7 +586,7 @@ export default function Facturacion() {
                 className="btn-modal-close"
                 onClick={() => setIsDetalleModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
 
@@ -599,7 +613,7 @@ export default function Facturacion() {
                 </div>
 
                 <div className="fac-vehiculo-row">
-                  <i className="bi bi-car-front text-primary me-2"></i>
+                  <Car size={16} className="text-primary me-2" />
                   <span>{facturaDetalle.vehiculo}</span>
                 </div>
 
@@ -647,7 +661,7 @@ export default function Facturacion() {
                 className="btn-primary-custom"
                 onClick={() => handleDescargarPDF(facturaDetalle.id_factura)}
               >
-                <i className="bi bi-file-earmark-pdf-fill"></i>
+                <FileDown size={16} />
                 <span>Imprimir / Descargar PDF</span>
               </button>
               <button
@@ -673,19 +687,18 @@ export default function Facturacion() {
                 className="btn-modal-close"
                 onClick={() => setIsDeleteModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
             <div className="modal-body-custom" style={{ textAlign: 'center', padding: '24px 20px' }}>
-              <i
-                className="bi bi-exclamation-triangle-fill"
+              <AlertTriangle
+                size={38}
+                color="#ef4444"
                 style={{
-                  fontSize: '38px',
-                  color: '#ef4444',
                   marginBottom: '12px',
                   display: 'inline-block'
                 }}
-              ></i>
+              />
               <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
                 ¿Eliminar la factura{' '}
                 <strong style={{ color: '#1e293b' }}>
@@ -707,7 +720,7 @@ export default function Facturacion() {
                 Cancelar
               </button>
               <button type="button" className="btn-danger-custom" onClick={handleConfirmDelete}>
-                <i className="bi bi-trash"></i>
+                <Trash2 size={15} />
                 <span>Eliminar</span>
               </button>
             </div>

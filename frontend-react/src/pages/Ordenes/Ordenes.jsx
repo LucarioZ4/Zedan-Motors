@@ -1,5 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  X,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  Check,
+  Wrench,
+  Cog
+} from 'lucide-react';
+import {
   getOrdenes,
   getOrdenById,
   createOrden,
@@ -332,12 +345,11 @@ export default function Ordenes() {
       {/* Toast Flotante */}
       {toast && (
         <div className={`toast-floating ${toast.type}`}>
-          <i
-            className={`bi ${toast.type === 'success'
-                ? 'bi-check-circle-fill'
-                : 'bi-exclamation-triangle-fill'
-              }`}
-          ></i>
+          {toast.type === 'success' ? (
+            <CheckCircle2 size={18} />
+          ) : (
+            <AlertTriangle size={18} />
+          )}
           <span>{toast.message}</span>
         </div>
       )}
@@ -349,7 +361,7 @@ export default function Ordenes() {
           <p>Gestión de órdenes activas, mano de obra y repuestos utilizados.</p>
         </div>
         <button className="btn-primary-custom" onClick={handleOpenCreate}>
-          <i className="bi bi-plus-lg"></i>
+          <Plus size={16} />
           <span>Nueva orden</span>
         </button>
       </div>
@@ -357,7 +369,7 @@ export default function Ordenes() {
       {/* Barra de búsqueda y contador */}
       <div className="ordenes-actions-row">
         <div className="search-bar">
-          <i className="bi bi-search"></i>
+          <Search size={16} />
           <input
             type="text"
             placeholder="Buscar por orden, cliente, vehículo o técnico..."
@@ -418,14 +430,14 @@ export default function Ordenes() {
                           title="Editar / Gestionar orden"
                           onClick={() => handleOpenEdit(o.id_orden)}
                         >
-                          <i className="bi bi-pencil"></i>
+                          <Pencil size={14} />
                         </button>
                         <button
                           className="btn-accion eliminar"
                           title="Eliminar orden"
                           onClick={() => handleOpenDelete(o)}
                         >
-                          <i className="bi bi-trash"></i>
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -452,7 +464,7 @@ export default function Ordenes() {
                 className="btn-modal-close"
                 onClick={() => !isSaving && setIsModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
 
@@ -460,7 +472,7 @@ export default function Ordenes() {
               <div className="modal-body-custom">
                 {modalError && (
                   <div className="alert-modal-error">
-                    <i className="bi bi-exclamation-circle-fill"></i>
+                    <AlertCircle size={16} />
                     <span>{modalError}</span>
                   </div>
                 )}
@@ -547,17 +559,17 @@ export default function Ordenes() {
                 {/* ── Sección de Detalle: Servicios y Repuestos (sólo editable tras crear) ── */}
                 {modalMode === 'edit' && ordenActual.id_orden && (
                   <div className="orden-detalle-section">
-                    <h4 className="detalle-heading">
-                      <i className="bi bi-tools text-primary me-2"></i>
-                      Servicios y Repuestos de la Orden
+                    <h4 className="detalle-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Wrench size={18} className="text-primary" />
+                      <span>Servicios y Repuestos de la Orden</span>
                     </h4>
 
                     {/* Columnas: Servicios a la izquierda, Repuestos a la derecha */}
                     <div className="orden-detalle-grid">
                       {/* Servicios */}
                       <div className="detalle-col">
-                        <div className="seccion-titulo">
-                          <i className="bi bi-wrench"></i> Servicios aplicados
+                        <div className="seccion-titulo" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Wrench size={15} /> <span>Servicios aplicados</span>
                         </div>
                         <div className="detalle-input-row">
                           <select
@@ -577,7 +589,7 @@ export default function Ordenes() {
                             className="btn-add-detalle"
                             onClick={handleAddServicio}
                           >
-                            <i className="bi bi-plus"></i>
+                            <Plus size={15} />
                           </button>
                         </div>
 
@@ -598,7 +610,7 @@ export default function Ordenes() {
                                   className="btn-quitar"
                                   onClick={() => handleRemoveServicio(s.id_servicio)}
                                 >
-                                  <i className="bi bi-x"></i>
+                                  <X size={14} />
                                 </button>
                               </div>
                             ))
@@ -608,8 +620,8 @@ export default function Ordenes() {
 
                       {/* Repuestos */}
                       <div className="detalle-col">
-                        <div className="seccion-titulo">
-                          <i className="bi bi-gear"></i> Repuestos utilizados
+                        <div className="seccion-titulo" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Cog size={15} /> <span>Repuestos utilizados</span>
                         </div>
                         <div className="detalle-input-row">
                           <select
@@ -636,7 +648,7 @@ export default function Ordenes() {
                             className="btn-add-detalle"
                             onClick={handleAddRepuesto}
                           >
-                            <i className="bi bi-plus"></i>
+                            <Plus size={15} />
                           </button>
                         </div>
 
@@ -659,7 +671,7 @@ export default function Ordenes() {
                                   className="btn-quitar"
                                   onClick={() => handleRemoveRepuesto(r.id_repuesto)}
                                 >
-                                  <i className="bi bi-x"></i>
+                                  <X size={14} />
                                 </button>
                               </div>
                             ))
@@ -681,7 +693,7 @@ export default function Ordenes() {
                   {modalMode === 'edit' ? 'Cerrar' : 'Cancelar'}
                 </button>
                 <button type="submit" className="btn-primary-custom" disabled={isSaving}>
-                  <i className="bi bi-check-lg"></i>
+                  <Check size={16} />
                   <span>
                     {isSaving
                       ? 'Guardando...'
@@ -707,19 +719,18 @@ export default function Ordenes() {
                 className="btn-modal-close"
                 onClick={() => setIsDeleteModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
             <div className="modal-body-custom" style={{ textAlign: 'center', padding: '24px 20px' }}>
-              <i
-                className="bi bi-exclamation-triangle-fill"
+              <AlertTriangle
+                size={40}
+                color="#ef4444"
                 style={{
-                  fontSize: '38px',
-                  color: '#ef4444',
                   marginBottom: '12px',
                   display: 'inline-block'
                 }}
-              ></i>
+              />
               <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
                 ¿Eliminar la orden de trabajo{' '}
                 <strong style={{ color: '#1e293b' }}>#{ordenToDelete.id_orden}</strong>?
@@ -738,7 +749,7 @@ export default function Ordenes() {
                 Cancelar
               </button>
               <button type="button" className="btn-danger-custom" onClick={handleConfirmDelete}>
-                <i className="bi bi-trash"></i>
+                <Trash2 size={16} />
                 <span>Eliminar</span>
               </button>
             </div>

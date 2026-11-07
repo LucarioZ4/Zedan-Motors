@@ -53,10 +53,12 @@
   transition: all 0.2s ease;
 }
 
-.nav-item i {
-  font-size: 16px;
+.nav-item i,
+.nav-item svg {
+  font-size: 18px;
   color: #64748b;
-  transition: color 0.2s;
+  transition: color 0.2s, stroke 0.2s;
+  flex-shrink: 0;
 }
 
 .nav-item:hover {
@@ -64,8 +66,10 @@
   color: #1e3a8a;
 }
 
-.nav-item:hover i {
+.nav-item:hover i,
+.nav-item:hover svg {
   color: #3b82f6;
+  stroke: #3b82f6;
 }
 
 .nav-item.active {
@@ -75,8 +79,10 @@
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
 }
 
-.nav-item.active i {
+.nav-item.active i,
+.nav-item.active svg {
   color: #ffffff;
+  stroke: #ffffff;
 }
 
 .sidebar-footer {

@@ -1,25 +1,39 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Users,
+  Car,
+  UserCheck,
+  Wrench,
+  CalendarCheck,
+  ClipboardList,
+  Package,
+  Receipt,
+  History,
+  MessageSquare,
+  LogOut
+} from 'lucide-react';
 import ZedanLogo from '../common/ZedanLogo';
 import './Sidebar.css';
 
 const navItems = [
   { section: 'Principal', items: [
-    { label: 'Dashboard', path: '/dashboard', icon: 'bi-grid-1x2-fill' }
+    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard }
   ]},
   { section: 'Gestión', items: [
-    { label: 'Clientes', path: '/clientes', icon: 'bi-people-fill' },
-    { label: 'Vehículos', path: '/vehiculos', icon: 'bi-car-front-fill' },
-    { label: 'Empleados', path: '/empleados', icon: 'bi-person-badge-fill' },
-    { label: 'Servicios', path: '/servicios', icon: 'bi-tools' }
+    { label: 'Clientes', path: '/clientes', icon: Users },
+    { label: 'Vehículos', path: '/vehiculos', icon: Car },
+    { label: 'Empleados', path: '/empleados', icon: UserCheck },
+    { label: 'Servicios', path: '/servicios', icon: Wrench }
   ]},
   { section: 'Operaciones', items: [
-    { label: 'Citas', path: '/citas', icon: 'bi-calendar-check-fill' },
-    { label: 'Órdenes', path: '/ordenes', icon: 'bi-clipboard2-check-fill' },
-    { label: 'Inventario', path: '/inventario', icon: 'bi-box-seam-fill' },
-    { label: 'Facturación', path: '/facturacion', icon: 'bi-receipt-cutoff' },
-    { label: 'Historial', path: '/historial', icon: 'bi-clock-history' },
-    { label: 'Mensajes', path: '/mensajes', icon: 'bi-chat-dots-fill' }
+    { label: 'Citas', path: '/citas', icon: CalendarCheck },
+    { label: 'Órdenes', path: '/ordenes', icon: ClipboardList },
+    { label: 'Inventario', path: '/inventario', icon: Package },
+    { label: 'Facturación', path: '/facturacion', icon: Receipt },
+    { label: 'Historial', path: '/historial', icon: History },
+    { label: 'Mensajes', path: '/mensajes', icon: MessageSquare }
   ]}
 ];
 
@@ -46,16 +60,19 @@ export default function Sidebar() {
         {navItems.map((group, gIdx) => (
           <div key={gIdx} className="nav-group">
             <div className="nav-section-label">{group.section}</div>
-            {group.items.map((item, idx) => (
-              <NavLink
-                key={idx}
-                to={item.path}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-              >
-                <i className={`bi ${item.icon}`}></i>
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
+            {group.items.map((item, idx) => {
+              const IconComponent = item.icon;
+              return (
+                <NavLink
+                  key={idx}
+                  to={item.path}
+                  className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                >
+                  <IconComponent size={18} className="nav-icon" />
+                  <span>{item.label}</span>
+                </NavLink>
+              );
+            })}
           </div>
         ))}
       </nav>
@@ -69,7 +86,7 @@ export default function Sidebar() {
           </div>
         </div>
         <button className="btn-logout" onClick={handleLogout} title="Cerrar sesión">
-          <i className="bi bi-box-arrow-right"></i>
+          <LogOut size={16} />
           <span>Cerrar sesión</span>
         </button>
       </div>

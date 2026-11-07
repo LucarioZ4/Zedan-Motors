@@ -1,5 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  RotateCw,
+  CalendarPlus,
+  AlertTriangle,
+  Users,
+  Car,
+  CalendarCheck,
+  ClipboardList,
+  UserCheck,
+  Receipt,
+  Boxes,
+  Zap,
+  ChevronRight,
+  Calendar,
+  ArrowRight,
+  Clock,
+  CheckCircle2,
+  TrendingUp,
+  ShieldCheck,
+  Wrench
+} from 'lucide-react';
 import { getDashboardKPIs, getCitasHoy } from '../../services/dashboardService';
 import './Dashboard.css';
 
@@ -88,11 +109,11 @@ export default function Dashboard() {
             disabled={refreshing}
             title="Actualizar datos"
           >
-            <i className={`bi bi-arrow-clockwise ${refreshing ? 'spinning' : ''}`}></i>
+            <RotateCw size={15} className={refreshing ? 'spinning' : ''} />
             <span>{refreshing ? 'Actualizando...' : 'Actualizar'}</span>
           </button>
           <Link to="/citas" className="btn-hero-primary">
-            <i className="bi bi-calendar-plus"></i>
+            <CalendarPlus size={16} />
             <span>Nueva Cita</span>
           </Link>
         </div>
@@ -100,7 +121,7 @@ export default function Dashboard() {
 
       {error && (
         <div className="dashboard-alert-error">
-          <i className="bi bi-exclamation-triangle-fill"></i>
+          <AlertTriangle size={18} />
           <span>{error}</span>
           <button onClick={fetchData} className="alert-retry-btn">Reintentar</button>
         </div>
@@ -111,44 +132,44 @@ export default function Dashboard() {
         <div className="card-kpi kpi-orange">
           <div className="kpi-header">
             <span className="kpi-title">Clientes</span>
-            <div className="kpi-icon"><i className="bi bi-people-fill"></i></div>
+            <div className="kpi-icon"><Users size={20} /></div>
           </div>
           <div className="kpi-value">{loading ? '...' : kpis.clientes}</div>
           <div className="kpi-footer text-success">
-            <i className="bi bi-arrow-up-short"></i> Registrados en total
+            <TrendingUp size={14} /> Registrados en total
           </div>
         </div>
 
         <div className="card-kpi kpi-blue">
           <div className="kpi-header">
             <span className="kpi-title">Vehículos</span>
-            <div className="kpi-icon"><i className="bi bi-car-front-fill"></i></div>
+            <div className="kpi-icon"><Car size={20} /></div>
           </div>
           <div className="kpi-value">{loading ? '...' : kpis.vehiculos}</div>
           <div className="kpi-footer text-muted">
-            <i className="bi bi-check2"></i> Flota registrada
+            <CheckCircle2 size={14} /> Flota registrada
           </div>
         </div>
 
         <div className="card-kpi kpi-green">
           <div className="kpi-header">
             <span className="kpi-title">Citas hoy</span>
-            <div className="kpi-icon"><i className="bi bi-calendar-check-fill"></i></div>
+            <div className="kpi-icon"><CalendarCheck size={20} /></div>
           </div>
           <div className="kpi-value">{loading ? '...' : kpis.citasHoy}</div>
           <div className="kpi-footer text-warning">
-            <i className="bi bi-clock"></i> Programadas hoy
+            <Clock size={14} /> Programadas hoy
           </div>
         </div>
 
         <div className="card-kpi kpi-amber">
           <div className="kpi-header">
             <span className="kpi-title">Órdenes activas</span>
-            <div className="kpi-icon"><i className="bi bi-clipboard2-check-fill"></i></div>
+            <div className="kpi-icon"><ClipboardList size={20} /></div>
           </div>
           <div className="kpi-value">{loading ? '...' : kpis.ordenes}</div>
           <div className="kpi-footer text-warning">
-            <i className="bi bi-gear-wide-connected"></i> En proceso
+            <Wrench size={14} /> En proceso
           </div>
         </div>
       </div>
@@ -158,33 +179,33 @@ export default function Dashboard() {
         <div className="card-kpi kpi-purple">
           <div className="kpi-header">
             <span className="kpi-title">Empleados</span>
-            <div className="kpi-icon"><i className="bi bi-person-badge-fill"></i></div>
+            <div className="kpi-icon"><UserCheck size={20} /></div>
           </div>
           <div className="kpi-value">{loading ? '...' : kpis.empleados}</div>
           <div className="kpi-footer text-muted">
-            <i className="bi bi-shield-check"></i> Equipo técnico activo
+            <ShieldCheck size={14} /> Equipo técnico activo
           </div>
         </div>
 
         <div className="card-kpi kpi-red">
           <div className="kpi-header">
             <span className="kpi-title">Stock bajo</span>
-            <div className="kpi-icon"><i className="bi bi-exclamation-triangle-fill"></i></div>
+            <div className="kpi-icon"><AlertTriangle size={20} /></div>
           </div>
           <div className="kpi-value">{loading ? '...' : kpis.stockBajo}</div>
           <div className="kpi-footer text-danger">
-            <i className="bi bi-box-seam"></i> Repuestos críticos
+            <Boxes size={14} /> Repuestos críticos
           </div>
         </div>
 
         <div className="card-kpi kpi-emerald">
           <div className="kpi-header">
             <span className="kpi-title">Facturas este mes</span>
-            <div className="kpi-icon"><i className="bi bi-receipt-cutoff"></i></div>
+            <div className="kpi-icon"><Receipt size={20} /></div>
           </div>
           <div className="kpi-value">{loading ? '...' : kpis.facturas}</div>
           <div className="kpi-footer text-success">
-            <i className="bi bi-arrow-up-short"></i> Emitidas este mes
+            <TrendingUp size={14} /> Emitidas este mes
           </div>
         </div>
       </div>
@@ -195,7 +216,7 @@ export default function Dashboard() {
         <div className="panel-card quick-access-panel">
           <div className="panel-header">
             <div className="panel-title">
-              <i className="bi bi-lightning-charge-fill text-primary"></i>
+              <Zap size={18} className="text-primary" />
               <h3>Acceso rápido</h3>
             </div>
             <span className="panel-tag">Atajos directos</span>
@@ -204,41 +225,41 @@ export default function Dashboard() {
           <div className="quick-grid">
             <Link to="/clientes" className="quick-item">
               <div className="quick-icon-box orange">
-                <i className="bi bi-people-fill"></i>
+                <Users size={20} />
               </div>
               <div className="quick-texts">
                 <span className="quick-name">Clientes</span>
-                <span className="quick-hint">Administrar <i className="bi bi-chevron-right"></i></span>
+                <span className="quick-hint">Administrar <ChevronRight size={13} /></span>
               </div>
             </Link>
 
             <Link to="/citas" className="quick-item">
               <div className="quick-icon-box green">
-                <i className="bi bi-calendar-check-fill"></i>
+                <CalendarCheck size={20} />
               </div>
               <div className="quick-texts">
                 <span className="quick-name">Citas</span>
-                <span className="quick-hint">Gestionar <i className="bi bi-chevron-right"></i></span>
+                <span className="quick-hint">Gestionar <ChevronRight size={13} /></span>
               </div>
             </Link>
 
             <Link to="/ordenes" className="quick-item">
               <div className="quick-icon-box amber">
-                <i className="bi bi-clipboard2-check-fill"></i>
+                <ClipboardList size={20} />
               </div>
               <div className="quick-texts">
                 <span className="quick-name">Órdenes</span>
-                <span className="quick-hint">Seguimiento <i className="bi bi-chevron-right"></i></span>
+                <span className="quick-hint">Seguimiento <ChevronRight size={13} /></span>
               </div>
             </Link>
 
             <Link to="/inventario" className="quick-item">
               <div className="quick-icon-box blue">
-                <i className="bi bi-box-seam-fill"></i>
+                <Boxes size={20} />
               </div>
               <div className="quick-texts">
                 <span className="quick-name">Inventario</span>
-                <span className="quick-hint">Control de stock <i className="bi bi-chevron-right"></i></span>
+                <span className="quick-hint">Control de stock <ChevronRight size={13} /></span>
               </div>
             </Link>
           </div>
@@ -248,14 +269,14 @@ export default function Dashboard() {
         <div className="panel-card appointments-panel">
           <div className="panel-header">
             <div className="panel-title">
-              <i className="bi bi-calendar-event-fill text-primary"></i>
+              <Calendar size={18} className="text-primary" />
               <h3>Citas de hoy</h3>
               <span className="badge-citas-counter">
                 {citas.length > 0 ? `${citas.length} programadas` : 'Al día'}
               </span>
             </div>
             <Link to="/citas" className="link-see-all">
-              Ver todas <i className="bi bi-arrow-right"></i>
+              Ver todas <ArrowRight size={14} />
             </Link>
           </div>
 
@@ -274,7 +295,7 @@ export default function Dashboard() {
                   <tr>
                     <td colSpan="4" className="empty-table-cell">
                       <div className="empty-box">
-                        <i className="bi bi-arrow-clockwise spinning"></i>
+                        <RotateCw size={24} className="spinning" />
                         <p>Cargando citas de hoy...</p>
                       </div>
                     </td>
@@ -284,7 +305,7 @@ export default function Dashboard() {
                     <td colSpan="4" className="empty-table-cell">
                       <div className="empty-box">
                         <div className="empty-icon-circle">
-                          <i className="bi bi-calendar2-check"></i>
+                          <CalendarCheck size={24} />
                         </div>
                         <h4>Agenda al día</h4>
                         <p>No hay citas pendientes programadas para hoy.</p>
@@ -296,13 +317,13 @@ export default function Dashboard() {
                     <tr key={idx}>
                       <td>
                         <span className="time-pill">
-                          <i className="bi bi-clock"></i> {cita.hora || '--:--'}
+                          <Clock size={12} /> {cita.hora || '--:--'}
                         </span>
                       </td>
                       <td className="font-semibold">{cita.cliente}</td>
                       <td>
                         <span className="vehicle-info">
-                          <i className="bi bi-car-front"></i> {cita.vehiculo}
+                          <Car size={13} /> {cita.vehiculo}
                         </span>
                       </td>
                       <td>{getBadgeEstado(cita.estado)}</td>

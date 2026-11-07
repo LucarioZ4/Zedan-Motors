@@ -1,5 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
+  Plus,
+  Search,
+  Phone,
+  Pencil,
+  Trash2,
+  X,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  Check,
+  RotateCw
+} from 'lucide-react';
+import {
   getEmpleados,
   createEmpleado,
   updateEmpleado,
@@ -174,7 +187,11 @@ export default function Empleados() {
       {/* Toast Flotante */}
       {toast && (
         <div className={`toast-floating ${toast.type}`}>
-          <i className={`bi ${toast.type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}`}></i>
+          {toast.type === 'success' ? (
+            <CheckCircle2 size={18} />
+          ) : (
+            <AlertTriangle size={18} />
+          )}
           <span>{toast.message}</span>
         </div>
       )}
@@ -186,7 +203,7 @@ export default function Empleados() {
           <p>Administra el equipo técnico y administrativo del taller.</p>
         </div>
         <button className="btn-primary-custom" onClick={handleOpenCreate}>
-          <i className="bi bi-plus-lg"></i>
+          <Plus size={16} />
           <span>Nuevo empleado</span>
         </button>
       </div>
@@ -194,7 +211,7 @@ export default function Empleados() {
       {/* Barra de búsqueda y contador */}
       <div className="empleados-actions-row">
         <div className="search-bar">
-          <i className="bi bi-search"></i>
+          <Search size={16} />
           <input
             type="text"
             placeholder="Buscar por nombre o cargo..."
@@ -224,7 +241,10 @@ export default function Empleados() {
               {loading ? (
                 <tr>
                   <td colSpan="5" style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
-                    <i className="bi bi-arrow-clockwise spinning me-2"></i> Cargando equipo de empleados...
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <RotateCw size={16} className="spinning" />
+                      <span>Cargando equipo de empleados...</span>
+                    </div>
                   </td>
                 </tr>
               ) : empleados.length === 0 ? (
@@ -249,7 +269,7 @@ export default function Empleados() {
                       </td>
                       <td>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <i className="bi bi-telephone text-primary" style={{ color: '#3b82f6' }}></i>
+                          <Phone size={14} style={{ color: '#3b82f6' }} />
                           {e.telefono}
                         </span>
                       </td>
@@ -266,14 +286,14 @@ export default function Empleados() {
                             title="Editar empleado"
                             onClick={() => handleOpenEdit(e)}
                           >
-                            <i className="bi bi-pencil"></i>
+                            <Pencil size={14} />
                           </button>
                           <button
                             className="btn-accion eliminar"
                             title="Eliminar empleado"
                             onClick={() => handleOpenDelete(e)}
                           >
-                            <i className="bi bi-trash"></i>
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       </td>
@@ -299,7 +319,7 @@ export default function Empleados() {
                 className="btn-modal-close"
                 onClick={() => !isSaving && setIsModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
 
@@ -307,7 +327,7 @@ export default function Empleados() {
               <div className="modal-body-custom">
                 {modalError && (
                   <div className="alert-modal-error">
-                    <i className="bi bi-exclamation-circle-fill"></i>
+                    <AlertCircle size={16} />
                     <span>{modalError}</span>
                   </div>
                 )}
@@ -385,7 +405,7 @@ export default function Empleados() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-primary-custom" disabled={isSaving}>
-                  <i className="bi bi-check-lg"></i>
+                  <Check size={16} />
                   <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
                 </button>
               </div>
@@ -405,14 +425,15 @@ export default function Empleados() {
                 className="btn-modal-close"
                 onClick={() => setIsDeleteModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
             <div className="modal-body-custom" style={{ textAlign: 'center', padding: '24px 20px' }}>
-              <i
-                className="bi bi-exclamation-triangle-fill"
-                style={{ fontSize: '38px', color: '#ef4444', marginBottom: '12px', display: 'inline-block' }}
-              ></i>
+              <AlertTriangle
+                size={40}
+                color="#ef4444"
+                style={{ marginBottom: '12px', display: 'inline-block' }}
+              />
               <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
                 ¿Eliminar al empleado <strong style={{ color: '#1e293b' }}>{empleadoToDelete.nombre} {empleadoToDelete.apellido}</strong>?
                 <br />
@@ -428,7 +449,7 @@ export default function Empleados() {
                 Cancelar
               </button>
               <button type="button" className="btn-danger-custom" onClick={handleConfirmDelete}>
-                <i className="bi bi-trash"></i>
+                <Trash2 size={16} />
                 <span>Eliminar</span>
               </button>
             </div>
