@@ -4,6 +4,30 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
 import {
+  Calendar,
+  CalendarDays,
+  CalendarPlus,
+  CalendarCheck,
+  Clock,
+  History,
+  Plus,
+  PlusCircle,
+  Search,
+  Table2,
+  Users,
+  User,
+  Car,
+  Wrench,
+  Pencil,
+  Trash2,
+  Info,
+  X,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  Check
+} from 'lucide-react';
+import {
   getCitas,
   getCitaById,
   createCita,
@@ -283,7 +307,6 @@ export default function Citas() {
         showToast('Cita agendada con éxito', 'success');
       }
 
-      // Si la cita creada tiene fecha distinta a la actual, enfocamos esa fecha
       setFechaSeleccionada(citaActual.fecha);
       setIsModalOpen(false);
       await fetchData(searchTerm);
@@ -358,13 +381,11 @@ export default function Citas() {
       {/* Toast Flotante */}
       {toast && (
         <div className={`toast-floating ${toast.type}`}>
-          <i
-            className={`bi ${
-              toast.type === 'success'
-                ? 'bi-check-circle-fill'
-                : 'bi-exclamation-triangle-fill'
-            }`}
-          ></i>
+          {toast.type === 'success' ? (
+            <CheckCircle2 size={18} className="toast-icon" />
+          ) : (
+            <AlertTriangle size={18} className="toast-icon" />
+          )}
           <span>{toast.message}</span>
         </div>
       )}
@@ -388,7 +409,7 @@ export default function Citas() {
               onClick={() => setVistaModo('calendario')}
               title="Vista calendario interactivo con agenda del día"
             >
-              <i className="bi bi-calendar3"></i>
+              <CalendarDays size={16} />
               <span>Vista Calendario</span>
             </button>
             <button
@@ -397,13 +418,13 @@ export default function Citas() {
               onClick={() => setVistaModo('tabla')}
               title="Vista listado general en tabla"
             >
-              <i className="bi bi-table"></i>
+              <Table2 size={16} />
               <span>Listado General</span>
             </button>
           </div>
 
           <button className="btn-primary-custom" onClick={() => handleOpenCreate(fechaSeleccionada)}>
-            <i className="bi bi-plus-lg"></i>
+            <Plus size={17} />
             <span>Nueva cita</span>
           </button>
         </div>
@@ -419,7 +440,7 @@ export default function Citas() {
             <div className="calendar-card">
               <div className="calendar-card-header">
                 <div className="calendar-card-title">
-                  <i className="bi bi-calendar-event"></i>
+                  <Calendar size={17} />
                   <span>Calendario de Citas</span>
                 </div>
                 <button
@@ -428,7 +449,7 @@ export default function Citas() {
                   onClick={handleIrAHoy}
                   title="Ir al día actual"
                 >
-                  <i className="bi bi-clock-history"></i> Hoy
+                  <History size={14} /> Hoy
                 </button>
               </div>
 
@@ -454,7 +475,7 @@ export default function Citas() {
                   }}
                   dateClick={handleDateClick}
                   events={calendarEvents}
-                  eventDisplay="none" // Ocultamos barras nativas para usar badges limpios personalizados en cada celda
+                  eventDisplay="none"
                   dayCellClassNames={(arg) => {
                     const dStr = normalizarFecha(arg.date);
                     const classes = [];
@@ -490,7 +511,7 @@ export default function Citas() {
                 className="btn-agregar-cita-dia"
                 onClick={() => handleOpenCreate(fechaSeleccionada)}
               >
-                <i className="bi bi-plus-circle-fill"></i>
+                <PlusCircle size={16} />
                 <span>+ Agregar cita ({fechaSeleccionada.split('-')[2] || 'Día'})</span>
               </button>
 
@@ -543,7 +564,7 @@ export default function Citas() {
 
                   {/* Buscador de Paciente / Cliente */}
                   <div className="search-bar-compact">
-                    <i className="bi bi-search"></i>
+                    <Search size={15} />
                     <input
                       type="text"
                       placeholder="Buscar cliente, vehículo o motivo..."
@@ -556,7 +577,7 @@ export default function Citas() {
 
               {/* Barra verde / banner contador (Exacto como en la foto) */}
               <div className="day-count-banner">
-                <i className="bi bi-people-fill"></i>
+                <Users size={16} />
                 <span>
                   Cantidad de clientes / citas encontrados:{' '}
                   <strong>{citasDelDia.length}</strong>
@@ -574,7 +595,7 @@ export default function Citas() {
               ) : citasDelDia.length === 0 ? (
                 <div className="day-agenda-empty">
                   <div className="empty-icon-wrap">
-                    <i className="bi bi-calendar-check"></i>
+                    <CalendarCheck size={28} />
                   </div>
                   <h4>No hay citas registradas para este día</h4>
                   <p>
@@ -586,7 +607,7 @@ export default function Citas() {
                     className="btn-primary-custom btn-empty-cta"
                     onClick={() => handleOpenCreate(fechaSeleccionada)}
                   >
-                    <i className="bi bi-plus-lg"></i>
+                    <Plus size={16} />
                     <span>Agendar primera cita para este día</span>
                   </button>
                 </div>
@@ -610,7 +631,7 @@ export default function Citas() {
                             <div className="turno-hora-box">
                               <span className="turno-num">#{index + 1}</span>
                               <div className="turno-hora-text">
-                                <i className="bi bi-clock"></i>
+                                <Clock size={13} />
                                 <span>{c.hora || '--:--'}</span>
                               </div>
                             </div>
@@ -620,11 +641,11 @@ export default function Citas() {
                           <td>
                             <div className="agenda-cliente-info">
                               <div className="agenda-cliente-name">
-                                <i className="bi bi-person-fill"></i>
+                                <User size={14} />
                                 <span>{c.cliente}</span>
                               </div>
                               <div className="agenda-vehiculo-badge">
-                                <i className="bi bi-car-front-fill"></i>
+                                <Car size={13} />
                                 <span>{c.vehiculo}</span>
                               </div>
                             </div>
@@ -635,7 +656,7 @@ export default function Citas() {
                             <div className="agenda-motivo-text">
                               {c.motivo ? (
                                 <>
-                                  <i className="bi bi-wrench"></i>
+                                  <Wrench size={13} />
                                   <span>{c.motivo}</span>
                                 </>
                               ) : (
@@ -655,14 +676,14 @@ export default function Citas() {
                                 title="Editar Cita"
                                 onClick={() => handleOpenEdit(c.id_cita)}
                               >
-                                <i className="bi bi-pencil-fill"></i>
+                                <Pencil size={14} />
                               </button>
                               <button
                                 className="btn-accion eliminar"
                                 title="Eliminar Cita"
                                 onClick={() => handleOpenDelete(c)}
                               >
-                                <i className="bi bi-trash-fill"></i>
+                                <Trash2 size={14} />
                               </button>
                             </div>
                           </td>
@@ -676,7 +697,7 @@ export default function Citas() {
               {/* Botón flotante inferior "Agendar" (Como en la foto) */}
               <div className="day-agenda-footer">
                 <div className="agenda-footer-tip">
-                  <i className="bi bi-info-circle"></i>
+                  <Info size={15} />
                   <span>Haz clic sobre cualquier fecha en el calendario izquierdo para ver o agregar citas en ese día.</span>
                 </div>
                 <button
@@ -684,7 +705,7 @@ export default function Citas() {
                   className="btn-agendar-cta-green"
                   onClick={() => handleOpenCreate(fechaSeleccionada)}
                 >
-                  <i className="bi bi-calendar-plus-fill"></i>
+                  <CalendarPlus size={17} />
                   <span>Agendar Cita</span>
                 </button>
               </div>
@@ -701,7 +722,7 @@ export default function Citas() {
           {/* Barra de búsqueda, filtro y contador */}
           <div className="citas-actions-row">
             <div className="search-bar">
-              <i className="bi bi-search"></i>
+              <Search size={16} />
               <input
                 type="text"
                 placeholder="Buscar por cliente, vehículo o motivo..."
@@ -778,14 +799,14 @@ export default function Citas() {
                               title="Editar"
                               onClick={() => handleOpenEdit(c.id_cita)}
                             >
-                              <i className="bi bi-pencil"></i>
+                              <Pencil size={14} />
                             </button>
                             <button
                               className="btn-accion eliminar"
                               title="Eliminar"
                               onClick={() => handleOpenDelete(c)}
                             >
-                              <i className="bi bi-trash"></i>
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </td>
@@ -805,7 +826,7 @@ export default function Citas() {
           <div className="modal-dialog-custom" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-custom">
               <div className="modal-header-title-box">
-                <i className={`bi ${modalMode === 'edit' ? 'bi-pencil-square' : 'bi-calendar-plus'}`}></i>
+                {modalMode === 'edit' ? <Pencil size={18} /> : <CalendarPlus size={18} />}
                 <h5 className="modal-title-custom">
                   {modalMode === 'edit' ? 'Editar cita' : 'Agendar nueva cita'}
                 </h5>
@@ -815,7 +836,7 @@ export default function Citas() {
                 className="btn-modal-close"
                 onClick={() => !isSaving && setIsModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
 
@@ -823,7 +844,7 @@ export default function Citas() {
               <div className="modal-body-custom">
                 {modalError && (
                   <div className="alert-modal-error">
-                    <i className="bi bi-exclamation-circle-fill"></i>
+                    <AlertCircle size={16} />
                     <span>{modalError}</span>
                   </div>
                 )}
@@ -941,7 +962,7 @@ export default function Citas() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-primary-custom" disabled={isSaving}>
-                  <i className="bi bi-check-lg"></i>
+                  <Check size={17} />
                   <span>{isSaving ? 'Guardando...' : 'Guardar Cita'}</span>
                 </button>
               </div>
@@ -961,19 +982,18 @@ export default function Citas() {
                 className="btn-modal-close"
                 onClick={() => setIsDeleteModalOpen(false)}
               >
-                <i className="bi bi-x-lg"></i>
+                <X size={18} />
               </button>
             </div>
             <div className="modal-body-custom" style={{ textAlign: 'center', padding: '24px 20px' }}>
-              <i
-                className="bi bi-exclamation-triangle-fill"
+              <AlertTriangle
+                size={40}
+                color="#ef4444"
                 style={{
-                  fontSize: '38px',
-                  color: '#ef4444',
                   marginBottom: '12px',
                   display: 'inline-block'
                 }}
-              ></i>
+              />
               <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
                 ¿Eliminar la cita de{' '}
                 <strong style={{ color: '#1e293b' }}>{citaToDelete.cliente}</strong>?
@@ -992,7 +1012,7 @@ export default function Citas() {
                 Cancelar
               </button>
               <button type="button" className="btn-danger-custom" onClick={handleConfirmDelete}>
-                <i className="bi bi-trash"></i>
+                <Trash2 size={16} />
                 <span>Eliminar</span>
               </button>
             </div>

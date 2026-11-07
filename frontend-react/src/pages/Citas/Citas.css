@@ -178,9 +178,11 @@
     color: #1e3a8a;
 }
 
-.calendar-card-title i {
+.calendar-card-title i,
+.calendar-card-title svg {
     color: #2563eb;
     font-size: 16px;
+    flex-shrink: 0;
 }
 
 .btn-hoy-pill {
@@ -485,13 +487,15 @@
     min-width: 220px;
 }
 
-.search-bar-compact i {
+.search-bar-compact i,
+.search-bar-compact svg {
     position: absolute;
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: #94a3b8;
     font-size: 13px;
+    pointer-events: none;
 }
 
 .search-bar-compact input {
@@ -604,8 +608,10 @@
     border-radius: 6px;
 }
 
-.turno-hora-text i {
+.turno-hora-text i,
+.turno-hora-text svg {
     font-size: 11px;
+    flex-shrink: 0;
 }
 
 /* Cliente y Vehículo */
@@ -624,9 +630,11 @@
     color: #0f172a;
 }
 
-.agenda-cliente-name i {
+.agenda-cliente-name i,
+.agenda-cliente-name svg {
     color: #3b82f6;
     font-size: 13px;
+    flex-shrink: 0;
 }
 
 .agenda-vehiculo-badge {
@@ -641,9 +649,11 @@
     width: fit-content;
 }
 
-.agenda-vehiculo-badge i {
+.agenda-vehiculo-badge i,
+.agenda-vehiculo-badge svg {
     color: #64748b;
     font-size: 11px;
+    flex-shrink: 0;
 }
 
 /* Motivo */
@@ -655,7 +665,8 @@
     font-size: 13px;
 }
 
-.agenda-motivo-text i {
+.agenda-motivo-text i,
+.agenda-motivo-text svg {
     color: #94a3b8;
     font-size: 12px;
     flex-shrink: 0;
@@ -773,13 +784,15 @@
     min-width: 240px;
 }
 
-.search-bar i {
+.search-bar i,
+.search-bar svg {
     position: absolute;
     left: 16px;
     top: 50%;
     transform: translateY(-50%);
     color: #94a3b8;
     font-size: 15px;
+    pointer-events: none;
 }
 
 .search-bar input {
@@ -1018,9 +1031,11 @@
     gap: 10px;
 }
 
-.modal-header-title-box i {
+.modal-header-title-box i,
+.modal-header-title-box svg {
     color: #2563eb;
     font-size: 18px;
+    flex-shrink: 0;
 }
 
 .modal-title-custom {
