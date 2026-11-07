@@ -1,4 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import esLocale from '@fullcalendar/core/locales/es';
 import {
   getCitas,
   getCitaById,
@@ -28,6 +32,37 @@ const emptyForm = {
   id_estado: '1'
 };
 
+// Formatea fecha a YYYY-MM-DD local
+const normalizarFecha = (fecha) => {
+  if (!fecha) return '';
+  if (typeof fecha === 'string') {
+    return fecha.includes('T') ? fecha.split('T')[0] : fecha.slice(0, 10);
+  }
+  const y = fecha.getFullYear();
+  const m = String(fecha.getMonth() + 1).padStart(2, '0');
+  const d = String(fecha.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+const getHoyFecha = () => {
+  const hoy = new Date();
+  const y = hoy.getFullYear();
+  const m = String(hoy.getMonth() + 1).padStart(2, '0');
+  const d = String(hoy.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+const formatearFechaLarga = (fechaStr) => {
+  if (!fechaStr) return '';
+  const partes = fechaStr.split('-');
+  if (partes.length !== 3) return fechaStr;
+  const [y, m, d] = partes.map(Number);
+  const date = new Date(y, m - 1, d);
+  const opciones = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+  const str = date.toLocaleDateString('es-ES', opciones);
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
 export default function Citas() {
   const [citas, setCitas] = useState([]);
   const [todasCitas, setTodasCitas] = useState([]);
@@ -36,6 +71,12 @@ export default function Citas() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
+
+  // Vista activa: 'calendario' (estilo dividido de la foto) o 'tabla' (tabla general completa)
+  const [vistaModo, setVistaModo] = useState('calendario');
+
+  // Fecha seleccionada en el calendario (por defecto hoy)
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(getHoyFecha());
 
   // Estados Modal Formulario
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,9 +89,10 @@ export default function Citas() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [citaToDelete, setCitaToDelete] = useState(null);
 
-  // Toast
+  // Toast y Referencias
   const [toast, setToast] = useState(null);
   const timerBuscar = useRef(null);
+  const calendarRef = useRef(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -76,30 +118,90 @@ export default function Citas() {
 
   useEffect(() => {
     fetchData();
-    const inputFecha = document.getElementById('fFecha');
-    if (inputFecha) inputFecha.min = new Date().toISOString().split('T')[0];
   }, []);
 
+  // Filtrado general de citas
   useEffect(() => {
     const filtradas = filtroEstado
-      ? todasCitas.filter((c) => c.id_estado == filtroEstado)
+      ? todasCitas.filter((c) => String(c.id_estado) === String(filtroEstado))
       : todasCitas;
     setCitas(filtradas);
   }, [filtroEstado, todasCitas]);
+
+  // Agrupación de citas por fecha para el calendario
+  const citasPorFecha = useMemo(() => {
+    const map = {};
+    todasCitas.forEach((c) => {
+      const f = normalizarFecha(c.fecha);
+      if (f) {
+        if (!map[f]) map[f] = [];
+        map[f].push(c);
+      }
+    });
+    return map;
+  }, [todasCitas]);
+
+  // Eventos para FullCalendar
+  const calendarEvents = useMemo(() => {
+    return todasCitas.map((c) => {
+      const fecha = normalizarFecha(c.fecha);
+      const hora = c.hora || '08:00';
+      return {
+        id: String(c.id_cita),
+        title: `${c.hora || ''} ${c.cliente || 'Cita'}`,
+        start: `${fecha}T${hora}:00`,
+        allDay: false,
+        extendedProps: c
+      };
+    });
+  }, [todasCitas]);
+
+  // Citas del día seleccionado con filtros aplicados (búsqueda y estado)
+  const citasDelDia = useMemo(() => {
+    let list = citasPorFecha[fechaSeleccionada] || [];
+
+    if (filtroEstado) {
+      list = list.filter((c) => String(c.id_estado) === String(filtroEstado));
+    }
+
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      list = list.filter((c) => {
+        const clienteNom = (c.cliente || '').toLowerCase();
+        const vehiculoTxt = (c.vehiculo || '').toLowerCase();
+        const motivoTxt = (c.motivo || '').toLowerCase();
+        return clienteNom.includes(q) || vehiculoTxt.includes(q) || motivoTxt.includes(q);
+      });
+    }
+
+    // Ordenar por hora ascendente
+    return [...list].sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+  }, [citasPorFecha, fechaSeleccionada, filtroEstado, searchTerm]);
+
+  // Estadísticas del mes / taller
+  const statsResumen = useMemo(() => {
+    const hoyStr = getHoyFecha();
+    const hoyCitas = citasPorFecha[hoyStr]?.length || 0;
+    const diaSeleccionadoCitas = citasPorFecha[fechaSeleccionada]?.length || 0;
+    const pendientes = todasCitas.filter((c) => String(c.id_estado) === '1').length;
+    return { hoyCitas, diaSeleccionadoCitas, pendientes, total: todasCitas.length };
+  }, [citasPorFecha, fechaSeleccionada, todasCitas]);
 
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearchTerm(val);
 
-    if (timerBuscar.current) clearTimeout(timerBuscar.current);
-    timerBuscar.current = setTimeout(async () => {
-      try {
-        const data = await getCitas(val);
-        setTodasCitas(data || []);
-      } catch (err) {
-        console.error('Error filtrando citas:', err);
-      }
-    }, 400);
+    if (vistaModo === 'tabla') {
+      if (timerBuscar.current) clearTimeout(timerBuscar.current);
+      timerBuscar.current = setTimeout(async () => {
+        try {
+          const data = await getCitas(val);
+          setTodasCitas(data || []);
+        } catch (err) {
+          console.error('Error filtrando citas:', err);
+        }
+      }, 400);
+    }
   };
 
   const handleClienteChange = async (idCliente) => {
@@ -114,9 +216,14 @@ export default function Citas() {
     }
   };
 
-  // Abrir Modal Crear
-  const handleOpenCreate = () => {
-    setCitaActual(emptyForm);
+  // Abrir Modal Crear (pre-seleccionando fecha)
+  const handleOpenCreate = (fechaInicial = null) => {
+    const fechaParaCita = fechaInicial || fechaSeleccionada || getHoyFecha();
+    setCitaActual({
+      ...emptyForm,
+      fecha: fechaParaCita,
+      hora: '08:30'
+    });
     setVehiculos([]);
     setModalError('');
     setModalMode('create');
@@ -129,7 +236,7 @@ export default function Citas() {
       const data = await getCitaById(id);
       setCitaActual({
         id_cita: data.id_cita,
-        fecha: data.fecha ? data.fecha.split('T')[0] : '',
+        fecha: data.fecha ? normalizarFecha(data.fecha) : '',
         hora: data.hora || '',
         motivo: data.motivo || '',
         id_vehiculo: data.id_vehiculo || '',
@@ -163,7 +270,7 @@ export default function Citas() {
       const payload = {
         fecha: citaActual.fecha,
         hora: citaActual.hora,
-        motivo: citaActual.motivo.trim(),
+        motivo: (citaActual.motivo || '').trim(),
         id_vehiculo: citaActual.id_vehiculo,
         id_estado: citaActual.id_estado
       };
@@ -173,11 +280,13 @@ export default function Citas() {
         showToast('Cita actualizada correctamente', 'success');
       } else {
         await createCita(payload);
-        showToast('Cita registrada con éxito', 'success');
+        showToast('Cita agendada con éxito', 'success');
       }
 
+      // Si la cita creada tiene fecha distinta a la actual, enfocamos esa fecha
+      setFechaSeleccionada(citaActual.fecha);
       setIsModalOpen(false);
-      fetchData(searchTerm);
+      await fetchData(searchTerm);
     } catch (err) {
       setModalError(err.message || 'Error al guardar cita');
     } finally {
@@ -229,138 +338,478 @@ export default function Citas() {
     );
   };
 
+  // Click en día del calendario
+  const handleDateClick = (arg) => {
+    setFechaSeleccionada(arg.dateStr);
+  };
+
+  // Ir a fecha de hoy en el calendario
+  const handleIrAHoy = () => {
+    const hoy = getHoyFecha();
+    setFechaSeleccionada(hoy);
+    if (calendarRef.current) {
+      const api = calendarRef.current.getApi();
+      api.today();
+    }
+  };
+
   return (
     <div className="citas-container">
       {/* Toast Flotante */}
       {toast && (
         <div className={`toast-floating ${toast.type}`}>
           <i
-            className={`bi ${toast.type === 'success'
+            className={`bi ${
+              toast.type === 'success'
                 ? 'bi-check-circle-fill'
                 : 'bi-exclamation-triangle-fill'
-              }`}
+            }`}
           ></i>
           <span>{toast.message}</span>
         </div>
       )}
 
-      {/* Header superior */}
+      {/* Header superior principal */}
       <div className="citas-header">
         <div className="citas-header-info">
-          <h2>Gestión de Citas</h2>
-          <p>Administra las citas programadas con los clientes.</p>
+          <div className="citas-header-title-row">
+            <span className="citas-badge-tag">Módulo Operativo</span>
+            <h2>Agenda y Calendario de Citas</h2>
+          </div>
+          <p>Supervisa los clientes y vehículos agendados por día o programa nuevas citas en el taller.</p>
         </div>
-        <button className="btn-primary-custom" onClick={handleOpenCreate}>
-          <i className="bi bi-plus-lg"></i>
-          <span>Nueva cita</span>
-        </button>
+
+        <div className="citas-header-actions">
+          {/* Selector de Vista: Calendario Dividido vs Tabla General */}
+          <div className="vista-toggle-group">
+            <button
+              type="button"
+              className={`btn-toggle-vista ${vistaModo === 'calendario' ? 'active' : ''}`}
+              onClick={() => setVistaModo('calendario')}
+              title="Vista calendario interactivo con agenda del día"
+            >
+              <i className="bi bi-calendar3"></i>
+              <span>Vista Calendario</span>
+            </button>
+            <button
+              type="button"
+              className={`btn-toggle-vista ${vistaModo === 'tabla' ? 'active' : ''}`}
+              onClick={() => setVistaModo('tabla')}
+              title="Vista listado general en tabla"
+            >
+              <i className="bi bi-table"></i>
+              <span>Listado General</span>
+            </button>
+          </div>
+
+          <button className="btn-primary-custom" onClick={() => handleOpenCreate(fechaSeleccionada)}>
+            <i className="bi bi-plus-lg"></i>
+            <span>Nueva cita</span>
+          </button>
+        </div>
       </div>
 
-      {/* Barra de búsqueda, filtro y contador */}
-      <div className="citas-actions-row">
-        <div className="search-bar">
-          <i className="bi bi-search"></i>
-          <input
-            type="text"
-            placeholder="Buscar por cliente o vehículo..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
-        </div>
-        <select
-          className="filtro-select"
-          value={filtroEstado}
-          onChange={(e) => setFiltroEstado(e.target.value)}
-        >
-          <option value="">Todos los estados</option>
-          {ESTADOS.map((es) => (
-            <option key={es.id} value={es.id}>
-              {es.nombre}
-            </option>
-          ))}
-        </select>
-        <div className="stat-pill">
-          <span>{citas.length}</span> citas
-        </div>
-      </div>
+      {/* ══════════════════════════════════════════════════════════════
+          VISTA 1: CALENDARIO INTERACTIVO DIVIDIDO (ESTILO DE LA FOTO)
+         ══════════════════════════════════════════════════════════════ */}
+      {vistaModo === 'calendario' && (
+        <div className="citas-split-layout">
+          {/* PANEL IZQUIERDO: CALENDARIO FULLCALENDAR */}
+          <aside className="citas-calendar-sidebar">
+            <div className="calendar-card">
+              <div className="calendar-card-header">
+                <div className="calendar-card-title">
+                  <i className="bi bi-calendar-event"></i>
+                  <span>Calendario de Citas</span>
+                </div>
+                <button
+                  type="button"
+                  className="btn-hoy-pill"
+                  onClick={handleIrAHoy}
+                  title="Ir al día actual"
+                >
+                  <i className="bi bi-clock-history"></i> Hoy
+                </button>
+              </div>
 
-      {/* Tabla de Citas */}
-      <div className="card-custom">
-        <div className="table-responsive">
-          <table className="table-custom">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Hora</th>
-                <th>Cliente</th>
-                <th>Vehículo</th>
-                <th>Motivo</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="table-empty">
-                    Cargando citas...
-                  </td>
-                </tr>
-              ) : citas.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="table-empty">
-                    No se encontraron citas
-                  </td>
-                </tr>
-              ) : (
-                citas.map((c) => (
-                  <tr key={c.id_cita}>
-                    <td>
-                      <div className="td-primary">{formatearFecha(c.fecha)}</div>
-                    </td>
-                    <td>
-                      <span className="td-hora">{c.hora}</span>
-                    </td>
-                    <td>{c.cliente}</td>
-                    <td className="td-muted">{c.vehiculo}</td>
-                    <td className="td-muted">
-                      {c.motivo || <span className="td-dash">—</span>}
-                    </td>
-                    <td>{getBadgeEstado(c.estado)}</td>
-                    <td>
-                      <div className="d-flex gap-2">
-                        <button
-                          className="btn-accion editar"
-                          title="Editar"
-                          onClick={() => handleOpenEdit(c.id_cita)}
-                        >
-                          <i className="bi bi-pencil"></i>
-                        </button>
-                        <button
-                          className="btn-accion eliminar"
-                          title="Eliminar"
-                          onClick={() => handleOpenDelete(c)}
-                        >
-                          <i className="bi bi-trash"></i>
-                        </button>
+              {/* Contenedor del componente FullCalendar */}
+              <div className="fullcalendar-wrapper">
+                <FullCalendar
+                  ref={calendarRef}
+                  plugins={[dayGridPlugin, interactionPlugin]}
+                  initialView="dayGridMonth"
+                  initialDate={fechaSeleccionada}
+                  locales={[esLocale]}
+                  locale="es"
+                  height="auto"
+                  fixedWeekCount={false}
+                  showNonCurrentDates={true}
+                  headerToolbar={{
+                    left: 'prev',
+                    center: 'title',
+                    right: 'next'
+                  }}
+                  buttonText={{
+                    today: 'Hoy'
+                  }}
+                  dateClick={handleDateClick}
+                  events={calendarEvents}
+                  eventDisplay="none" // Ocultamos barras nativas para usar badges limpios personalizados en cada celda
+                  dayCellClassNames={(arg) => {
+                    const dStr = normalizarFecha(arg.date);
+                    const classes = [];
+                    if (dStr === fechaSeleccionada) classes.push('fc-day-active-selected');
+                    if (citasPorFecha[dStr]?.length > 0) classes.push('fc-day-has-citas');
+                    return classes;
+                  }}
+                  dayCellContent={(arg) => {
+                    const dStr = normalizarFecha(arg.date);
+                    const count = citasPorFecha[dStr]?.length || 0;
+                    return (
+                      <div className="fc-custom-cell">
+                        <span className="fc-custom-day-num">
+                          {arg.dayNumberText.replace(/[^0-9]/g, '')}
+                        </span>
+                        {count > 0 && (
+                          <span
+                            className="fc-citas-indicator"
+                            title={`${count} cita(s) agendada(s)`}
+                          >
+                            {count}
+                          </span>
+                        )}
                       </div>
-                    </td>
-                  </tr>
-                ))
+                    );
+                  }}
+                />
+              </div>
+
+              {/* Botón rápido "+ Agregar cita" bajo el calendario (Estilo Foto) */}
+              <button
+                type="button"
+                className="btn-agregar-cita-dia"
+                onClick={() => handleOpenCreate(fechaSeleccionada)}
+              >
+                <i className="bi bi-plus-circle-fill"></i>
+                <span>+ Agregar cita ({fechaSeleccionada.split('-')[2] || 'Día'})</span>
+              </button>
+
+              {/* Resumen rápido de métricas */}
+              <div className="calendar-stats-box">
+                <div className="cal-stat-item">
+                  <span className="cal-stat-num">{statsResumen.diaSeleccionadoCitas}</span>
+                  <span className="cal-stat-label">Citas este día</span>
+                </div>
+                <div className="cal-stat-divider"></div>
+                <div className="cal-stat-item">
+                  <span className="cal-stat-num">{statsResumen.hoyCitas}</span>
+                  <span className="cal-stat-label">Citas hoy</span>
+                </div>
+                <div className="cal-stat-divider"></div>
+                <div className="cal-stat-item">
+                  <span className="cal-stat-num">{statsResumen.pendientes}</span>
+                  <span className="cal-stat-label">Pendientes</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* PANEL DERECHO: CLIENTES Y CITAS DEL DÍA SELECCIONADO */}
+          <main className="citas-day-main">
+            {/* Header del Día Seleccionado con Filtros (Estilo Foto) */}
+            <div className="day-agenda-header-card">
+              <div className="day-agenda-top">
+                <div className="day-agenda-date-info">
+                  <span className="day-agenda-tag">Agenda Diaria</span>
+                  <h3 className="day-agenda-title">
+                    {formatearFechaLarga(fechaSeleccionada)}
+                  </h3>
+                </div>
+
+                <div className="day-agenda-filters">
+                  {/* Selector de Estado */}
+                  <select
+                    className="filtro-select-compact"
+                    value={filtroEstado}
+                    onChange={(e) => setFiltroEstado(e.target.value)}
+                  >
+                    <option value="">TODOS LOS ESTADOS</option>
+                    {ESTADOS.map((es) => (
+                      <option key={es.id} value={es.id}>
+                        {es.nombre.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Buscador de Paciente / Cliente */}
+                  <div className="search-bar-compact">
+                    <i className="bi bi-search"></i>
+                    <input
+                      type="text"
+                      placeholder="Buscar cliente, vehículo o motivo..."
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Barra verde / banner contador (Exacto como en la foto) */}
+              <div className="day-count-banner">
+                <i className="bi bi-people-fill"></i>
+                <span>
+                  Cantidad de clientes / citas encontrados:{' '}
+                  <strong>{citasDelDia.length}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Listado / Tabla de Citas del Día */}
+            <div className="day-agenda-content-card">
+              {loading ? (
+                <div className="day-agenda-empty">
+                  <div className="spinner-border text-primary" role="status"></div>
+                  <p>Cargando citas del taller...</p>
+                </div>
+              ) : citasDelDia.length === 0 ? (
+                <div className="day-agenda-empty">
+                  <div className="empty-icon-wrap">
+                    <i className="bi bi-calendar-check"></i>
+                  </div>
+                  <h4>No hay citas registradas para este día</h4>
+                  <p>
+                    No se encontraron clientes agendados para el{' '}
+                    <strong>{formatearFechaLarga(fechaSeleccionada)}</strong>.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-primary-custom btn-empty-cta"
+                    onClick={() => handleOpenCreate(fechaSeleccionada)}
+                  >
+                    <i className="bi bi-plus-lg"></i>
+                    <span>Agendar primera cita para este día</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table-agenda-custom">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '110px' }}>TURNO / HORA</th>
+                        <th>CLIENTE Y VEHÍCULO</th>
+                        <th>MOTIVO DEL SERVICIO</th>
+                        <th style={{ width: '130px' }}>ESTADO</th>
+                        <th style={{ width: '100px', textAlign: 'center' }}>ACCIONES</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {citasDelDia.map((c, index) => (
+                        <tr key={c.id_cita} className="agenda-row">
+                          {/* Turno / Hora */}
+                          <td>
+                            <div className="turno-hora-box">
+                              <span className="turno-num">#{index + 1}</span>
+                              <div className="turno-hora-text">
+                                <i className="bi bi-clock"></i>
+                                <span>{c.hora || '--:--'}</span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Cliente y Vehículo */}
+                          <td>
+                            <div className="agenda-cliente-info">
+                              <div className="agenda-cliente-name">
+                                <i className="bi bi-person-fill"></i>
+                                <span>{c.cliente}</span>
+                              </div>
+                              <div className="agenda-vehiculo-badge">
+                                <i className="bi bi-car-front-fill"></i>
+                                <span>{c.vehiculo}</span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Motivo */}
+                          <td>
+                            <div className="agenda-motivo-text">
+                              {c.motivo ? (
+                                <>
+                                  <i className="bi bi-wrench"></i>
+                                  <span>{c.motivo}</span>
+                                </>
+                              ) : (
+                                <span className="td-dash">Consulta / Mantenimiento general</span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Estado */}
+                          <td>{getBadgeEstado(c.estado)}</td>
+
+                          {/* Acciones */}
+                          <td>
+                            <div className="d-flex justify-content-center gap-2">
+                              <button
+                                className="btn-accion editar"
+                                title="Editar Cita"
+                                onClick={() => handleOpenEdit(c.id_cita)}
+                              >
+                                <i className="bi bi-pencil-fill"></i>
+                              </button>
+                              <button
+                                className="btn-accion eliminar"
+                                title="Eliminar Cita"
+                                onClick={() => handleOpenDelete(c)}
+                              >
+                                <i className="bi bi-trash-fill"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </tbody>
-          </table>
+
+              {/* Botón flotante inferior "Agendar" (Como en la foto) */}
+              <div className="day-agenda-footer">
+                <div className="agenda-footer-tip">
+                  <i className="bi bi-info-circle"></i>
+                  <span>Haz clic sobre cualquier fecha en el calendario izquierdo para ver o agregar citas en ese día.</span>
+                </div>
+                <button
+                  type="button"
+                  className="btn-agendar-cta-green"
+                  onClick={() => handleOpenCreate(fechaSeleccionada)}
+                >
+                  <i className="bi bi-calendar-plus-fill"></i>
+                  <span>Agendar Cita</span>
+                </button>
+              </div>
+            </div>
+          </main>
         </div>
-      </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          VISTA 2: LISTADO GENERAL EN TABLA COMPLETA
+         ══════════════════════════════════════════════════════════════ */}
+      {vistaModo === 'tabla' && (
+        <div className="citas-tabla-completa-wrap">
+          {/* Barra de búsqueda, filtro y contador */}
+          <div className="citas-actions-row">
+            <div className="search-bar">
+              <i className="bi bi-search"></i>
+              <input
+                type="text"
+                placeholder="Buscar por cliente, vehículo o motivo..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+              />
+            </div>
+            <select
+              className="filtro-select"
+              value={filtroEstado}
+              onChange={(e) => setFiltroEstado(e.target.value)}
+            >
+              <option value="">Todos los estados</option>
+              {ESTADOS.map((es) => (
+                <option key={es.id} value={es.id}>
+                  {es.nombre}
+                </option>
+              ))}
+            </select>
+            <div className="stat-pill">
+              <span>{citas.length}</span> citas totales
+            </div>
+          </div>
+
+          {/* Tabla General de Citas */}
+          <div className="card-custom">
+            <div className="table-responsive">
+              <table className="table-custom">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Cliente</th>
+                    <th>Vehículo</th>
+                    <th>Motivo</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="7" className="table-empty">
+                        Cargando citas...
+                      </td>
+                    </tr>
+                  ) : citas.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="table-empty">
+                        No se encontraron citas
+                      </td>
+                    </tr>
+                  ) : (
+                    citas.map((c) => (
+                      <tr key={c.id_cita}>
+                        <td>
+                          <div className="td-primary">{formatearFecha(c.fecha)}</div>
+                        </td>
+                        <td>
+                          <span className="td-hora">{c.hora}</span>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.cliente}</div>
+                        </td>
+                        <td className="td-muted">{c.vehiculo}</td>
+                        <td className="td-muted">
+                          {c.motivo || <span className="td-dash">—</span>}
+                        </td>
+                        <td>{getBadgeEstado(c.estado)}</td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            <button
+                              className="btn-accion editar"
+                              title="Editar"
+                              onClick={() => handleOpenEdit(c.id_cita)}
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </button>
+                            <button
+                              className="btn-accion eliminar"
+                              title="Eliminar"
+                              onClick={() => handleOpenDelete(c)}
+                            >
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Modal Nuevo / Editar Cita ── */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => !isSaving && setIsModalOpen(false)}>
           <div className="modal-dialog-custom" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-custom">
-              <h5 className="modal-title-custom">
-                {modalMode === 'edit' ? 'Editar cita' : 'Nueva cita'}
-              </h5>
+              <div className="modal-header-title-box">
+                <i className={`bi ${modalMode === 'edit' ? 'bi-pencil-square' : 'bi-calendar-plus'}`}></i>
+                <h5 className="modal-title-custom">
+                  {modalMode === 'edit' ? 'Editar cita' : 'Agendar nueva cita'}
+                </h5>
+              </div>
               <button
                 type="button"
                 className="btn-modal-close"
@@ -391,14 +840,14 @@ export default function Citas() {
                       <option value="">Seleccionar cliente...</option>
                       {clientes.map((cl) => (
                         <option key={cl.id_cliente} value={cl.id_cliente}>
-                          {cl.nombre} {cl.apellido}
+                          {cl.nombre} {cl.apellido} {cl.telefono ? `(${cl.telefono})` : ''}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div className="form-group-full">
-                    <label className="field-label">Vehículo *</label>
+                    <label className="field-label">Vehículo del Cliente *</label>
                     <select
                       className="field-input"
                       value={citaActual.id_vehiculo}
@@ -408,17 +857,23 @@ export default function Citas() {
                       required
                       disabled={!citaActual.id_cliente}
                     >
-                      <option value="">Seleccionar vehículo...</option>
+                      <option value="">
+                        {!citaActual.id_cliente
+                          ? 'Primero selecciona un cliente'
+                          : vehiculos.length === 0
+                          ? 'Este cliente no tiene vehículos registrados'
+                          : 'Seleccionar vehículo...'}
+                      </option>
                       {vehiculos.map((v) => (
                         <option key={v.id_vehiculo} value={v.id_vehiculo}>
-                          {v.placa} — {v.marca} {v.modelo}
+                          {v.placa} — {v.marca} {v.modelo} {v.color ? `(${v.color})` : ''}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="field-label">Fecha *</label>
+                    <label className="field-label">Fecha de la Cita *</label>
                     <input
                       id="fFecha"
                       type="date"
@@ -462,10 +917,10 @@ export default function Citas() {
                   </div>
 
                   <div className="form-group-full">
-                    <label className="field-label">Motivo</label>
+                    <label className="field-label">Motivo o Servicio Requerido</label>
                     <textarea
                       className="field-input"
-                      placeholder="Motivo de la cita..."
+                      placeholder="Ej: Cambio de aceite y filtros, revisión de frenos, alineación..."
                       rows="3"
                       value={citaActual.motivo}
                       onChange={(e) =>
@@ -487,7 +942,7 @@ export default function Citas() {
                 </button>
                 <button type="submit" className="btn-primary-custom" disabled={isSaving}>
                   <i className="bi bi-check-lg"></i>
-                  <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
+                  <span>{isSaving ? 'Guardando...' : 'Guardar Cita'}</span>
                 </button>
               </div>
             </form>
@@ -524,7 +979,7 @@ export default function Citas() {
                 <strong style={{ color: '#1e293b' }}>{citaToDelete.cliente}</strong>?
                 <br />
                 <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>
-                  Esta acción no se puede deshacer.
+                  Vehículo: {citaToDelete.vehiculo}
                 </span>
               </p>
             </div>

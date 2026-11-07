@@ -12,7 +12,7 @@ const FACTURA_EMPRESA = {
   nombre: "Zedan Motor's",
   nit: '900.123.456-7',
   direccion: 'Calle Falsa 123, Ciudad',
-  contacto: 'Tel. (601) 000 0000'
+  contacto: 'Tel. (57)-318 6950825'
 };
 
 export default function Facturacion() {
