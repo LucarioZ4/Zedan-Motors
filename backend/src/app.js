@@ -14,7 +14,7 @@ const app = express();
 
 // Si despliegas detrás de un proxy (Nginx, Render, Railway...) descomenta esta línea,
 // para que el rate limiting vea la IP real del cliente y no la del proxy:
-// app.set('trust proxy', 1);
+app.set('trust proxy', 1);
 
 // ── Middleware ──
 app.use(helmet({
