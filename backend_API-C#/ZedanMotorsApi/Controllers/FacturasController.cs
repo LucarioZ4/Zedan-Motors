@@ -1,9 +1,11 @@
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ZedanMotorsApi.Data;
 using ZedanMotorsApi.DTOs;
 using ZedanMotorsApi.Models;
+using ZedanMotorsApi.Security;
 
 namespace ZedanMotorsApi.Controllers
 {
@@ -52,6 +54,7 @@ namespace ZedanMotorsApi.Controllers
 
         // PUT: api/Facturas/5
         // Nota: la orden de una factura no se puede cambiar, solo fecha, total y método de pago.
+        [Authorize(Roles = RolesApp.Administrador)]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutFactura(int id, FacturaCreateDTO facturaUpdate)
         {
@@ -71,6 +74,7 @@ namespace ZedanMotorsApi.Controllers
         }
 
         // POST: api/Facturas
+        [Authorize(Roles = RolesApp.Administrador)]
         [HttpPost]
         public async Task<ActionResult<FacturaDTO>> PostFactura(FacturaCreateDTO facturaCreate)
         {
@@ -101,6 +105,7 @@ namespace ZedanMotorsApi.Controllers
         }
 
         // DELETE: api/Facturas/5
+        [Authorize(Roles = RolesApp.Administrador)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFactura(int id)
         {

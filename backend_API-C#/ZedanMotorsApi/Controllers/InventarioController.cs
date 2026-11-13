@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ZedanMotorsApi.Data;
 using ZedanMotorsApi.DTOs;
 using ZedanMotorsApi.Models;
+using ZedanMotorsApi.Security;
 
 namespace ZedanMotorsApi.Controllers
 {
@@ -54,6 +56,7 @@ namespace ZedanMotorsApi.Controllers
         }
 
         // PUT: api/Inventario/5
+        [Authorize(Roles = RolesApp.AdminOJefe)]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRepuesto(int id, InventarioCreateDTO repuestoUpdate)
         {
@@ -74,6 +77,7 @@ namespace ZedanMotorsApi.Controllers
         }
 
         // POST: api/Inventario
+        [Authorize(Roles = RolesApp.AdminOJefe)]
         [HttpPost]
         public async Task<ActionResult<InventarioDTO>> PostRepuesto(InventarioCreateDTO repuestoCreate)
         {
@@ -100,6 +104,7 @@ namespace ZedanMotorsApi.Controllers
         }
 
         // DELETE: api/Inventario/5
+        [Authorize(Roles = RolesApp.Administrador)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRepuesto(int id)
         {
