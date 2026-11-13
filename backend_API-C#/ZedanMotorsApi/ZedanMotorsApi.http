@@ -1,12 +1,33 @@
 @ZedanMotorsApi_HostAddress = http://localhost:5200
 
+# 1) Ejecuta el login, copia el valor de "token" de la respuesta y pégalo aquí abajo.
+# (No subas un token real al repositorio.)
+@token = PEGA_AQUI_EL_TOKEN
+
+POST {{ZedanMotorsApi_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "usuario": "admin",
+  "password": "TU_PASSWORD"
+}
+
+###
+
+GET {{ZedanMotorsApi_HostAddress}}/api/auth/verificar
+Authorization: Bearer {{token}}
+
+###
+
 GET {{ZedanMotorsApi_HostAddress}}/api/clientes
 Accept: application/json
+Authorization: Bearer {{token}}
 
 ###
 
 POST {{ZedanMotorsApi_HostAddress}}/api/clientes
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "nombre": "Juan",
@@ -20,6 +41,7 @@ Content-Type: application/json
 
 POST {{ZedanMotorsApi_HostAddress}}/api/vehiculos
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "placa": "ABC123",
@@ -27,7 +49,7 @@ Content-Type: application/json
   "anio": 2020,
   "marca": "Toyota",
   "color": "Blanco",
-  "idCliente": 1
+  "id_cliente": 1
 }
 
 ###
