@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5200';
 
 export const getHeaders = () => {
   const token = sessionStorage.getItem('token');
