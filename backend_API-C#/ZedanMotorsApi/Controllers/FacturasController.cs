@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using ZedanMotorsApi.Data;
 using ZedanMotorsApi.DTOs;
 using ZedanMotorsApi.Models;
@@ -53,10 +54,10 @@ namespace ZedanMotorsApi.Controllers
         }
 
         // PUT: api/Facturas/5
-        // Nota: la orden de una factura no se puede cambiar, solo fecha, total y método de pago.
+        // Una factura emitida solo permite corregir el método de pago: la orden, la fecha y el total quedan fijos.
         [Authorize(Roles = RolesApp.Administrador)]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutFactura(int id, FacturaCreateDTO facturaUpdate)
+        public async Task<IActionResult> PutFactura(int id, FacturaUpdateDTO facturaUpdate)
         {
             var factura = await _context.Facturas.FindAsync(id);
             if (factura == null)
@@ -64,8 +65,6 @@ namespace ZedanMotorsApi.Controllers
                 return NotFound();
             }
 
-            factura.fecha = facturaUpdate.fecha;
-            factura.total = facturaUpdate.total;
             factura.metodoPago = facturaUpdate.metodoPago;
 
             await _context.SaveChangesAsync();
@@ -88,21 +87,54 @@ namespace ZedanMotorsApi.Controllers
                 return Conflict(new { mensaje = "Esa orden de trabajo ya tiene una factura." });
             }
 
+            var totalServicios = await _context.OrdenServicios
+                .Where(os => os.idOrden == facturaCreate.idOrden)
+                .SumAsync(os => (decimal?)os.Servicio.costo) ?? 0m;
+
+            var totalRepuestos = await _context.OrdenInventarios
+                .Where(oi => oi.idOrden == facturaCreate.idOrden)
+                .SumAsync(oi => (decimal?)(oi.Repuesto.precio * oi.cantidad)) ?? 0m;
+
+            var total = decimal.Round(totalServicios + totalRepuestos, 2);
+
+            if (total <= 0)
+            {
+                return BadRequest(new
+                {
+                    mensaje = "La orden no tiene servicios ni repuestos. Agrega items antes de facturar."
+                });
+            }
+
             var factura = new Facturacion
             {
-                fecha = facturaCreate.fecha,
-                total = facturaCreate.total,
+                fecha = FechaHoyColombia(),
+                total = total,
                 metodoPago = facturaCreate.metodoPago,
                 idOrden = facturaCreate.idOrden
             };
             _context.Facturas.Add(factura);
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (
+                ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                // Dos solicitudes simultáneas para la misma orden: la segunda choca con el índice único
+                return Conflict(new { mensaje = "Esa orden de trabajo ya tiene una factura." });
+            }
 
             var respuesta = await _context.Facturas.Where(f => f.idFactura == factura.idFactura)
                 .Select(ToDto).FirstAsync();
 
             return CreatedAtAction(nameof(GetFactura), new { id = factura.idFactura }, respuesta);
         }
+
+        // Fecha de emisión en hora de Colombia (UTC-5, sin horario de verano), no la del servidor:
+        // con UTC, una factura emitida después de las 7 p. m. quedaría con la fecha de mañana.
+        private static DateOnly FechaHoyColombia() =>
+            DateOnly.FromDateTime(DateTime.UtcNow.AddHours(-5));
 
         // DELETE: api/Facturas/5
         [Authorize(Roles = RolesApp.Administrador)]

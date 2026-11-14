@@ -13,15 +13,19 @@ namespace ZedanMotorsApi.DTOs
 
     public class FacturaCreateDTO
     {
-        [Required]
-        public DateOnly fecha { get; set; }
-        [Range(0.01, 99999999.99)]
-        public decimal total { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "idOrden debe ser un número válido.")]
+        public int idOrden { get; set; }
         [Required]
         [RegularExpression("^(Efectivo|Tarjeta|Transferencia)$",
             ErrorMessage = "metodoPago debe ser Efectivo, Tarjeta o Transferencia.")]
         public string metodoPago { get; set; } = string.Empty;
+    }
+
+    public class FacturaUpdateDTO
+    {
         [Required]
-        public int idOrden { get; set; }
+        [RegularExpression("^(Efectivo|Tarjeta|Transferencia)$",
+            ErrorMessage = "metodoPago debe ser Efectivo, Tarjeta o Transferencia.")]
+        public string metodoPago { get; set; } = string.Empty;
     }
 }
