@@ -11,3 +11,9 @@ export const getCitasHoy = async () => {
   if (!res.ok) throw new Error('Error al cargar citas de hoy');
   return res.json();
 };
+
+export const getGraficas = async () => {
+  const res = await apiFetch('/api/dashboard/graficas');
+  if (!res.ok) throw new Error('Error al cargar las gráficas');
+  return res.json();
+};
