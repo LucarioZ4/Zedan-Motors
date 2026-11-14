@@ -39,7 +39,7 @@ export default function Login() {
       if (response.ok) {
         sessionStorage.setItem('token', data.token);
         sessionStorage.setItem('usuario', data.usuario?.usuario || usuario);
-        sessionStorage.setItem('rol', data.usuario?.rol || 'Administrador');
+        sessionStorage.setItem('rol', data.usuario?.rol || 'Sin rol asignado');
         sessionStorage.setItem('nombre', data.usuario?.nombre || usuario);
         navigate('/dashboard');
       } else {
@@ -78,7 +78,7 @@ export default function Login() {
             <div className="input-wrap">
               <span className="input-icon">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                  <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+                  <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
                 </svg>
               </span>
               <input
@@ -101,7 +101,7 @@ export default function Login() {
             <div className="input-wrap">
               <span className="input-icon">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                  <path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/>
+                  <path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" />
                 </svg>
               </span>
               <input

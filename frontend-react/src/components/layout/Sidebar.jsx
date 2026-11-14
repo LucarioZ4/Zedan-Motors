@@ -18,29 +18,35 @@ import ZedanLogo from '../common/ZedanLogo';
 import './Sidebar.css';
 
 const navItems = [
-  { section: 'Principal', items: [
-    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard }
-  ]},
-  { section: 'Gestión', items: [
-    { label: 'Clientes', path: '/clientes', icon: Users },
-    { label: 'Vehículos', path: '/vehiculos', icon: Car },
-    { label: 'Empleados', path: '/empleados', icon: UserCheck },
-    { label: 'Servicios', path: '/servicios', icon: Wrench }
-  ]},
-  { section: 'Operaciones', items: [
-    { label: 'Citas', path: '/citas', icon: CalendarCheck },
-    { label: 'Órdenes', path: '/ordenes', icon: ClipboardList },
-    { label: 'Inventario', path: '/inventario', icon: Package },
-    { label: 'Facturación', path: '/facturacion', icon: Receipt },
-    { label: 'Historial', path: '/historial', icon: History },
-    { label: 'Mensajes', path: '/mensajes', icon: MessageSquare }
-  ]}
+  {
+    section: 'Principal', items: [
+      { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard }
+    ]
+  },
+  {
+    section: 'Gestión', items: [
+      { label: 'Clientes', path: '/clientes', icon: Users },
+      { label: 'Vehículos', path: '/vehiculos', icon: Car },
+      { label: 'Empleados', path: '/empleados', icon: UserCheck },
+      { label: 'Servicios', path: '/servicios', icon: Wrench }
+    ]
+  },
+  {
+    section: 'Operaciones', items: [
+      { label: 'Citas', path: '/citas', icon: CalendarCheck },
+      { label: 'Órdenes', path: '/ordenes', icon: ClipboardList },
+      { label: 'Inventario', path: '/inventario', icon: Package },
+      { label: 'Facturación', path: '/facturacion', icon: Receipt },
+      { label: 'Historial', path: '/historial', icon: History },
+      { label: 'Mensajes', path: '/mensajes', icon: MessageSquare }
+    ]
+  }
 ];
 
 export default function Sidebar() {
   const navigate = useNavigate();
   const usuario = sessionStorage.getItem('usuario') || 'Usuario';
-  const rol = sessionStorage.getItem('rol') || 'Administrador';
+  const rol = sessionStorage.getItem('rol') || 'Sin rol asignado';
   const inicial = usuario.charAt(0).toUpperCase();
 
   const handleLogout = () => {
