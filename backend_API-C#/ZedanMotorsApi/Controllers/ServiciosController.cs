@@ -47,7 +47,7 @@ namespace ZedanMotorsApi.Controllers
 
             if (servicio == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Servicio no encontrado" });
             }
 
             return servicio;
@@ -60,7 +60,7 @@ namespace ZedanMotorsApi.Controllers
             var servicio = await _context.Servicios.FindAsync(id);
             if (servicio == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Servicio no encontrado" });
             }
 
             servicio.nombreServicio = servicioUpdate.nombreServicio;
@@ -73,10 +73,10 @@ namespace ZedanMotorsApi.Controllers
             }
             catch (DbUpdateException)
             {
-                return Conflict(new { mensaje = "Ya existe un servicio con ese nombre." });
+                return Conflict(new { error = "Ya existe un servicio con ese nombre." });
             }
 
-            return NoContent();
+            return Ok(new { mensaje = "Servicio actualizado" });
         }
 
         // POST: api/Servicios
@@ -97,7 +97,7 @@ namespace ZedanMotorsApi.Controllers
             }
             catch (DbUpdateException)
             {
-                return Conflict(new { mensaje = "Ya existe un servicio con ese nombre." });
+                return Conflict(new { error = "Ya existe un servicio con ese nombre." });
             }
 
             var respuesta = new ServicioDTO
@@ -119,13 +119,13 @@ namespace ZedanMotorsApi.Controllers
             var servicio = await _context.Servicios.FindAsync(id);
             if (servicio == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Servicio no encontrado" });
             }
 
             _context.Servicios.Remove(servicio);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Servicio eliminado" });
         }
     }
 }

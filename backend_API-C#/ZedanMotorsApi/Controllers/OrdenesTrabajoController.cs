@@ -77,7 +77,7 @@ namespace ZedanMotorsApi.Controllers
 
             if (orden == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Orden no encontrada" });
             }
 
             return orden;
@@ -91,14 +91,14 @@ namespace ZedanMotorsApi.Controllers
             var orden = await _context.OrdenesTrabajo.FindAsync(id);
             if (orden == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Orden no encontrada" });
             }
 
             var error = await ValidarOrden(ordenUpdate.fechaInicio, ordenUpdate.fechaFin,
                 ordenUpdate.idCita, ordenUpdate.idEmpleado);
             if (error != null)
             {
-                return BadRequest(new { mensaje = error });
+                return BadRequest(new { error = error });
             }
 
             orden.fechaInicio = ordenUpdate.fechaInicio;
@@ -109,7 +109,7 @@ namespace ZedanMotorsApi.Controllers
 
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Orden actualizada" });
         }
 
         // POST: api/OrdenesTrabajo
@@ -122,7 +122,7 @@ namespace ZedanMotorsApi.Controllers
                 ordenCreate.idCita, ordenCreate.idEmpleado);
             if (error != null)
             {
-                return BadRequest(new { mensaje = error });
+                return BadRequest(new { error = error });
             }
 
             var idServicios = ordenCreate.idServicios.Distinct().ToList();
@@ -130,7 +130,7 @@ namespace ZedanMotorsApi.Controllers
                 .CountAsync(s => idServicios.Contains(s.idServicio));
             if (cantidadServicios != idServicios.Count)
             {
-                return BadRequest(new { mensaje = "Alguno de los servicios indicados no existe." });
+                return BadRequest(new { error = "Alguno de los servicios indicados no existe." });
             }
 
             // Si un repuesto viene repetido, se suman las cantidades
@@ -151,14 +151,14 @@ namespace ZedanMotorsApi.Controllers
             {
                 if (!repuestosBD.TryGetValue(pedido.idRepuesto, out var repuesto))
                 {
-                    return BadRequest(new { mensaje = $"El repuesto {pedido.idRepuesto} no existe." });
+                    return BadRequest(new { error = $"El repuesto {pedido.idRepuesto} no existe." });
                 }
 
                 if (repuesto.stock < pedido.cantidad)
                 {
                     return BadRequest(new
                     {
-                        mensaje = $"Stock insuficiente de '{repuesto.nombre}' (disponible: {repuesto.stock})."
+                        error = $"Stock insuficiente de '{repuesto.nombre}' (disponible: {repuesto.stock})."
                     });
                 }
 
@@ -195,13 +195,13 @@ namespace ZedanMotorsApi.Controllers
             var orden = await _context.OrdenesTrabajo.FindAsync(id);
             if (orden == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Orden no encontrada" });
             }
 
             _context.OrdenesTrabajo.Remove(orden);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Orden eliminada" });
         }
 
         // ── Servicios y repuestos de una orden ──

@@ -49,7 +49,7 @@ namespace ZedanMotorsApi.Controllers
 
             if (cita == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Cita no encontrada" });
             }
 
             return cita;
@@ -62,13 +62,13 @@ namespace ZedanMotorsApi.Controllers
             var cita = await _context.Citas.FindAsync(id);
             if (cita == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Cita no encontrada" });
             }
 
             var error = await ValidarRelaciones(citaUpdate);
             if (error != null)
             {
-                return BadRequest(new { mensaje = error });
+                return BadRequest(new { error = error });
             }
 
             cita.fecha = citaUpdate.fecha;
@@ -79,7 +79,7 @@ namespace ZedanMotorsApi.Controllers
 
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Cita actualizada" });
         }
 
         // POST: api/Citas
@@ -89,7 +89,7 @@ namespace ZedanMotorsApi.Controllers
             var error = await ValidarRelaciones(citaCreate);
             if (error != null)
             {
-                return BadRequest(new { mensaje = error });
+                return BadRequest(new { error = error });
             }
 
             var cita = new Cita
@@ -117,13 +117,13 @@ namespace ZedanMotorsApi.Controllers
             var cita = await _context.Citas.FindAsync(id);
             if (cita == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Cita no encontrada" });
             }
 
             _context.Citas.Remove(cita);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Cita eliminada" });
         }
 
         private async Task<string?> ValidarRelaciones(CitaCreateDTO dto)

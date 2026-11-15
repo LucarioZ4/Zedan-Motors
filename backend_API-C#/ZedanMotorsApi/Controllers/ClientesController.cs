@@ -61,7 +61,7 @@ namespace ZedanMotorsApi.Controllers
 
             if (cliente == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Cliente no encontrado" });
             }
 
             return cliente;
@@ -95,7 +95,7 @@ namespace ZedanMotorsApi.Controllers
             var cliente = await _context.Clientes.FindAsync(id);
             if (cliente == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Cliente no encontrado" });
             }
 
             cliente.nombre = clienteUpdate.nombre;
@@ -110,10 +110,10 @@ namespace ZedanMotorsApi.Controllers
             }
             catch (DbUpdateException)
             {
-                return Conflict(new { mensaje = "El teléfono o el correo ya están registrados." });
+                return Conflict(new { error = "El teléfono o el correo ya están registrados." });
             }
 
-            return NoContent();
+            return Ok(new { mensaje = "Cliente actualizado" });
         }
 
         // POST: api/Clientes
@@ -136,7 +136,7 @@ namespace ZedanMotorsApi.Controllers
             }
             catch (DbUpdateException)
             {
-                return Conflict(new { mensaje = "El teléfono o el correo ya están registrados." });
+                return Conflict(new { error = "El teléfono o el correo ya están registrados." });
             }
 
             var respuesta = new ClienteDTO
@@ -160,13 +160,13 @@ namespace ZedanMotorsApi.Controllers
             var cliente = await _context.Clientes.FindAsync(id);
             if (cliente == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Cliente no encontrado" });
             }
 
             _context.Clientes.Remove(cliente);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Cliente eliminado" });
         }
     }
 }

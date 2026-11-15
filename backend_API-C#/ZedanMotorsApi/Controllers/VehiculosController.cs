@@ -52,7 +52,7 @@ namespace ZedanMotorsApi.Controllers
 
             if (vehiculo == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Vehículo no encontrado" });
             }
 
             return vehiculo;
@@ -65,12 +65,12 @@ namespace ZedanMotorsApi.Controllers
             var vehiculo = await _context.Vehiculos.FindAsync(id);
             if (vehiculo == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Vehículo no encontrado" });
             }
 
             if (!await _context.Clientes.AnyAsync(c => c.idCliente == vehiculoUpdate.idCliente))
             {
-                return BadRequest(new { mensaje = "El cliente indicado no existe." });
+                return BadRequest(new { error = "El cliente indicado no existe." });
             }
 
             vehiculo.placa = vehiculoUpdate.placa;
@@ -86,10 +86,10 @@ namespace ZedanMotorsApi.Controllers
             }
             catch (DbUpdateException)
             {
-                return Conflict(new { mensaje = "Ya existe un vehículo con esa placa." });
+                return Conflict(new { error = "Ya existe un vehículo con esa placa." });
             }
 
-            return NoContent();
+            return Ok(new { mensaje = "Vehículo actualizado" });
         }
 
         // POST: api/Vehiculos
@@ -98,7 +98,7 @@ namespace ZedanMotorsApi.Controllers
         {
             if (!await _context.Clientes.AnyAsync(c => c.idCliente == vehiculoCreate.idCliente))
             {
-                return BadRequest(new { mensaje = "El cliente indicado no existe." });
+                return BadRequest(new { error = "El cliente indicado no existe." });
             }
 
             var vehiculo = new Vehiculo
@@ -118,7 +118,7 @@ namespace ZedanMotorsApi.Controllers
             }
             catch (DbUpdateException)
             {
-                return Conflict(new { mensaje = "Ya existe un vehículo con esa placa." });
+                return Conflict(new { error = "Ya existe un vehículo con esa placa." });
             }
 
             var respuesta = await _context.Vehiculos.Where(v => v.idVehiculo == vehiculo.idVehiculo)
@@ -135,13 +135,13 @@ namespace ZedanMotorsApi.Controllers
             var vehiculo = await _context.Vehiculos.FindAsync(id);
             if (vehiculo == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Vehículo no encontrado" });
             }
 
             _context.Vehiculos.Remove(vehiculo);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Vehículo eliminado" });
         }
 
         // POST: api/Vehiculos/importar

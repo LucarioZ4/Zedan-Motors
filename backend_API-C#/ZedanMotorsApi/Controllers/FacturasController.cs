@@ -47,7 +47,7 @@ namespace ZedanMotorsApi.Controllers
 
             if (factura == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Factura no encontrada" });
             }
 
             return factura;
@@ -62,29 +62,30 @@ namespace ZedanMotorsApi.Controllers
             var factura = await _context.Facturas.FindAsync(id);
             if (factura == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Factura no encontrada" });
             }
 
             factura.metodoPago = facturaUpdate.metodoPago;
 
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Factura actualizada" });
         }
 
         // POST: api/Facturas
+        // El total se calcula aquí con los servicios y repuestos de la orden; la fecha es la de hoy.
         [Authorize(Roles = RolesApp.Administrador)]
         [HttpPost]
         public async Task<ActionResult<FacturaDTO>> PostFactura(FacturaCreateDTO facturaCreate)
         {
             if (!await _context.OrdenesTrabajo.AnyAsync(o => o.idOrden == facturaCreate.idOrden))
             {
-                return BadRequest(new { mensaje = "La orden de trabajo indicada no existe." });
+                return BadRequest(new { error = "La orden de trabajo indicada no existe." });
             }
 
             if (await _context.Facturas.AnyAsync(f => f.idOrden == facturaCreate.idOrden))
             {
-                return Conflict(new { mensaje = "Esa orden de trabajo ya tiene una factura." });
+                return Conflict(new { error = "Esa orden de trabajo ya tiene una factura." });
             }
 
             var totalServicios = await _context.OrdenServicios
@@ -101,7 +102,7 @@ namespace ZedanMotorsApi.Controllers
             {
                 return BadRequest(new
                 {
-                    mensaje = "La orden no tiene servicios ni repuestos. Agrega items antes de facturar."
+                    error = "La orden no tiene servicios ni repuestos. Agrega items antes de facturar."
                 });
             }
 
@@ -122,7 +123,7 @@ namespace ZedanMotorsApi.Controllers
                 ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
             {
                 // Dos solicitudes simultáneas para la misma orden: la segunda choca con el índice único
-                return Conflict(new { mensaje = "Esa orden de trabajo ya tiene una factura." });
+                return Conflict(new { error = "Esa orden de trabajo ya tiene una factura." });
             }
 
             var respuesta = await _context.Facturas.Where(f => f.idFactura == factura.idFactura)
@@ -144,13 +145,13 @@ namespace ZedanMotorsApi.Controllers
             var factura = await _context.Facturas.FindAsync(id);
             if (factura == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Factura no encontrada" });
             }
 
             _context.Facturas.Remove(factura);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Factura eliminada" });
         }
     }
 }

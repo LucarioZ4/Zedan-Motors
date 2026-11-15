@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -13,8 +14,8 @@ using ZedanMotorsApi.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // ── JWT: la API no arranca si la clave falta o es débil ──
-// Una clave corta o vacía permite falsificar tokens. Se define en appsettings.json (que no se sube
-// a git), con 'dotnet user-secrets' o con la variable de entorno Jwt__Key.
+// Una clave corta o vacía permite falsificar tokens. Se define en appsettings.json,
+// con 'dotnet user-secrets' o con la variable de entorno Jwt__Key.
 const int JwtKeyMinBytes = 32;
 var jwtKey = builder.Configuration["Jwt:Key"];
 if (string.IsNullOrWhiteSpace(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < JwtKeyMinBytes)
@@ -79,6 +80,11 @@ builder.Services.AddControllers()
     .AddJsonOptions(o =>
     {
         o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+            new BadRequestObjectResult(new { error = ErroresApi.MensajeDeValidacion(context.ModelState) });
     });
 
 // ── Autenticación JWT ──
@@ -168,6 +174,29 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Errores no controlados: se registran en consola y se responde { "error": "..." }
+app.UseExceptionHandler(errorApp =>
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        await context.Response.WriteAsJsonAsync(new { error = "Error interno del servidor" });
+    }));
+
+// Respuestas de error que salen sin cuerpo (ruta inexistente, método o tipo de contenido no
+// permitido...) -> { "error": "..." }. Así el frontend siempre puede leer el cuerpo como JSON.
+app.UseStatusCodePages(async context =>
+{
+    var respuesta = context.HttpContext.Response;
+    var mensaje = respuesta.StatusCode switch
+    {
+        StatusCodes.Status404NotFound => "Recurso no encontrado",
+        StatusCodes.Status405MethodNotAllowed => "Método no permitido",
+        StatusCodes.Status415UnsupportedMediaType => "Tipo de contenido no soportado",
+        _ => "Error en la solicitud"
+    };
+    await respuesta.WriteAsJsonAsync(new { error = mensaje });
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

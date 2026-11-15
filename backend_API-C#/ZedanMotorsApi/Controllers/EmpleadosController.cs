@@ -47,7 +47,7 @@ namespace ZedanMotorsApi.Controllers
 
             if (empleado == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Empleado no encontrado" });
             }
 
             return empleado;
@@ -61,13 +61,13 @@ namespace ZedanMotorsApi.Controllers
             var empleado = await _context.Empleados.FindAsync(id);
             if (empleado == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Empleado no encontrado" });
             }
 
             if (empleadoUpdate.idCargo != null &&
                 !await _context.Cargos.AnyAsync(c => c.idCargo == empleadoUpdate.idCargo))
             {
-                return BadRequest(new { mensaje = "El cargo indicado no existe." });
+                return BadRequest(new { error = "El cargo indicado no existe." });
             }
 
             empleado.nombre = empleadoUpdate.nombre;
@@ -82,10 +82,10 @@ namespace ZedanMotorsApi.Controllers
             }
             catch (DbUpdateException)
             {
-                return Conflict(new { mensaje = "El teléfono o el correo ya están registrados." });
+                return Conflict(new { error = "El teléfono o el correo ya están registrados." });
             }
 
-            return NoContent();
+            return Ok(new { mensaje = "Empleado actualizado" });
         }
 
         // POST: api/Empleados
@@ -96,7 +96,7 @@ namespace ZedanMotorsApi.Controllers
             if (empleadoCreate.idCargo != null &&
                 !await _context.Cargos.AnyAsync(c => c.idCargo == empleadoCreate.idCargo))
             {
-                return BadRequest(new { mensaje = "El cargo indicado no existe." });
+                return BadRequest(new { error = "El cargo indicado no existe." });
             }
 
             var empleado = new Empleado
@@ -115,7 +115,7 @@ namespace ZedanMotorsApi.Controllers
             }
             catch (DbUpdateException)
             {
-                return Conflict(new { mensaje = "El teléfono o el correo ya están registrados." });
+                return Conflict(new { error = "El teléfono o el correo ya están registrados." });
             }
 
             var respuesta = await _context.Empleados.Where(e => e.idEmpleado == empleado.idEmpleado)
@@ -132,13 +132,13 @@ namespace ZedanMotorsApi.Controllers
             var empleado = await _context.Empleados.FindAsync(id);
             if (empleado == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Empleado no encontrado" });
             }
 
             _context.Empleados.Remove(empleado);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Empleado eliminado" });
         }
     }
 }

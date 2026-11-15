@@ -53,7 +53,7 @@ namespace ZedanMotorsApi.Controllers
 
             if (repuesto == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Repuesto no encontrado" });
             }
 
             return repuesto;
@@ -67,7 +67,7 @@ namespace ZedanMotorsApi.Controllers
             var repuesto = await _context.Inventario.FindAsync(id);
             if (repuesto == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Repuesto no encontrado" });
             }
 
             repuesto.nombre = repuestoUpdate.nombre;
@@ -77,7 +77,7 @@ namespace ZedanMotorsApi.Controllers
 
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Repuesto actualizado" });
         }
 
         // POST: api/Inventario
@@ -115,13 +115,13 @@ namespace ZedanMotorsApi.Controllers
             var repuesto = await _context.Inventario.FindAsync(id);
             if (repuesto == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Repuesto no encontrado" });
             }
 
             _context.Inventario.Remove(repuesto);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Repuesto eliminado" });
         }
 
         // POST: api/Inventario/importar
