@@ -25,6 +25,12 @@ const numeroPositivo = (valor, porDefecto) => {
 };
 
 module.exports = {
+    // ...existing exports above
+    // Diagnóstico (nuevo módulo)
+    diagMaxMb: numeroPositivo(process.env.DIAG_MAX_MB, 10),
+    diagAllowedMime: (process.env.DIAG_ALLOWED_MIME || 'image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime')
+        .split(',').map(m => m.trim()),
+    diagBucket: process.env.DIAG_BUCKET || 'diagnosticos',
     port:       process.env.PORT       || 3000,
     jwtSecret,
     jwtExpires: process.env.JWT_EXPIRES_IN || '8h',
