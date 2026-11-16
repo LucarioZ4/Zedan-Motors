@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertTriangle, RotateCw, Check } from 'lucide-react';
-import { apiFetch } from '../../services/api';
+import { apiFetch, getErrorMessage } from '../../services/api';
 import ZedanLogo from '../../components/common/ZedanLogo';
 import './Login.css';
 
@@ -32,18 +32,18 @@ export default function Login() {
       const response = await apiFetch('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ usuario: usuario.trim(), password })
-      });
-
-      const data = await response.json();
+      }, { redirectOnUnauthorized: false });
 
       if (response.ok) {
+        const data = await response.json();
         sessionStorage.setItem('token', data.token);
         sessionStorage.setItem('usuario', data.usuario?.usuario || usuario);
         sessionStorage.setItem('rol', data.usuario?.rol || 'Sin rol asignado');
         sessionStorage.setItem('nombre', data.usuario?.nombre || usuario);
         navigate('/dashboard');
       } else {
-        setErrorMsg(data.error || 'Credenciales incorrectas.');
+        setErrorMsg(await getErrorMessage(response,
+          response.status === 401 ? 'Credenciales incorrectas.' : 'No se pudo iniciar sesión.'));
       }
     } catch (err) {
       console.error('Error login:', err);

@@ -9,7 +9,7 @@ export const getHeaders = () => {
   };
 };
 
-export const apiFetch = async (endpoint, options = {}) => {
+export const apiFetch = async (endpoint, options = {}, { redirectOnUnauthorized = true } = {}) => {
   const url = `${API_URL}${endpoint}`;
   const response = await fetch(url, {
     ...options,
@@ -19,7 +19,7 @@ export const apiFetch = async (endpoint, options = {}) => {
     }
   });
 
-  if (response.status === 401) {
+  if (response.status === 401 && redirectOnUnauthorized) {
     sessionStorage.clear();
     window.location.href = '/login';
     throw new Error('Sesión expirada');
