@@ -73,4 +73,13 @@ router.delete('/:id/repuestos/:rid', auth,
     [validarIdUrl('id', 'El id de la orden'), validarIdUrl('rid', 'El id del repuesto')],
     validar, controller.removeRepuesto);
 
+// ── Videos de recepción y entrega (evidencia multimedia) ──
+const videosController = require('./videos.controller');
+router.get('/:id/videos', auth, validarIdUrl('id', 'El id de la orden'), validar, videosController.listar);
+router.post('/:id/videos/firma', auth, roles('Administrador', 'Jefe de taller', 'Mecánico'), validarIdUrl('id', 'El id de la orden'), validar, videosController.firmarSubida);
+router.post('/:id/videos', auth, roles('Administrador', 'Jefe de taller', 'Mecánico'), validarIdUrl('id', 'El id de la orden'), validar, videosController.registrar);
+router.delete('/:id/videos/:vid', auth, roles('Administrador', 'Jefe de taller'),
+    [validarIdUrl('id', 'El id de la orden'), validarIdUrl('vid', 'El id del video')],
+    validar, videosController.eliminar);
+
 module.exports = router;

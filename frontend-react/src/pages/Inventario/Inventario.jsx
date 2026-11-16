@@ -6,14 +6,14 @@ import {
   FileSpreadsheet,
   Upload,
   Plus,
+  Sparkles,
   Search,
   Pencil,
   Trash2,
   X,
   Check,
   Download,
-  CloudUpload,
-  Sparkles
+  CloudUpload
 } from 'lucide-react';
 import {
   getInventario,
@@ -23,8 +23,7 @@ import {
   deleteRepuesto,
   importarRepuestos
 } from '../../services/inventarioService';
-import { getEstadoIA } from '../../services/inventarioIaService';
-import AnalisisIAModal from './AnalisisIAModal';
+import InventarioIA from './InventarioIA';
 import './Inventario.css';
 
 const emptyForm = {
@@ -32,9 +31,7 @@ const emptyForm = {
   nombre: '',
   marca: '',
   precio: '',
-  stock: 0,
-  referencia: '',
-  codigo_barras: ''
+  stock: 0
 };
 
 export default function Inventario() {
@@ -43,12 +40,6 @@ export default function Inventario() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroStock, setFiltroStock] = useState('todos');
-
-  // Modal IA
-  const [isIaModalOpen, setIsIaModalOpen] = useState(false);
-  const [iaConfig, setIaConfig] = useState({ habilitado: false, maxImagenes: 5, maxMb: 5 });
-  const rolUsuario = sessionStorage.getItem('rol') || '';
-  const puedeUsarIA = ['Administrador', 'Jefe de taller'].includes(rolUsuario);
 
   // Modal Formulario (Crear/Editar)
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,6 +54,7 @@ export default function Inventario() {
 
   // Modal Importar CSV
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isIaModalOpen, setIsIaModalOpen] = useState(false);
   const [csvText, setCsvText] = useState('');
   const [itemsParaImportar, setItemsParaImportar] = useState([]);
   const [importError, setImportError] = useState('');
@@ -94,20 +86,6 @@ export default function Inventario() {
 
   useEffect(() => {
     fetchData();
-
-    // Consultar estado de la función de IA
-    getEstadoIA()
-      .then((cfg) => {
-        setIaConfig({
-          habilitado: Boolean(cfg.habilitado),
-          maxImagenes: cfg.maxImagenes || 5,
-          maxMb: cfg.maxMb || 5
-        });
-      })
-      .catch((err) => {
-        console.warn('Función de IA no disponible o no configurada:', err.message);
-        setIaConfig({ habilitado: false, maxImagenes: 5, maxMb: 5 });
-      });
   }, []);
 
   useEffect(() => {
@@ -152,9 +130,7 @@ export default function Inventario() {
         nombre: data.nombre || '',
         marca: data.marca || '',
         precio: data.precio || '',
-        stock: data.stock ?? 0,
-        referencia: data.referencia || '',
-        codigo_barras: data.codigo_barras || ''
+        stock: data.stock ?? 0
       });
       setModalError('');
       setModalMode('edit');
@@ -183,11 +159,9 @@ export default function Inventario() {
     try {
       const payload = {
         nombre: repuestoActual.nombre.trim(),
-        marca: repuestoActual.marca.trim() || null,
+        marca: repuestoActual.marca.trim(),
         precio: precioNum,
-        stock: parseInt(repuestoActual.stock, 10) || 0,
-        referencia: repuestoActual.referencia?.trim() || null,
-        codigo_barras: repuestoActual.codigo_barras?.trim() || null
+        stock: parseInt(repuestoActual.stock) || 0
       };
 
       if (modalMode === 'edit') {
@@ -373,17 +347,15 @@ export default function Inventario() {
           <p>Control de stock, precios y catálogo de piezas del taller.</p>
         </div>
         <div className="header-buttons">
-          {iaConfig.habilitado && puedeUsarIA && (
-            <button
-              className="btn-ia-custom"
-              onClick={() => setIsIaModalOpen(true)}
-              type="button"
-              title="Analizar fotos de factura o repuestos con IA"
-            >
-              <Sparkles size={16} />
-              <span>Actualizar con IA</span>
-            </button>
-          )}
+          <button
+            className="btn-secondary-custom"
+            onClick={() => setIsIaModalOpen(true)}
+            type="button"
+            title="Conteo y escaneo de repuestos con IA"
+          >
+            <Sparkles size={16} color="#7c3aed" />
+            <span>Inventario con IA</span>
+          </button>
           <button
             className="btn-secondary-custom"
             onClick={handleOpenImport}
@@ -446,8 +418,7 @@ export default function Inventario() {
             <thead>
               <tr>
                 <th>Repuesto</th>
-                <th>Marca / Ref.</th>
-                <th>Código de Barras</th>
+                <th>Marca</th>
                 <th>Precio</th>
                 <th>Stock</th>
                 <th>Estado</th>
@@ -457,13 +428,13 @@ export default function Inventario() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="table-empty">
+                  <td colSpan="6" className="table-empty">
                     Cargando inventario...
                   </td>
                 </tr>
               ) : repuestos.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="table-empty">
+                  <td colSpan="6" className="table-empty">
                     No se encontraron repuestos registrados.
                   </td>
                 </tr>
@@ -479,23 +450,7 @@ export default function Inventario() {
                         <div className="td-primary">{r.nombre}</div>
                         <div className="td-sub">ID #{r.id_repuesto}</div>
                       </td>
-                      <td>
-                        <div>{r.marca || '—'}</div>
-                        {r.referencia && (
-                          <div className="td-sub" style={{ color: '#2563eb' }}>
-                            Ref: {r.referencia}
-                          </div>
-                        )}
-                      </td>
-                      <td>
-                        {r.codigo_barras ? (
-                          <span className="td-muted" style={{ fontFamily: 'monospace', fontSize: '11.5px' }}>
-                            {r.codigo_barras}
-                          </span>
-                        ) : (
-                          <span className="td-muted">—</span>
-                        )}
-                      </td>
+                      <td className="td-muted">{r.marca || '—'}</td>
                       <td>
                         <span className="td-precio">
                           ${parseFloat(r.precio || 0).toLocaleString('es-CO')}
@@ -630,32 +585,6 @@ export default function Inventario() {
                       value={repuestoActual.stock}
                       onChange={(e) =>
                         setRepuestoActual((prev) => ({ ...prev, stock: e.target.value }))
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label className="field-label">Referencia / Código de parte</label>
-                    <input
-                      type="text"
-                      className="field-input"
-                      placeholder="Ej. PH-3593A, BKR6EIX"
-                      value={repuestoActual.referencia}
-                      onChange={(e) =>
-                        setRepuestoActual((prev) => ({ ...prev, referencia: e.target.value }))
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label className="field-label">Código de barras</label>
-                    <input
-                      type="text"
-                      className="field-input"
-                      placeholder="Ej. 750100123456"
-                      value={repuestoActual.codigo_barras}
-                      onChange={(e) =>
-                        setRepuestoActual((prev) => ({ ...prev, codigo_barras: e.target.value }))
                       }
                     />
                   </div>
@@ -897,20 +826,18 @@ export default function Inventario() {
           </div>
         </div>
       )}
-      {/* ── Modal Actualizar con IA ── */}
-      <AnalisisIAModal
-        isOpen={isIaModalOpen}
-        onClose={() => setIsIaModalOpen(false)}
-        maxImagenes={iaConfig.maxImagenes}
-        maxMb={iaConfig.maxMb}
-        onSuccess={(res) => {
-          showToast(
-            `Inventario actualizado con IA: ${res.actualizados} actualizado(s), ${res.creados} nuevo(s)`,
-            'success'
-          );
-          fetchData(searchTerm);
-        }}
-      />
+
+      {/* Modal Inventario con IA */}
+      {isIaModalOpen && (
+        <InventarioIA
+          onClose={() => setIsIaModalOpen(false)}
+          onApplied={() => {
+            setIsIaModalOpen(false);
+            cargarDatos();
+            showToast('Inventario actualizado con éxito');
+          }}
+        />
+      )}
     </div>
   );
 }

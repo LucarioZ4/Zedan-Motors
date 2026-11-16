@@ -31,9 +31,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(morgan('dev', { skip: () => process.env.NODE_ENV === 'test' }));
+
+// La foto del inventario con IA viaja en base64 y supera el límite por defecto (100 kb).
+// Va ANTES del parser general, que se salta lo que ya fue leído.
+app.use('/api/inventario/ia', express.json({ limit: '6mb' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 
 // ── Rate limiting general de la API ──
 app.use('/api', apiLimiter);
@@ -48,13 +51,12 @@ app.use('/api/estados', require('./modules/estados/estados.routes'));
 app.use('/api/ordenes', require('./modules/ordenes/ordenes.routes'));
 app.use('/api/empleados', require('./modules/empleados/empleados.routes'));
 app.use('/api/servicios', require('./modules/servicios/servicios.routes'));
-// Montaje IA de inventario ANTES de /api/inventario para evitar colisión con /:id
-app.use('/api/inventario/ia', require('./modules/inventario-ia/inventarioIa.routes'));
 app.use('/api/inventario', require('./modules/inventario/inventario.routes'));
 app.use('/api/facturacion', require('./modules/facturacion/facturacion.routes'));
 app.use('/api/cargos', require('./modules/cargos/cargos.routes'));
 app.use('/api/historial', require('./modules/historial/historial.routes'));
 app.use('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
+app.use('/api/diagnosticos', require('./modules/diagnosticos/diagnosticos.routes'));
 
 // Servir frontend
 app.use(express.static(path.join(__dirname, '../../frontend')));

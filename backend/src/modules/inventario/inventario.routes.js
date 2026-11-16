@@ -1,8 +1,10 @@
 const express    = require('express');
 const router     = express.Router();
 const controller = require('./inventario.controller');
+const iaController = require('./inventario.ia.controller');
 const auth       = require('../../middleware/auth');
 const roles      = require('../../middleware/roles');
+const iaLimiter  = require('../../middleware/iaLimiter');
 const { body, validationResult } = require('express-validator');
 
 const validarInventario = [
@@ -14,10 +16,6 @@ const validarInventario = [
         .isFloat({ gt: 0 }).withMessage('El precio debe ser mayor a cero'),
     body('stock').optional({ checkFalsy: false })
         .isInt({ min: 0 }).withMessage('El stock no puede ser negativo'),
-    body('referencia').optional({ checkFalsy: true })
-        .isLength({ max: 60 }).withMessage('La referencia es muy larga (máximo 60 caracteres)'),
-    body('codigo_barras').optional({ checkFalsy: true })
-        .isLength({ max: 40 }).withMessage('El código de barras es muy largo (máximo 40 caracteres)'),
 ];
 
 const validar = (req, res, next) => {
@@ -30,6 +28,11 @@ const validar = (req, res, next) => {
 };
 
 router.get('/',          auth, controller.getAll);
+
+// ── Inventario con IA ──
+router.post('/ia/analizar', auth, roles('Administrador', 'Jefe de taller'), iaLimiter, iaController.analizar);
+router.post('/ia/aplicar',  auth, roles('Administrador', 'Jefe de taller'), iaController.aplicar);
+
 router.post('/importar', auth, roles('Administrador', 'Jefe de taller'), controller.importar);
 router.get('/:id',       auth, controller.getById);
 router.post('/',         auth, roles('Administrador', 'Jefe de taller'), validarInventario, validar, controller.create);
