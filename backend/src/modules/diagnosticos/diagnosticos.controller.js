@@ -85,16 +85,18 @@ const listar = async (req, res) => {
   try {
     const { vehiculo, cliente, fechaDesde, fechaHasta, estado } = req.query;
     let sql = `
-      SELECT d.*, v.placa, v.marca, v.modelo,
-             cl.nombre || ' ' || cl.apellido AS cliente
+      SELECT d.*, v.placa, v.marca, v.modelo, v.color, v.anio,
+             cl.nombre || ' ' || cl.apellido AS cliente, cl.telefono AS cliente_telefono,
+             (SELECT COUNT(*) FROM diagnostico_accesorio WHERE id_diagnostico = d.id_diagnostico)::int AS total_accesorios,
+             (SELECT COUNT(*) FROM diagnostico_archivo WHERE id_diagnostico = d.id_diagnostico)::int AS total_archivos
       FROM diagnostico d
       JOIN vehiculo v ON d.id_vehiculo = v.id_vehiculo
       JOIN cliente cl ON v.id_cliente = cl.id_cliente
       WHERE 1=1`;
     const params = [];
     let idx = 1;
-    if (vehiculo) { sql += ` AND v.placa ILIKE $${idx++}`; params.push(`%${vehiculo}%`); }
-    if (cliente) { sql += ` AND (cl.nombre ILIKE $${idx++} OR cl.apellido ILIKE $${idx++})`; params.push(`%${cliente}%`, `%${cliente}%`); }
+    if (vehiculo) { sql += ` AND (v.placa ILIKE $${idx} OR v.marca ILIKE $${idx} OR v.modelo ILIKE $${idx})`; params.push(`%${vehiculo}%`); idx++; }
+    if (cliente) { sql += ` AND (cl.nombre ILIKE $${idx} OR cl.apellido ILIKE $${idx})`; params.push(`%${cliente}%`); idx++; }
     if (fechaDesde) { sql += ` AND d.fecha_ingreso >= $${idx++}`; params.push(fechaDesde); }
     if (fechaHasta) { sql += ` AND d.fecha_ingreso <= $${idx++}`; params.push(fechaHasta); }
     if (estado) { sql += ` AND d.estado = $${idx++}`; params.push(estado); }
@@ -110,18 +112,41 @@ const listar = async (req, res) => {
 const detalle = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const d = await pool.query('SELECT * FROM diagnostico WHERE id_diagnostico=$1', [id]);
+    const d = await pool.query(`
+      SELECT d.*, v.placa, v.marca, v.modelo, v.anio, v.color,
+             cl.id_cliente, cl.nombre AS cliente_nombre, cl.apellido AS cliente_apellido,
+             cl.nombre || ' ' || cl.apellido AS cliente, cl.telefono AS cliente_telefono, cl.correo AS cliente_correo,
+             c.fecha AS cita_fecha, c.hora AS cita_hora, c.motivo AS cita_motivo
+      FROM diagnostico d
+      JOIN vehiculo v ON d.id_vehiculo = v.id_vehiculo
+      JOIN cliente cl ON v.id_cliente = cl.id_cliente
+      LEFT JOIN cita c ON d.id_cita = c.id_cita
+      WHERE d.id_diagnostico=$1`, [id]);
     if (d.rowCount === 0) return res.status(404).json({ error: 'Diagnóstico no encontrado' });
 
     const accesorios = await pool.query(
-      'SELECT nombre, estado, observacion FROM diagnostico_accesorio WHERE id_diagnostico=$1',
+      'SELECT id_accesorio, nombre, estado, observacion FROM diagnostico_accesorio WHERE id_diagnostico=$1 ORDER BY id_accesorio ASC',
       [id]
     );
     const archivos = await pool.query(
-      'SELECT * FROM diagnostico_archivo WHERE id_diagnostico=$1',
+      'SELECT id_archivo, id_diagnostico, ruta, tipo, nombre_original, tamano, descripcion, creado_en FROM diagnostico_archivo WHERE id_diagnostico=$1 ORDER BY creado_en DESC',
       [id]
     );
-    res.json({ ...d.rows[0], accesorios: accesorios.rows, archivos: archivos.rows });
+
+    let urls = {};
+    if (storage.configurado() && archivos.rows.length > 0) {
+      try {
+        urls = await storage.urlsFirmadas(archivos.rows.map(a => a.ruta));
+      } catch (e) {
+        console.warn('No se pudieron generar URLs firmadas:', e.message);
+      }
+    }
+    const archivosConUrl = archivos.rows.map(a => ({
+      ...a,
+      url: urls[a.ruta] || a.ruta
+    }));
+
+    res.json({ ...d.rows[0], accesorios: accesorios.rows, archivos: archivosConUrl });
   } catch (err) {
     responderError(res, err, 'Error al obtener diagnóstico');
   }

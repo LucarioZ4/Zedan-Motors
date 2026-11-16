@@ -1,107 +1,186 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Plus, Trash2, CheckSquare, Wrench } from 'lucide-react';
 
-export default function AccesoriosChecklist({ accesorios, setAccesorios }) {
-  const defaultAccesorios = [
-    'llanta de repuesto',
-    'gato',
-    'llave de ruedas',
-    'extintor',
-    'triángulos de seguridad',
-    'botiquín',
-    'radio/pantalla',
-    'aire acondicionado',
-    'luces delanteras',
-    'luces traseras',
-    'espejos',
-    'limpiaparabrisas',
-    'tapetes',
-    'tapicería',
-    'antena',
-    'tapas de ruedas',
-  ];
+const ACCESORIOS_DEFAULT = [
+  'Llanta de repuesto',
+  'Gato mecánico/hidráulico',
+  'Llave de ruedas',
+  'Extintor vigente',
+  'Triángulos de seguridad',
+  'Botiquín de primeros auxilios',
+  'Radio / Pantalla táctil',
+  'Aire acondicionado',
+  'Luces delanteras / exploradoras',
+  'Luces traseras / stop',
+  'Espejos retrovisores',
+  'Limpiaparabrisas (plumillas)',
+  'Tapetes',
+  'Tapicería y asientos',
+  'Antena',
+  'Tapas de ruedas (copas / rines)'
+];
 
-  const addAccesorio = () => {
-    setAccesorios([...accesorios, { nombre: '', estado: 'Bueno', observacion: '' }]);
-  };
+const ESTADOS = [
+  { valor: 'Bueno', label: 'Bueno', activeClass: 'active-bueno' },
+  { valor: 'Regular', label: 'Regular', activeClass: 'active-regular' },
+  { valor: 'Malo', label: 'Malo', activeClass: 'active-malo' },
+  { valor: 'No tiene', label: 'No tiene', activeClass: 'active-notiene' }
+];
 
-  const updateAccesorio = (index, field, value) => {
-    const newList = accesorios.map((a, i) => (i === index ? { ...a, [field]: value } : a));
-    setAccesorios(newList);
-  };
+export default function AccesoriosChecklist({ accesorios = [], setAccesorios }) {
+  const [nuevoNombre, setNuevoNombre] = useState('');
 
-  const removeAccesorio = (index) => {
-    const newList = accesorios.filter((_, i) => i !== index);
-    setAccesorios(newList);
-  };
-
-  // If the list is empty, initialize with defaults (read‑only selection)
+  // Inicializa con la lista por defecto si está vacía
   React.useEffect(() => {
-    if (accesorios.length === 0) {
-      const init = defaultAccesorios.map((n) => ({ nombre: n, estado: 'Bueno', observacion: '' }));
-      setAccesorios(init);
+    if (!accesorios || accesorios.length === 0) {
+      const inicial = ACCESORIOS_DEFAULT.map((nombre) => ({
+        nombre,
+        estado: 'Bueno',
+        observacion: ''
+      }));
+      setAccesorios(inicial);
     }
-    // eslint‑disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleEstadoChange = (index, nuevoEstado) => {
+    const list = [...accesorios];
+    list[index].estado = nuevoEstado;
+    setAccesorios(list);
+  };
+
+  const handleObservacionChange = (index, observacion) => {
+    const list = [...accesorios];
+    list[index].observacion = observacion;
+    setAccesorios(list);
+  };
+
+  const handleNombreChange = (index, nombre) => {
+    const list = [...accesorios];
+    list[index].nombre = nombre;
+    setAccesorios(list);
+  };
+
+  const handleRemove = (index) => {
+    setAccesorios(accesorios.filter((_, i) => i !== index));
+  };
+
+  const handleAddCustom = (e) => {
+    e.preventDefault();
+    if (!nuevoNombre.trim()) return;
+    setAccesorios([
+      ...accesorios,
+      {
+        nombre: nuevoNombre.trim(),
+        estado: 'Bueno',
+        observacion: ''
+      }
+    ]);
+    setNuevoNombre('');
+  };
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Revisión de accesorios</h3>
-      <table className="min-w-full bg-white border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-2 border">Accesorio</th>
-            <th className="p-2 border">Estado</th>
-            <th className="p-2 border">Observación</th>
-            <th className="p-2 border">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {accesorios.map((a, i) => (
-            <tr key={i} className="text-center">
-              <td className="p-2 border">
-                <input
-                  type="text"
-                  value={a.nombre}
-                  onChange={(e) => updateAccesorio(i, 'nombre', e.target.value)}
-                  className="w-full border rounded p-1"
-                />
-              </td>
-              <td className="p-2 border">
-                <select
-                  value={a.estado}
-                  onChange={(e) => updateAccesorio(i, 'estado', e.target.value)}
-                  className="w-full border rounded p-1"
-                >
-                  <option>Bueno</option>
-                  <option>Regular</option>
-                  <option>Malo</option>
-                  <option>No tiene</option>
-                </select>
-              </td>
-              <td className="p-2 border">
-                <input
-                  type="text"
-                  value={a.observacion || ''}
-                  onChange={(e) => updateAccesorio(i, 'observacion', e.target.value)}
-                  className="w-full border rounded p-1"
-                />
-              </td>
-              <td className="p-2 border">
-                <button
-                  onClick={() => removeAccesorio(i)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
-                >
-                  Eliminar
-                </button>
-              </td>
+    <div className="form-section-card">
+      <h3 className="form-section-title">
+        <CheckSquare size={18} className="text-primary" />
+        <span>Revisión de Inventario y Accesorios</span>
+      </h3>
+      <p style={{ fontSize: '12.5px', color: '#64748b', margin: '-8px 0 16px 0' }}>
+        Verifique el estado con el que ingresa cada elemento al taller. Seleccione el estado y añada notas opcionales.
+      </p>
+
+      <div className="table-responsive">
+        <table className="accesorios-table">
+          <thead>
+            <tr>
+              <th style={{ width: '32%' }}>Accesorio / Elemento</th>
+              <th style={{ width: '33%' }}>Estado de Recepción</th>
+              <th style={{ width: '30%' }}>Observación / Detalle</th>
+              <th style={{ width: '5%', textAlign: 'center' }}></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <button onClick={addAccesorio} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded">
-        Añadir accesorio
-      </button>
+          </thead>
+          <tbody>
+            {accesorios.map((acc, idx) => (
+              <tr key={idx}>
+                <td>
+                  <input
+                    type="text"
+                    value={acc.nombre}
+                    onChange={(e) => handleNombreChange(idx, e.target.value)}
+                    className="form-control-custom"
+                    style={{ padding: '6px 10px', fontSize: '13px' }}
+                    placeholder="Nombre del accesorio"
+                  />
+                </td>
+                <td>
+                  <div className="estado-pill-group">
+                    {ESTADOS.map((est) => {
+                      const isActive = acc.estado === est.valor;
+                      return (
+                        <button
+                          key={est.valor}
+                          type="button"
+                          className={`btn-estado-pill ${isActive ? est.activeClass : ''}`}
+                          onClick={() => handleEstadoChange(idx, est.valor)}
+                        >
+                          {est.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value={acc.observacion || ''}
+                    onChange={(e) => handleObservacionChange(idx, e.target.value)}
+                    placeholder="Opcional: rayones, desgaste, marca..."
+                    className="form-control-custom"
+                    style={{ padding: '6px 10px', fontSize: '12.5px' }}
+                  />
+                </td>
+                <td style={{ textAlign: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(idx)}
+                    className="btn-accion eliminar"
+                    title="Quitar accesorio de la lista"
+                    style={{ padding: '4px 6px' }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Agregar otro accesorio no estándar */}
+      <div style={{ marginTop: '16px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          placeholder="Nombre de otro accesorio (ej. Portaequipajes, Cargador USB...)"
+          value={nuevoNombre}
+          onChange={(e) => setNuevoNombre(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleAddCustom(e);
+            }
+          }}
+          className="form-control-custom"
+          style={{ maxWidth: '420px', padding: '8px 12px' }}
+        />
+        <button
+          type="button"
+          onClick={handleAddCustom}
+          className="btn-secondary-custom"
+          style={{ padding: '8px 14px' }}
+        >
+          <Plus size={16} />
+          Añadir Accesorio
+        </button>
+      </div>
     </div>
   );
 }
-

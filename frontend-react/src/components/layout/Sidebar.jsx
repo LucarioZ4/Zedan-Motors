@@ -8,11 +8,11 @@ import {
   Wrench,
   CalendarCheck,
   ClipboardList,
+  ClipboardCheck,
   Package,
   Receipt,
   History,
   MessageSquare,
-  FileText,
   LogOut,
   X
 } from 'lucide-react';
@@ -27,6 +27,7 @@ const navItems = [
   },
   {
     section: 'Gestión', items: [
+      { label: 'Diagnósticos', path: '/diagnosticos', icon: ClipboardCheck },
       { label: 'Clientes', path: '/clientes', icon: Users },
       { label: 'Vehículos', path: '/vehiculos', icon: Car },
       { label: 'Empleados', path: '/empleados', icon: UserCheck },
@@ -40,8 +41,7 @@ const navItems = [
       { label: 'Inventario', path: '/inventario', icon: Package },
       { label: 'Facturación', path: '/facturacion', icon: Receipt },
       { label: 'Historial', path: '/historial', icon: History },
-      { label: 'Mensajes', path: '/mensajes', icon: MessageSquare },
-      { label: 'Diagnósticos', path: '/diagnosticos', icon: FileText }
+      { label: 'Mensajes', path: '/mensajes', icon: MessageSquare }
     ]
   }
 ];
