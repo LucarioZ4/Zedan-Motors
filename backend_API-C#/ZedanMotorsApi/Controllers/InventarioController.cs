@@ -25,16 +25,29 @@ namespace ZedanMotorsApi.Controllers
 
         // GET: api/Inventario
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<InventarioDTO>>> GetInventario()
+        public async Task<ActionResult<IEnumerable<InventarioDTO>>> GetInventario([FromQuery] string? buscar)
         {
-            return await _context.Inventario.Select(r => new InventarioDTO
+            var consulta = _context.Inventario.AsQueryable();
+
+            // Búsqueda por nombre o marca (el React envía ?buscar=)
+            if (!string.IsNullOrWhiteSpace(buscar))
             {
-                idRepuesto = r.idRepuesto,
-                nombre = r.nombre,
-                marca = r.marca,
-                precio = r.precio,
-                stock = r.stock
-            }).ToListAsync();
+                var patron = BusquedaHelper.PatronContiene(buscar);
+                consulta = consulta.Where(r =>
+                    EF.Functions.ILike(r.nombre, patron) ||
+                    (r.marca != null && EF.Functions.ILike(r.marca, patron)));
+            }
+
+            return await consulta
+                .OrderBy(r => r.nombre)
+                .Select(r => new InventarioDTO
+                {
+                    idRepuesto = r.idRepuesto,
+                    nombre = r.nombre,
+                    marca = r.marca,
+                    precio = r.precio,
+                    stock = r.stock
+                }).ToListAsync();
         }
 
         // GET: api/Inventario/5

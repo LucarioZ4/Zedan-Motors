@@ -6,6 +6,7 @@ using ZedanMotorsApi.Data;
 using ZedanMotorsApi.DTOs;
 using ZedanMotorsApi.Models;
 using ZedanMotorsApi.Security;
+using ZedanMotorsApi.Services;
 
 namespace ZedanMotorsApi.Controllers
 {
@@ -27,16 +28,32 @@ namespace ZedanMotorsApi.Controllers
             hora = c.hora,
             motivo = c.motivo,
             idVehiculo = c.idVehiculo,
-            placaVehiculo = c.Vehiculo.placa,
+            idCliente = c.Vehiculo.idCliente,
+            cliente = c.Vehiculo.Cliente.nombre + " " + c.Vehiculo.Cliente.apellido,
+            vehiculo = c.Vehiculo.placa + " - " + c.Vehiculo.marca + " " + c.Vehiculo.modelo,
             idEstado = c.idEstado,
-            nombreEstado = c.Estado == null ? null : c.Estado.nombreEstado
+            estado = c.Estado == null ? null : c.Estado.nombreEstado
         };
 
         // GET: api/Citas
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CitaDTO>>> GetCitas()
+        public async Task<ActionResult<IEnumerable<CitaDTO>>> GetCitas([FromQuery] string? buscar)
         {
-            return await _context.Citas.OrderBy(c => c.fecha).ThenBy(c => c.hora)
+            var consulta = _context.Citas.AsQueryable();
+
+            // Búsqueda por cliente, placa o motivo (el React envía ?buscar=)
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                var patron = BusquedaHelper.PatronContiene(buscar);
+                consulta = consulta.Where(c =>
+                    EF.Functions.ILike(c.Vehiculo.Cliente.nombre, patron) ||
+                    EF.Functions.ILike(c.Vehiculo.Cliente.apellido, patron) ||
+                    EF.Functions.ILike(c.Vehiculo.placa, patron) ||
+                    (c.motivo != null && EF.Functions.ILike(c.motivo, patron)));
+            }
+
+            return await consulta
+                .OrderByDescending(c => c.fecha).ThenBy(c => c.hora)
                 .Select(ToDto).ToListAsync();
         }
 

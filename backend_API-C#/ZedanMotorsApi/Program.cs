@@ -80,9 +80,14 @@ builder.Services.AddControllers()
     .AddJsonOptions(o =>
     {
         o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+        // Fechas y horas con el formato que enviaba Node (evita que el navegador muestre un día antes)
+        o.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+        o.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
     })
     .ConfigureApiBehaviorOptions(options =>
     {
+        // Errores de validación: { "error": "..." } en vez del ProblemDetails por defecto,
+        // que es lo que lee el frontend
         options.InvalidModelStateResponseFactory = context =>
             new BadRequestObjectResult(new { error = ErroresApi.MensajeDeValidacion(context.ModelState) });
     });

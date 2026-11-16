@@ -28,14 +28,14 @@ namespace ZedanMotorsApi.Controllers
             telefono = e.telefono,
             correo = e.correo,
             idCargo = e.idCargo,
-            nombreCargo = e.Cargo == null ? null : e.Cargo.nombreCargo
+            cargo = e.Cargo == null ? null : e.Cargo.nombreCargo
         };
 
         // GET: api/Empleados
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EmpleadoDTO>>> GetEmpleados()
         {
-            return await _context.Empleados.Select(ToDto).ToListAsync();
+            return await _context.Empleados.OrderBy(e => e.apellido).ThenBy(e => e.nombre).Select(ToDto).ToListAsync();
         }
 
         // GET: api/Empleados/5

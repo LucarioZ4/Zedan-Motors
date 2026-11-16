@@ -33,14 +33,14 @@ namespace ZedanMotorsApi.Controllers
             marca = v.marca,
             color = v.color,
             idCliente = v.idCliente,
-            nombreCliente = v.Cliente.nombre + " " + v.Cliente.apellido
+            cliente = v.Cliente.nombre + " " + v.Cliente.apellido
         };
 
         // GET: api/Vehiculos
         [HttpGet]
         public async Task<ActionResult<IEnumerable<VehiculoDTO>>> GetVehiculos()
         {
-            return await _context.Vehiculos.Select(ToDto).ToListAsync();
+            return await _context.Vehiculos.OrderBy(v => v.marca).ThenBy(v => v.modelo).Select(ToDto).ToListAsync();
         }
 
         // GET: api/Vehiculos/5

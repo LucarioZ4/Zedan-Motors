@@ -13,7 +13,6 @@ namespace ZedanMotorsApi.DTOs
         public DateTime fecha { get; set; }
     }
 
-    // Mensaje con los datos del cliente y vehículo de su orden (para el listado)
     public class MensajeListaDTO : MensajeDTO
     {
         public string? clienteNombre { get; set; }

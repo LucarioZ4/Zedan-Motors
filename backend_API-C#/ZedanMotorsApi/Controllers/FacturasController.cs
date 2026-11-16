@@ -33,17 +33,62 @@ namespace ZedanMotorsApi.Controllers
 
         // GET: api/Facturas
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<FacturaDTO>>> GetFacturas()
+        public async Task<ActionResult<IEnumerable<FacturaListaDTO>>> GetFacturas()
         {
-            return await _context.Facturas.Select(ToDto).ToListAsync();
+            return await _context.Facturas
+                .OrderByDescending(f => f.fecha)
+                .Select(f => new FacturaListaDTO
+                {
+                    idFactura = f.idFactura,
+                    fecha = f.fecha,
+                    total = f.total,
+                    metodoPago = f.metodoPago,
+                    idOrden = f.idOrden,
+                    cliente = f.Orden.Cita == null ? null
+                        : f.Orden.Cita.Vehiculo.Cliente.nombre + " " + f.Orden.Cita.Vehiculo.Cliente.apellido,
+                    vehiculo = f.Orden.Cita == null ? null
+                        : f.Orden.Cita.Vehiculo.placa + " - " + f.Orden.Cita.Vehiculo.marca + " " + f.Orden.Cita.Vehiculo.modelo
+                })
+                .ToListAsync();
         }
 
         // GET: api/Facturas/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<FacturaDTO>> GetFactura(int id)
+        public async Task<ActionResult<FacturaDetalleDTO>> GetFactura(int id)
         {
-            var factura = await _context.Facturas.Where(f => f.idFactura == id)
-                .Select(ToDto).FirstOrDefaultAsync();
+            var factura = await _context.Facturas
+                .Where(f => f.idFactura == id)
+                .Select(f => new FacturaDetalleDTO
+                {
+                    idFactura = f.idFactura,
+                    fecha = f.fecha,
+                    total = f.total,
+                    metodoPago = f.metodoPago,
+                    idOrden = f.idOrden,
+                    cliente = f.Orden.Cita == null ? null
+                        : f.Orden.Cita.Vehiculo.Cliente.nombre + " " + f.Orden.Cita.Vehiculo.Cliente.apellido,
+                    vehiculo = f.Orden.Cita == null ? null
+                        : f.Orden.Cita.Vehiculo.placa + " - " + f.Orden.Cita.Vehiculo.marca + " " + f.Orden.Cita.Vehiculo.modelo,
+                    telefono = f.Orden.Cita == null ? null : f.Orden.Cita.Vehiculo.Cliente.telefono,
+                    correo = f.Orden.Cita == null ? null : f.Orden.Cita.Vehiculo.Cliente.correo,
+                    observaciones = f.Orden.observaciones,
+                    fechaInicio = f.Orden.fechaInicio,
+                    fechaFin = f.Orden.fechaFin,
+                    servicios = f.Orden.Servicios.Select(s => new FacturaServicioDTO
+                    {
+                        nombreServicio = s.Servicio.nombreServicio,
+                        costo = s.Servicio.costo
+                    }).ToList(),
+                    repuestos = f.Orden.Repuestos.Select(r => new FacturaRepuestoDTO
+                    {
+                        nombre = r.Repuesto.nombre,
+                        marca = r.Repuesto.marca,
+                        cantidad = r.cantidad,
+                        precio = r.Repuesto.precio,
+                        total = r.Repuesto.precio * r.cantidad
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
 
             if (factura == null)
             {

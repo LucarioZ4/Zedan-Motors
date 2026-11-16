@@ -5,6 +5,7 @@ using ZedanMotorsApi.Data;
 using ZedanMotorsApi.DTOs;
 using ZedanMotorsApi.Models;
 using ZedanMotorsApi.Security;
+using ZedanMotorsApi.Services;
 
 namespace ZedanMotorsApi.Controllers
 {
@@ -21,17 +22,32 @@ namespace ZedanMotorsApi.Controllers
 
         // GET: api/Clientes
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ClienteListaDTO>>> GetClientes()
+        public async Task<ActionResult<IEnumerable<ClienteListaDTO>>> GetClientes([FromQuery] string? buscar)
         {
-            return await _context.Clientes.Select(c => new ClienteListaDTO
+            var consulta = _context.Clientes.AsQueryable();
+
+            // Búsqueda por nombre, apellido o teléfono (el React envía ?buscar=)
+            if (!string.IsNullOrWhiteSpace(buscar))
             {
-                idCliente = c.idCliente,
-                nombre = c.nombre,
-                apellido = c.apellido,
-                telefono = c.telefono,
-                correo = c.correo,
-                totalVehiculos = c.Vehiculos.Count()
-            }).ToListAsync();
+                var patron = BusquedaHelper.PatronContiene(buscar);
+                consulta = consulta.Where(c =>
+                    EF.Functions.ILike(c.nombre, patron) ||
+                    EF.Functions.ILike(c.apellido, patron) ||
+                    EF.Functions.ILike(c.telefono, patron));
+            }
+
+            return await consulta
+                .OrderBy(c => c.apellido).ThenBy(c => c.nombre)
+                .Select(c => new ClienteListaDTO
+                {
+                    idCliente = c.idCliente,
+                    nombre = c.nombre,
+                    apellido = c.apellido,
+                    telefono = c.telefono,
+                    correo = c.correo,
+                    direccion = c.direccion,
+                    totalVehiculos = c.Vehiculos.Count()
+                }).ToListAsync();
         }
 
         // GET: api/Clientes/5
@@ -82,7 +98,7 @@ namespace ZedanMotorsApi.Controllers
                     marca = v.marca,
                     color = v.color,
                     idCliente = v.idCliente,
-                    nombreCliente = v.Cliente.nombre + " " + v.Cliente.apellido
+                    cliente = v.Cliente.nombre + " " + v.Cliente.apellido
                 }).ToListAsync();
 
             return vehiculos;

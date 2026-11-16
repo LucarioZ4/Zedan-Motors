@@ -25,17 +25,26 @@ namespace ZedanMotorsApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<OrdenTrabajoListaDTO>>> GetOrdenes()
         {
-            return await _context.OrdenesTrabajo.Select(o => new OrdenTrabajoListaDTO
-            {
-                idOrden = o.idOrden,
-                fechaInicio = o.fechaInicio,
-                fechaFin = o.fechaFin,
-                idCita = o.idCita,
-                idEmpleado = o.idEmpleado,
-                nombreEmpleado = o.Empleado == null ? null : o.Empleado.nombre + " " + o.Empleado.apellido,
-                totalServicios = o.Servicios.Count(),
-                totalRepuestos = o.Repuestos.Count()
-            }).ToListAsync();
+            return await _context.OrdenesTrabajo
+                .OrderByDescending(o => o.fechaInicio)
+                .Select(o => new OrdenTrabajoListaDTO
+                {
+                    idOrden = o.idOrden,
+                    fechaInicio = o.fechaInicio,
+                    fechaFin = o.fechaFin,
+                    observaciones = o.observaciones,
+                    idCita = o.idCita,
+                    idEmpleado = o.idEmpleado,
+                    fechaCita = o.Cita == null ? null : (DateOnly?)o.Cita.fecha,
+                    cliente = o.Cita == null ? null
+                        : o.Cita.Vehiculo.Cliente.nombre + " " + o.Cita.Vehiculo.Cliente.apellido,
+                    vehiculo = o.Cita == null ? null
+                        : o.Cita.Vehiculo.placa + " - " + o.Cita.Vehiculo.marca + " " + o.Cita.Vehiculo.modelo,
+                    empleado = o.Empleado == null ? null : o.Empleado.nombre + " " + o.Empleado.apellido,
+                    estado = o.Cita == null || o.Cita.Estado == null ? null : o.Cita.Estado.nombreEstado,
+                    totalServicios = o.Servicios.Count(),
+                    totalRepuestos = o.Repuestos.Count()
+                }).ToListAsync();
         }
 
         // GET: api/OrdenesTrabajo/5
@@ -51,7 +60,12 @@ namespace ZedanMotorsApi.Controllers
                     observaciones = o.observaciones,
                     idCita = o.idCita,
                     idEmpleado = o.idEmpleado,
-                    nombreEmpleado = o.Empleado == null ? null : o.Empleado.nombre + " " + o.Empleado.apellido,
+                    cliente = o.Cita == null ? null
+                        : o.Cita.Vehiculo.Cliente.nombre + " " + o.Cita.Vehiculo.Cliente.apellido,
+                    vehiculo = o.Cita == null ? null
+                        : o.Cita.Vehiculo.placa + " - " + o.Cita.Vehiculo.marca + " " + o.Cita.Vehiculo.modelo,
+                    empleado = o.Empleado == null ? null : o.Empleado.nombre + " " + o.Empleado.apellido,
+                    estado = o.Cita == null || o.Cita.Estado == null ? null : o.Cita.Estado.nombreEstado,
                     Servicios = o.Servicios.Select(s => new OrdenServicioDTO
                     {
                         idServicio = s.idServicio,
