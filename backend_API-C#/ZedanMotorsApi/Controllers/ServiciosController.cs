@@ -21,9 +21,17 @@ namespace ZedanMotorsApi.Controllers
 
         // GET: api/Servicios
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ServicioDTO>>> GetServicios()
+        public async Task<ActionResult<IEnumerable<ServicioDTO>>> GetServicios([FromQuery] string? buscar)
         {
-            return await _context.Servicios.Select(s => new ServicioDTO
+            var query = _context.Servicios.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                var patron = $"%{buscar.Trim()}%";
+                query = query.Where(s => EF.Functions.ILike(s.nombreServicio, patron) ||
+                    (s.descripcion != null && EF.Functions.ILike(s.descripcion, patron)));
+            }
+
+            return await query.OrderBy(s => s.nombreServicio).Select(s => new ServicioDTO
             {
                 idServicio = s.idServicio,
                 nombreServicio = s.nombreServicio,

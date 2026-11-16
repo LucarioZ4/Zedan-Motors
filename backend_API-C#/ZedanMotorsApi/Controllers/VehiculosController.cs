@@ -38,9 +38,22 @@ namespace ZedanMotorsApi.Controllers
 
         // GET: api/Vehiculos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<VehiculoDTO>>> GetVehiculos()
+        public async Task<ActionResult<IEnumerable<VehiculoDTO>>> GetVehiculos([FromQuery] string? buscar)
         {
-            return await _context.Vehiculos.OrderBy(v => v.marca).ThenBy(v => v.modelo).Select(ToDto).ToListAsync();
+            var query = _context.Vehiculos.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                var patron = $"%{buscar.Trim()}%";
+                query = query.Where(v =>
+                    EF.Functions.ILike(v.placa, patron) ||
+                    EF.Functions.ILike(v.marca, patron) ||
+                    EF.Functions.ILike(v.modelo, patron) ||
+                    EF.Functions.ILike(v.Cliente.nombre, patron) ||
+                    EF.Functions.ILike(v.Cliente.apellido, patron) ||
+                    EF.Functions.ILike(v.Cliente.nombre + " " + v.Cliente.apellido, patron));
+            }
+
+            return await query.OrderBy(v => v.marca).ThenBy(v => v.modelo).Select(ToDto).ToListAsync();
         }
 
         // GET: api/Vehiculos/5

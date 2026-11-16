@@ -42,6 +42,59 @@ namespace ZedanMotorsApi.Controllers
             };
         }
 
+        // Mismo contrato que la API Node para las graficas del frontend.
+        [HttpGet("graficas")]
+        public async Task<ActionResult> GetGraficas()
+        {
+            var hoy = FechaColombia.Hoy();
+            var mesActual = new DateOnly(hoy.Year, hoy.Month, 1);
+            var inicio = mesActual.AddMonths(-5);
+            var fin = mesActual.AddMonths(1);
+
+            var totales = await _context.Facturas
+                .Where(f => f.fecha >= inicio && f.fecha < fin)
+                .GroupBy(f => new { f.fecha.Year, f.fecha.Month })
+                .Select(g => new { g.Key.Year, g.Key.Month, total = g.Sum(f => f.total) })
+                .ToListAsync();
+
+            var ingresos = Enumerable.Range(0, 6).Select(i =>
+            {
+                var mes = inicio.AddMonths(i);
+                return new
+                {
+                    periodo = mes.ToString("yyyy-MM", System.Globalization.CultureInfo.InvariantCulture),
+                    total = totales.FirstOrDefault(t => t.Year == mes.Year && t.Month == mes.Month)?.total ?? 0m
+                };
+            }).ToList();
+
+            var citasPorEstado = await _context.Estados
+                .OrderBy(e => e.idEstado)
+                .Select(e => new { estado = e.nombreEstado, total = e.Citas.Count() })
+                .ToListAsync();
+
+            var topServicios = await _context.OrdenServicios
+                .GroupBy(os => new { os.idServicio, os.Servicio.nombreServicio })
+                .Select(g => new { nombre = g.Key.nombreServicio, total = g.Count() })
+                .OrderByDescending(s => s.total).ThenBy(s => s.nombre)
+                .Take(5).ToListAsync();
+
+            var stockCritico = await _context.Inventario
+                .Where(i => i.stock < 5)
+                .OrderBy(i => i.stock).ThenBy(i => i.nombre)
+                .Select(i => new { i.nombre, i.marca, i.stock })
+                .Take(6).ToListAsync();
+
+            // Las claves del diccionario preservan el camelCase del contrato,
+            // aunque el resto de la API utiliza snake_case.
+            return Ok(new Dictionary<string, object>
+            {
+                ["ingresos"] = ingresos,
+                ["citasPorEstado"] = citasPorEstado,
+                ["topServicios"] = topServicios,
+                ["stockCritico"] = stockCritico
+            });
+        }
+
         // GET: api/Dashboard/citas-hoy
         [HttpGet("citas-hoy")]
         public async Task<ActionResult<IEnumerable<CitaHoyDTO>>> GetCitasHoy()
