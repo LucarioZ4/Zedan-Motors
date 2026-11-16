@@ -11,6 +11,7 @@ namespace ZedanMotorsApi.DTOs
         public string? correo { get; set; }
         public string? direccion { get; set; }
         public List<VehiculoDTO> Vehiculos { get; set; } = new();
+        public string nombreCompleto => $"{nombre} {apellido}";
     }
 
     public class ClienteListaDTO
@@ -20,7 +21,9 @@ namespace ZedanMotorsApi.DTOs
         public string apellido { get; set; } = string.Empty;
         public string telefono { get; set; } = string.Empty;
         public string? correo { get; set; }
+        public string? direccion { get; set; }
         public int totalVehiculos { get; set; }
+        public string nombreCompleto => $"{nombre} {apellido}";
     }
 
     public class ClienteCreateDTO

@@ -8,9 +8,6 @@ obj/
 appsettings.json
 appsettings.*.json
 !appsettings.Example.json
-<<<<<<< HEAD
 
 # Documentos privados de defensa y apuntes
 *.docx
-=======
->>>>>>> b4ffb469536c0f3eff5695ed1e4a3bd01060d74d

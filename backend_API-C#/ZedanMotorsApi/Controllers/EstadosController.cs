@@ -37,7 +37,7 @@ namespace ZedanMotorsApi.Controllers
 
             if (estado == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Estado no encontrado" });
             }
 
             return estado;

@@ -1,9 +1,12 @@
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ZedanMotorsApi.Data;
 using ZedanMotorsApi.DTOs;
 using ZedanMotorsApi.Models;
+using ZedanMotorsApi.Security;
+using ZedanMotorsApi.Services;
 
 namespace ZedanMotorsApi.Controllers
 {
@@ -25,16 +28,32 @@ namespace ZedanMotorsApi.Controllers
             hora = c.hora,
             motivo = c.motivo,
             idVehiculo = c.idVehiculo,
-            placaVehiculo = c.Vehiculo.placa,
+            idCliente = c.Vehiculo.idCliente,
+            cliente = c.Vehiculo.Cliente.nombre + " " + c.Vehiculo.Cliente.apellido,
+            vehiculo = c.Vehiculo.placa + " - " + c.Vehiculo.marca + " " + c.Vehiculo.modelo,
             idEstado = c.idEstado,
-            nombreEstado = c.Estado == null ? null : c.Estado.nombreEstado
+            estado = c.Estado == null ? null : c.Estado.nombreEstado
         };
 
         // GET: api/Citas
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CitaDTO>>> GetCitas()
+        public async Task<ActionResult<IEnumerable<CitaDTO>>> GetCitas([FromQuery] string? buscar)
         {
-            return await _context.Citas.OrderBy(c => c.fecha).ThenBy(c => c.hora)
+            var consulta = _context.Citas.AsQueryable();
+
+            // Búsqueda por cliente, placa o motivo (el React envía ?buscar=)
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                var patron = BusquedaHelper.PatronContiene(buscar);
+                consulta = consulta.Where(c =>
+                    EF.Functions.ILike(c.Vehiculo.Cliente.nombre, patron) ||
+                    EF.Functions.ILike(c.Vehiculo.Cliente.apellido, patron) ||
+                    EF.Functions.ILike(c.Vehiculo.placa, patron) ||
+                    (c.motivo != null && EF.Functions.ILike(c.motivo, patron)));
+            }
+
+            return await consulta
+                .OrderByDescending(c => c.fecha).ThenBy(c => c.hora)
                 .Select(ToDto).ToListAsync();
         }
 
@@ -47,7 +66,7 @@ namespace ZedanMotorsApi.Controllers
 
             if (cita == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Cita no encontrada" });
             }
 
             return cita;
@@ -60,13 +79,13 @@ namespace ZedanMotorsApi.Controllers
             var cita = await _context.Citas.FindAsync(id);
             if (cita == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Cita no encontrada" });
             }
 
             var error = await ValidarRelaciones(citaUpdate);
             if (error != null)
             {
-                return BadRequest(new { mensaje = error });
+                return BadRequest(new { error = error });
             }
 
             cita.fecha = citaUpdate.fecha;
@@ -77,7 +96,7 @@ namespace ZedanMotorsApi.Controllers
 
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Cita actualizada" });
         }
 
         // POST: api/Citas
@@ -87,7 +106,7 @@ namespace ZedanMotorsApi.Controllers
             var error = await ValidarRelaciones(citaCreate);
             if (error != null)
             {
-                return BadRequest(new { mensaje = error });
+                return BadRequest(new { error = error });
             }
 
             var cita = new Cita
@@ -108,19 +127,20 @@ namespace ZedanMotorsApi.Controllers
         }
 
         // DELETE: api/Citas/5
+        [Authorize(Roles = RolesApp.Administrador)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCita(int id)
         {
             var cita = await _context.Citas.FindAsync(id);
             if (cita == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Cita no encontrada" });
             }
 
             _context.Citas.Remove(cita);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Cita eliminada" });
         }
 
         private async Task<string?> ValidarRelaciones(CitaCreateDTO dto)
