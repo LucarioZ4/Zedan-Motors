@@ -94,3 +94,40 @@ export const removeRepuestoOrden = async (idOrden, idRepuesto) => {
   if (!res.ok) throw new Error(data.error || 'Error al quitar repuesto');
   return data;
 };
+
+// ── Videos de recepción y entrega ──
+export const getVideosOrden = async (idOrden) => {
+  const res = await apiFetch(`/api/ordenes/${idOrden}/videos`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error al obtener videos');
+  return data;
+};
+
+export const firmarVideoOrden = async (idOrden, { tipo, nombre_archivo, mime, tamano }) => {
+  const res = await apiFetch(`/api/ordenes/${idOrden}/videos/firma`, {
+    method: 'POST',
+    body: JSON.stringify({ tipo, nombre_archivo, mime, tamano })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error al preparar subida del video');
+  return data;
+};
+
+export const registrarVideoOrden = async (idOrden, { tipo, ruta, nombre_archivo }) => {
+  const res = await apiFetch(`/api/ordenes/${idOrden}/videos`, {
+    method: 'POST',
+    body: JSON.stringify({ tipo, ruta, nombre_archivo })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error al registrar video');
+  return data;
+};
+
+export const eliminarVideoOrden = async (idOrden, idVideo) => {
+  const res = await apiFetch(`/api/ordenes/${idOrden}/videos/${idVideo}`, {
+    method: 'DELETE'
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error al eliminar video');
+  return data;
+};

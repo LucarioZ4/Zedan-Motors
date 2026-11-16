@@ -29,6 +29,7 @@ import { getCitas } from '../../services/citasService';
 import { getEmpleados } from '../../services/empleadosService';
 import { getServicios } from '../../services/serviciosService';
 import { getInventario } from '../../services/inventarioService';
+import VideosOrden from './VideosOrden';
 import './Ordenes.css';
 
 const emptyForm = {
@@ -678,6 +679,11 @@ export default function Ordenes() {
                           )}
                         </div>
                       </div>
+                    </div>
+
+                    {/* Videos de Recepción y Entrega */}
+                    <div style={{ marginTop: '20px' }}>
+                      <VideosOrden idOrden={ordenActual.id_orden} />
                     </div>
                   </div>
                 )}

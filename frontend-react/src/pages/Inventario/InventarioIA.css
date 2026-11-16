@@ -1,0 +1,196 @@
+/* Inventario con IA. Reutiliza los estilos de modal y botones de Inventario.css. */
+.modal-dialog-custom.ia-dialog {
+    max-width: 980px;
+}
+
+.ia-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ia-modos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 6px 0 20px;
+}
+
+.ia-modo {
+    text-align: left;
+    background: #f8fafc;
+    border: 1.5px solid #dbe4f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #475569;
+    font-size: 12.5px;
+    transition: all 0.15s;
+}
+
+.ia-modo strong {
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.ia-modo.activo {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.ia-subir {
+    width: 100%;
+    background: #f8fafc;
+    border: 2px dashed #bfd0ea;
+    border-radius: 14px;
+    padding: 36px 20px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #3b82f6;
+    text-align: center;
+}
+
+.ia-subir strong {
+    color: #1e3a8a;
+    font-size: 15px;
+}
+
+.ia-subir span {
+    color: #64748b;
+    font-size: 12.5px;
+    max-width: 420px;
+}
+
+.ia-subir:hover {
+    background: #eff6ff;
+}
+
+.ia-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+
+.ia-preview img {
+    max-width: 100%;
+    max-height: 340px;
+    border-radius: 12px;
+    border: 1px solid #dbe4f0;
+    object-fit: contain;
+}
+
+.ia-preview-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.ia-aviso {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-left: 4px solid #f59e0b;
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #92400e;
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+.ia-aviso svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.ia-observaciones {
+    font-size: 13px;
+    color: #475569;
+    margin: 0 0 14px;
+}
+
+.ia-vacio {
+    text-align: center;
+    color: #64748b;
+    padding: 24px 0;
+    font-size: 14px;
+}
+
+.ia-tabla td {
+    vertical-align: top;
+}
+
+.ia-ignorada {
+    opacity: 0.5;
+}
+
+.ia-cantidad {
+    width: 84px;
+}
+
+.ia-resultado {
+    font-size: 14px;
+    color: #475569;
+    white-space: nowrap;
+}
+
+.ia-resultado strong {
+    color: #16a34a;
+    font-size: 16px;
+}
+
+.ia-nuevo {
+    display: grid;
+    gap: 6px;
+    min-width: 190px;
+}
+
+.ia-error-fila {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.ia-confianza {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ia-confianza.alta {
+    background: rgba(22, 163, 74, 0.12);
+    color: #15803d;
+}
+
+.ia-confianza.media {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+}
+
+.ia-confianza.baja {
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+}
+
+.ia-nota-label {
+    margin-top: 18px;
+}
+
+@media (max-width: 640px) {
+    .ia-modos {
+        grid-template-columns: 1fr;
+    }
+}
