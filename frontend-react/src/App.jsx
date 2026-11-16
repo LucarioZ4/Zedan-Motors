@@ -14,6 +14,7 @@ import Inventario from './pages/Inventario/Inventario';
 import Facturacion from './pages/Facturacion/Facturacion';
 import Historial from './pages/Historial/Historial';
 import Mensajes from './pages/Mensajes/Mensajes';
+import DiagnosticosRouter from './pages/Diagnosticos/Router';
 
 function ModulePlaceholder({ title }) {
   return (
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="facturacion" element={<Facturacion />} />
           <Route path="historial" element={<Historial />} />
           <Route path="mensajes" element={<Mensajes />} />
+          <Route path="diagnosticos/*" element={<DiagnosticosRouter />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
