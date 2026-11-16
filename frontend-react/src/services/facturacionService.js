@@ -1,17 +1,15 @@
-import { apiFetch } from './api';
+import { apiFetch, getErrorMessage } from './api';
 
 export const getFacturas = async () => {
   const res = await apiFetch('/api/facturacion');
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error al cargar facturas');
-  return data;
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Error al cargar facturas'));
+  return res.json();
 };
 
 export const getFacturaById = async (id) => {
   const res = await apiFetch(`/api/facturacion/${id}`);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error al obtener factura');
-  return data;
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Error al obtener factura'));
+  return res.json();
 };
 
 export const createFactura = async (factura) => {
@@ -19,16 +17,15 @@ export const createFactura = async (factura) => {
     method: 'POST',
     body: JSON.stringify(factura)
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error al crear factura');
-  return data;
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Error al crear factura'));
+  return res.json();
 };
 
 export const deleteFactura = async (id) => {
   const res = await apiFetch(`/api/facturacion/${id}`, {
     method: 'DELETE'
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error al eliminar factura');
-  return data;
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Error al eliminar factura'));
+  // La API de C# responde 204 sin cuerpo; la de Node responde JSON
+  return res.status === 204 ? null : res.json();
 };

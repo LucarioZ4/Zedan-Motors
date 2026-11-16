@@ -1,9 +1,12 @@
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using ZedanMotorsApi.Data;
 using ZedanMotorsApi.DTOs;
 using ZedanMotorsApi.Models;
+using ZedanMotorsApi.Security;
 
 namespace ZedanMotorsApi.Controllers
 {
@@ -30,69 +33,143 @@ namespace ZedanMotorsApi.Controllers
 
         // GET: api/Facturas
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<FacturaDTO>>> GetFacturas()
+        public async Task<ActionResult<IEnumerable<FacturaListaDTO>>> GetFacturas()
         {
-            return await _context.Facturas.Select(ToDto).ToListAsync();
+            return await _context.Facturas
+                .OrderByDescending(f => f.fecha)
+                .Select(f => new FacturaListaDTO
+                {
+                    idFactura = f.idFactura,
+                    fecha = f.fecha,
+                    total = f.total,
+                    metodoPago = f.metodoPago,
+                    idOrden = f.idOrden,
+                    cliente = f.Orden.Cita == null ? null
+                        : f.Orden.Cita.Vehiculo.Cliente.nombre + " " + f.Orden.Cita.Vehiculo.Cliente.apellido,
+                    vehiculo = f.Orden.Cita == null ? null
+                        : f.Orden.Cita.Vehiculo.placa + " - " + f.Orden.Cita.Vehiculo.marca + " " + f.Orden.Cita.Vehiculo.modelo
+                })
+                .ToListAsync();
         }
 
         // GET: api/Facturas/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<FacturaDTO>> GetFactura(int id)
+        public async Task<ActionResult<FacturaDetalleDTO>> GetFactura(int id)
         {
-            var factura = await _context.Facturas.Where(f => f.idFactura == id)
-                .Select(ToDto).FirstOrDefaultAsync();
+            var factura = await _context.Facturas
+                .Where(f => f.idFactura == id)
+                .Select(f => new FacturaDetalleDTO
+                {
+                    idFactura = f.idFactura,
+                    fecha = f.fecha,
+                    total = f.total,
+                    metodoPago = f.metodoPago,
+                    idOrden = f.idOrden,
+                    cliente = f.Orden.Cita == null ? null
+                        : f.Orden.Cita.Vehiculo.Cliente.nombre + " " + f.Orden.Cita.Vehiculo.Cliente.apellido,
+                    vehiculo = f.Orden.Cita == null ? null
+                        : f.Orden.Cita.Vehiculo.placa + " - " + f.Orden.Cita.Vehiculo.marca + " " + f.Orden.Cita.Vehiculo.modelo,
+                    telefono = f.Orden.Cita == null ? null : f.Orden.Cita.Vehiculo.Cliente.telefono,
+                    correo = f.Orden.Cita == null ? null : f.Orden.Cita.Vehiculo.Cliente.correo,
+                    observaciones = f.Orden.observaciones,
+                    fechaInicio = f.Orden.fechaInicio,
+                    fechaFin = f.Orden.fechaFin,
+                    servicios = f.Orden.Servicios.Select(s => new FacturaServicioDTO
+                    {
+                        nombreServicio = s.Servicio.nombreServicio,
+                        costo = s.Servicio.costo
+                    }).ToList(),
+                    repuestos = f.Orden.Repuestos.Select(r => new FacturaRepuestoDTO
+                    {
+                        nombre = r.Repuesto.nombre,
+                        marca = r.Repuesto.marca,
+                        cantidad = r.cantidad,
+                        precio = r.Repuesto.precio,
+                        total = r.Repuesto.precio * r.cantidad
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
 
             if (factura == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Factura no encontrada" });
             }
 
             return factura;
         }
 
         // PUT: api/Facturas/5
-        // Nota: la orden de una factura no se puede cambiar, solo fecha, total y método de pago.
+        // Una factura emitida solo permite corregir el método de pago: la orden, la fecha y el total quedan fijos.
+        [Authorize(Roles = RolesApp.Administrador)]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutFactura(int id, FacturaCreateDTO facturaUpdate)
+        public async Task<IActionResult> PutFactura(int id, FacturaUpdateDTO facturaUpdate)
         {
             var factura = await _context.Facturas.FindAsync(id);
             if (factura == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Factura no encontrada" });
             }
 
-            factura.fecha = facturaUpdate.fecha;
-            factura.total = facturaUpdate.total;
             factura.metodoPago = facturaUpdate.metodoPago;
 
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Factura actualizada" });
         }
 
         // POST: api/Facturas
+        // El total se calcula aquí con los servicios y repuestos de la orden; la fecha es la de hoy.
+        [Authorize(Roles = RolesApp.Administrador)]
         [HttpPost]
         public async Task<ActionResult<FacturaDTO>> PostFactura(FacturaCreateDTO facturaCreate)
         {
             if (!await _context.OrdenesTrabajo.AnyAsync(o => o.idOrden == facturaCreate.idOrden))
             {
-                return BadRequest(new { mensaje = "La orden de trabajo indicada no existe." });
+                return BadRequest(new { error = "La orden de trabajo indicada no existe." });
             }
 
             if (await _context.Facturas.AnyAsync(f => f.idOrden == facturaCreate.idOrden))
             {
-                return Conflict(new { mensaje = "Esa orden de trabajo ya tiene una factura." });
+                return Conflict(new { error = "Esa orden de trabajo ya tiene una factura." });
+            }
+
+            var totalServicios = await _context.OrdenServicios
+                .Where(os => os.idOrden == facturaCreate.idOrden)
+                .SumAsync(os => (decimal?)os.Servicio.costo) ?? 0m;
+
+            var totalRepuestos = await _context.OrdenInventarios
+                .Where(oi => oi.idOrden == facturaCreate.idOrden)
+                .SumAsync(oi => (decimal?)(oi.Repuesto.precio * oi.cantidad)) ?? 0m;
+
+            var total = decimal.Round(totalServicios + totalRepuestos, 2);
+
+            if (total <= 0)
+            {
+                return BadRequest(new
+                {
+                    error = "La orden no tiene servicios ni repuestos. Agrega items antes de facturar."
+                });
             }
 
             var factura = new Facturacion
             {
-                fecha = facturaCreate.fecha,
-                total = facturaCreate.total,
+                fecha = FechaHoyColombia(),
+                total = total,
                 metodoPago = facturaCreate.metodoPago,
                 idOrden = facturaCreate.idOrden
             };
             _context.Facturas.Add(factura);
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (
+                ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                // Dos solicitudes simultáneas para la misma orden: la segunda choca con el índice único
+                return Conflict(new { error = "Esa orden de trabajo ya tiene una factura." });
+            }
 
             var respuesta = await _context.Facturas.Where(f => f.idFactura == factura.idFactura)
                 .Select(ToDto).FirstAsync();
@@ -100,20 +177,26 @@ namespace ZedanMotorsApi.Controllers
             return CreatedAtAction(nameof(GetFactura), new { id = factura.idFactura }, respuesta);
         }
 
+        // Fecha de emisión en hora de Colombia (UTC-5, sin horario de verano), no la del servidor:
+        // con UTC, una factura emitida después de las 7 p. m. quedaría con la fecha de mañana.
+        private static DateOnly FechaHoyColombia() =>
+            DateOnly.FromDateTime(DateTime.UtcNow.AddHours(-5));
+
         // DELETE: api/Facturas/5
+        [Authorize(Roles = RolesApp.Administrador)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFactura(int id)
         {
             var factura = await _context.Facturas.FindAsync(id);
             if (factura == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Factura no encontrada" });
             }
 
             _context.Facturas.Remove(factura);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Factura eliminada" });
         }
     }
 }

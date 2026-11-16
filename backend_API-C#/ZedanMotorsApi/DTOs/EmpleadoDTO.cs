@@ -10,7 +10,8 @@ namespace ZedanMotorsApi.DTOs
         public string telefono { get; set; } = string.Empty;
         public string? correo { get; set; }
         public int? idCargo { get; set; }
-        public string? nombreCargo { get; set; }
+        public string? cargo { get; set; }
+        public string nombreCompleto => $"{nombre} {apellido}";
     }
 
     public class EmpleadoCreateDTO

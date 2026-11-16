@@ -1,9 +1,11 @@
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ZedanMotorsApi.Data;
 using ZedanMotorsApi.DTOs;
 using ZedanMotorsApi.Models;
+using ZedanMotorsApi.Security;
 
 namespace ZedanMotorsApi.Controllers
 {
@@ -26,14 +28,14 @@ namespace ZedanMotorsApi.Controllers
             telefono = e.telefono,
             correo = e.correo,
             idCargo = e.idCargo,
-            nombreCargo = e.Cargo == null ? null : e.Cargo.nombreCargo
+            cargo = e.Cargo == null ? null : e.Cargo.nombreCargo
         };
 
         // GET: api/Empleados
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EmpleadoDTO>>> GetEmpleados()
         {
-            return await _context.Empleados.Select(ToDto).ToListAsync();
+            return await _context.Empleados.OrderBy(e => e.apellido).ThenBy(e => e.nombre).Select(ToDto).ToListAsync();
         }
 
         // GET: api/Empleados/5
@@ -45,26 +47,27 @@ namespace ZedanMotorsApi.Controllers
 
             if (empleado == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Empleado no encontrado" });
             }
 
             return empleado;
         }
 
         // PUT: api/Empleados/5
+        [Authorize(Roles = RolesApp.Administrador)]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEmpleado(int id, EmpleadoCreateDTO empleadoUpdate)
         {
             var empleado = await _context.Empleados.FindAsync(id);
             if (empleado == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Empleado no encontrado" });
             }
 
             if (empleadoUpdate.idCargo != null &&
                 !await _context.Cargos.AnyAsync(c => c.idCargo == empleadoUpdate.idCargo))
             {
-                return BadRequest(new { mensaje = "El cargo indicado no existe." });
+                return BadRequest(new { error = "El cargo indicado no existe." });
             }
 
             empleado.nombre = empleadoUpdate.nombre;
@@ -79,20 +82,21 @@ namespace ZedanMotorsApi.Controllers
             }
             catch (DbUpdateException)
             {
-                return Conflict(new { mensaje = "El teléfono o el correo ya están registrados." });
+                return Conflict(new { error = "El teléfono o el correo ya están registrados." });
             }
 
-            return NoContent();
+            return Ok(new { mensaje = "Empleado actualizado" });
         }
 
         // POST: api/Empleados
+        [Authorize(Roles = RolesApp.Administrador)]
         [HttpPost]
         public async Task<ActionResult<EmpleadoDTO>> PostEmpleado(EmpleadoCreateDTO empleadoCreate)
         {
             if (empleadoCreate.idCargo != null &&
                 !await _context.Cargos.AnyAsync(c => c.idCargo == empleadoCreate.idCargo))
             {
-                return BadRequest(new { mensaje = "El cargo indicado no existe." });
+                return BadRequest(new { error = "El cargo indicado no existe." });
             }
 
             var empleado = new Empleado
@@ -111,7 +115,7 @@ namespace ZedanMotorsApi.Controllers
             }
             catch (DbUpdateException)
             {
-                return Conflict(new { mensaje = "El teléfono o el correo ya están registrados." });
+                return Conflict(new { error = "El teléfono o el correo ya están registrados." });
             }
 
             var respuesta = await _context.Empleados.Where(e => e.idEmpleado == empleado.idEmpleado)
@@ -121,19 +125,20 @@ namespace ZedanMotorsApi.Controllers
         }
 
         // DELETE: api/Empleados/5
+        [Authorize(Roles = RolesApp.Administrador)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEmpleado(int id)
         {
             var empleado = await _context.Empleados.FindAsync(id);
             if (empleado == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Empleado no encontrado" });
             }
 
             _context.Empleados.Remove(empleado);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Empleado eliminado" });
         }
     }
 }

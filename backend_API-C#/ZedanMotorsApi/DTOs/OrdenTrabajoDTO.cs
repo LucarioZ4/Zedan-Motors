@@ -25,7 +25,10 @@ namespace ZedanMotorsApi.DTOs
         public string? observaciones { get; set; }
         public int? idCita { get; set; }
         public int? idEmpleado { get; set; }
-        public string? nombreEmpleado { get; set; }
+        public string? cliente { get; set; }
+        public string? vehiculo { get; set; }
+        public string? empleado { get; set; }
+        public string? estado { get; set; }
         public List<OrdenServicioDTO> Servicios { get; set; } = new();
         public List<OrdenRepuestoDTO> Repuestos { get; set; } = new();
         public FacturaDTO? Factura { get; set; }
@@ -38,7 +41,12 @@ namespace ZedanMotorsApi.DTOs
         public DateOnly? fechaFin { get; set; }
         public int? idCita { get; set; }
         public int? idEmpleado { get; set; }
-        public string? nombreEmpleado { get; set; }
+        public string? observaciones { get; set; }
+        public DateOnly? fechaCita { get; set; }
+        public string? cliente { get; set; }
+        public string? vehiculo { get; set; }
+        public string? empleado { get; set; }
+        public string? estado { get; set; }
         public int totalServicios { get; set; }
         public int totalRepuestos { get; set; }
     }

@@ -37,7 +37,7 @@ namespace ZedanMotorsApi.Controllers
 
             if (cargo == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Cargo no encontrado" });
             }
 
             return cargo;

@@ -9,6 +9,7 @@ namespace ZedanMotorsApi.DTOs
         public string? marca { get; set; }
         public decimal precio { get; set; }
         public int stock { get; set; }
+        public bool stockBajo => stock < 5;
     }
 
     public class InventarioCreateDTO

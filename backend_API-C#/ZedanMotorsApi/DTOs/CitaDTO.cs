@@ -9,9 +9,11 @@ namespace ZedanMotorsApi.DTOs
         public TimeOnly hora { get; set; }
         public string? motivo { get; set; }
         public int idVehiculo { get; set; }
-        public string? placaVehiculo { get; set; }
+        public int idCliente { get; set; }
+        public string? cliente { get; set; }
+        public string? vehiculo { get; set; }
         public int? idEstado { get; set; }
-        public string? nombreEstado { get; set; }
+        public string? estado { get; set; }
     }
 
     public class CitaCreateDTO
