@@ -47,6 +47,13 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
       FACTUS_API_URL: ${FACTUS_API_URL:-}
       FACTUS_API_TOKEN: ${FACTUS_API_TOKEN:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-5-5}
+      IA_ANALISIS_POR_HORA: ${IA_ANALISIS_POR_HORA:-20}
+      IA_MAX_IMAGENES: ${IA_MAX_IMAGENES:-5}
+      IA_MAX_MB: ${IA_MAX_MB:-5}
+    volumes:
+      - ./backend/uploads/inventario-ia:/app/backend/uploads/inventario-ia
     depends_on:
       postgres:
         condition: service_healthy

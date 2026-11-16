@@ -12,7 +12,8 @@ import {
   Receipt,
   History,
   MessageSquare,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react';
 import ZedanLogo from '../common/ZedanLogo';
 import './Sidebar.css';
@@ -43,11 +44,16 @@ const navItems = [
   }
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = true, onClose = () => {} }) {
   const navigate = useNavigate();
   const usuario = sessionStorage.getItem('usuario') || 'Usuario';
   const rol = sessionStorage.getItem('rol') || 'Sin rol asignado';
   const inicial = usuario.charAt(0).toUpperCase();
+
+  // En celular, al elegir una opción el menú se esconde solo
+  const handleNavClick = () => {
+    if (window.matchMedia('(max-width: 900px)').matches) onClose();
+  };
 
   const handleLogout = () => {
     if (window.confirm('¿Deseas cerrar sesión?')) {
@@ -57,7 +63,16 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
+      <button
+        type="button"
+        className="sidebar-close"
+        onClick={onClose}
+        aria-label="Cerrar menú"
+      >
+        <X size={20} />
+      </button>
+
       <div className="sidebar-logo" onClick={() => navigate('/dashboard')} title="Ir al Dashboard">
         <ZedanLogo variant="sidebar" />
       </div>
@@ -72,6 +87,7 @@ export default function Sidebar() {
                 <NavLink
                   key={idx}
                   to={item.path}
+                  onClick={handleNavClick}
                   className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                 >
                   <IconComponent size={18} className="nav-icon" />

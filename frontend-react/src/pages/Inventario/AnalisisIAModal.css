@@ -1,0 +1,448 @@
+/* ═══════════════════════════════════════════════
+   MODAL ACTUALIZAR INVENTARIO CON IA (FOTO)
+   ═══════════════════════════════════════════════ */
+
+.modal-ia {
+    max-width: 640px;
+    width: 95%;
+    transition: max-width 0.25s ease;
+}
+
+.modal-ia-ancho {
+    max-width: 1100px;
+}
+
+.modal-ia-header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.ia-icon-bubble {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6366f1, #3b82f6);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);
+}
+
+.ia-header-subtitle {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 1px;
+}
+
+.modal-ia-body {
+    padding: 22px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* ── Paso 1: Fotos ── */
+.ia-guia-box {
+    display: flex;
+    gap: 12px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    color: #1e3a8a;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.ia-guia-icon {
+    flex-shrink: 0;
+    color: #2563eb;
+    margin-top: 2px;
+}
+
+.ia-upload-zone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 34px 20px;
+    text-align: center;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ia-upload-zone:hover {
+    border-color: #6366f1;
+    background: #f5f3ff;
+}
+
+.ia-upload-icon {
+    color: #6366f1;
+    margin-bottom: 8px;
+}
+
+.ia-upload-zone h6 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.ia-upload-zone p {
+    font-size: 12.5px;
+    color: #64748b;
+    margin: 0;
+}
+
+.ia-thumbnails-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.ia-thumbnail-item {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    background: #0f172a;
+}
+
+.ia-thumbnail-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.btn-ia-delete-thumb {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(239, 68, 68, 0.9);
+    border: none;
+    color: #ffffff;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.btn-ia-delete-thumb:hover {
+    background: #dc2626;
+}
+
+.ia-thumb-index {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    background: rgba(15, 23, 42, 0.75);
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.ia-btn-add-more {
+    aspect-ratio: 1;
+    border: 2px dashed #cbd5e1;
+    border-radius: 10px;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #64748b;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ia-btn-add-more:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+    background: #f5f3ff;
+}
+
+/* ── Paso 2: Loading ── */
+.ia-paso-loading {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.ia-spinner {
+    color: #6366f1;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.ia-paso-loading h5 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+}
+
+.ia-paso-loading p {
+    font-size: 13.5px;
+    color: #64748b;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* ── Paso 3: Revisión ── */
+.ia-advertencias-box {
+    display: flex;
+    gap: 12px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    color: #92400e;
+    font-size: 13px;
+}
+
+.text-warning-icon {
+    color: #d97706;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.ia-advertencias-box ul {
+    padding-left: 18px;
+    margin-top: 4px;
+}
+
+.ia-revision-split {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 860px) {
+    .ia-revision-split {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ia-foto-preview-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ia-foto-viewer {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #0f172a;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+}
+
+.ia-foto-grande {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.ia-no-foto {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.ia-foto-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.ia-strip-thumb {
+    width: 54px;
+    height: 54px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    padding: 0;
+    background: #0f172a;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.ia-strip-thumb.active {
+    border-color: #6366f1;
+}
+
+.ia-strip-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Tabla de revisión */
+.ia-tabla-responsive {
+    max-height: 480px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.ia-tabla {
+    margin: 0;
+    font-size: 13px;
+}
+
+.ia-item-row.row-revisar {
+    background: #fffbeb !important;
+}
+
+.ia-item-desc {
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.3;
+}
+
+.ia-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11.5px;
+    color: #64748b;
+    margin-top: 3px;
+}
+
+.ia-item-meta span {
+    background: #f1f5f9;
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.ia-item-evidencia {
+    font-size: 11.5px;
+    color: #475569;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.ia-input-cant {
+    padding: 6px 8px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.ia-select-coincidencia {
+    font-size: 12.5px;
+    padding: 6px 10px;
+}
+
+.select-warning {
+    border-color: #f59e0b !important;
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+    font-weight: 600;
+}
+
+/* Subformulario de creación de nuevo repuesto */
+.ia-subform-nuevo {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.ia-subform-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 8px;
+}
+
+@media (max-width: 600px) {
+    .ia-subform-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ia-sub-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 2px;
+}
+
+.ia-sub-input {
+    font-size: 12px;
+    padding: 5px 8px;
+}
+
+/* Insignias de confianza */
+.badge-ia-confianza {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.badge-ia-confianza.alta {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.badge-ia-confianza.media {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.badge-ia-confianza.baja {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* Botón Header Inventario IA */
+.btn-ia-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+    color: #ffffff;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-ia-custom:hover {
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
+    transform: translateY(-1px);
+    color: #ffffff;
+}
+
+.btn-ia-custom:active {
+    transform: translateY(0);
+}

@@ -14,6 +14,10 @@ const validarInventario = [
         .isFloat({ gt: 0 }).withMessage('El precio debe ser mayor a cero'),
     body('stock').optional({ checkFalsy: false })
         .isInt({ min: 0 }).withMessage('El stock no puede ser negativo'),
+    body('referencia').optional({ checkFalsy: true })
+        .isLength({ max: 60 }).withMessage('La referencia es muy larga (máximo 60 caracteres)'),
+    body('codigo_barras').optional({ checkFalsy: true })
+        .isLength({ max: 40 }).withMessage('El código de barras es muy largo (máximo 40 caracteres)'),
 ];
 
 const validar = (req, res, next) => {

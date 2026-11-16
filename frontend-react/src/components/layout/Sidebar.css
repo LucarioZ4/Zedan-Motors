@@ -10,6 +10,52 @@
   left: 0;
   z-index: 100;
   box-shadow: 2px 0 12px rgba(30, 58, 138, 0.03);
+  transform: translateX(0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Oculto: se desliza hacia la izquierda */
+.sidebar.closed {
+  transform: translateX(-100%);
+  box-shadow: none;
+}
+
+/* Botón X (solo visible en celular) */
+.sidebar-close {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.sidebar-close:hover {
+  background: #e2e8f0;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: min(280px, 82vw);
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .sidebar.open {
+    box-shadow: 8px 0 30px rgba(15, 23, 42, 0.25);
+  }
+
+  .sidebar-close {
+    display: inline-flex;
+  }
 }
 
 .sidebar-logo {

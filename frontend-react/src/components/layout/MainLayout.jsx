@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import './MainLayout.css';
 
@@ -17,8 +18,24 @@ const routeTitles = {
   '/mensajes': 'Mensajes & Notificaciones'
 };
 
+const MOBILE_QUERY = '(max-width: 900px)';
+
 export default function MainLayout() {
   const location = useLocation();
+
+  // En escritorio inicia abierto; en celular inicia oculto
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => !window.matchMedia(MOBILE_QUERY).matches
+  );
+
+  // Al cambiar el tamaño de pantalla, ajusta el estado por defecto
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_QUERY);
+    const onChange = (e) => setSidebarOpen(!e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
   const currentTitle = routeTitles[location.pathname] || 'Zedan Motor\'s';
 
   const hoyTexto = new Date().toLocaleDateString('es-ES', {
@@ -29,13 +46,29 @@ export default function MainLayout() {
   });
 
   return (
-    <div className="layout-root">
-      <Sidebar />
+    <div className={`layout-root ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div
+        className="sidebar-overlay"
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden="true"
+      />
       <div className="layout-main">
         <header className="topbar">
-          <div>
-            <div className="topbar-title">{currentTitle}</div>
-            <div className="topbar-sub">{hoyTexto}</div>
+          <div className="topbar-left">
+            <button
+              type="button"
+              className="btn-menu-toggle"
+              onClick={() => setSidebarOpen((v) => !v)}
+              aria-label={sidebarOpen ? 'Ocultar menú' : 'Mostrar menú'}
+              aria-expanded={sidebarOpen}
+            >
+              <Menu size={22} />
+            </button>
+            <div>
+              <div className="topbar-title">{currentTitle}</div>
+              <div className="topbar-sub">{hoyTexto}</div>
+            </div>
           </div>
           <div className="topbar-status">
             <span className="badge-status-active">

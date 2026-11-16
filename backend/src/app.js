@@ -14,7 +14,7 @@ const app = express();
 
 // Si despliegas detrás de un proxy (Nginx, Render, Railway...) descomenta esta línea,
 // para que el rate limiting vea la IP real del cliente y no la del proxy:
-// app.set('trust proxy', 1);
+app.set('trust proxy', 1);
 
 // ── Middleware ──
 app.use(helmet({
@@ -48,6 +48,8 @@ app.use('/api/estados', require('./modules/estados/estados.routes'));
 app.use('/api/ordenes', require('./modules/ordenes/ordenes.routes'));
 app.use('/api/empleados', require('./modules/empleados/empleados.routes'));
 app.use('/api/servicios', require('./modules/servicios/servicios.routes'));
+// Montaje IA de inventario ANTES de /api/inventario para evitar colisión con /:id
+app.use('/api/inventario/ia', require('./modules/inventario-ia/inventarioIa.routes'));
 app.use('/api/inventario', require('./modules/inventario/inventario.routes'));
 app.use('/api/facturacion', require('./modules/facturacion/facturacion.routes'));
 app.use('/api/cargos', require('./modules/cargos/cargos.routes'));

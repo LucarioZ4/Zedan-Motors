@@ -27,3 +27,7 @@ n8n-data/
 **/appsettings.json
 **/appsettings.*.json
 !**/appsettings.Example.json
+
+# Archivos subidos por usuarios
+backend/uploads/
+uploads/

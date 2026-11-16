@@ -4,7 +4,7 @@ const getAll = async (req, res) => {
     try {
         const { buscar } = req.query;
         let sql = `
-            SELECT id_repuesto, nombre, marca, precio, stock,
+            SELECT id_repuesto, nombre, marca, precio, stock, referencia, codigo_barras,
                    CASE WHEN stock < 5 THEN true ELSE false END AS stock_bajo
             FROM inventario
         `;
@@ -30,7 +30,7 @@ const getAll = async (req, res) => {
 const getById = async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT id_repuesto, nombre, marca, precio, stock,
+            `SELECT id_repuesto, nombre, marca, precio, stock, referencia, codigo_barras,
                     CASE WHEN stock < 5 THEN true ELSE false END AS stock_bajo
              FROM inventario WHERE id_repuesto = $1`,
             [req.params.id]
@@ -46,12 +46,12 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
     try {
-        const { nombre, marca, precio, stock } = req.body;
+        const { nombre, marca, precio, stock, referencia, codigo_barras } = req.body;
 
         const result = await pool.query(
-            `INSERT INTO inventario (nombre, marca, precio, stock)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [nombre, marca || null, precio, stock || 0]
+            `INSERT INTO inventario (nombre, marca, precio, stock, referencia, codigo_barras)
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+            [nombre, marca || null, precio, stock || 0, referencia || null, codigo_barras || null]
         );
         res.status(201).json(result.rows[0]);
 
@@ -63,14 +63,15 @@ const create = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const { nombre, marca, precio, stock } = req.body;
+        const { nombre, marca, precio, stock, referencia, codigo_barras } = req.body;
 
         const result = await pool.query(
             `UPDATE inventario SET
                 nombre = $1, marca = $2,
-                precio = $3, stock = $4
-             WHERE id_repuesto = $5 RETURNING *`,
-            [nombre, marca || null, precio, stock, req.params.id]
+                precio = $3, stock = $4,
+                referencia = $5, codigo_barras = $6
+             WHERE id_repuesto = $7 RETURNING *`,
+            [nombre, marca || null, precio, stock, referencia || null, codigo_barras || null, req.params.id]
         );
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Repuesto no encontrado' });
