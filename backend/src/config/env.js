@@ -19,22 +19,32 @@ const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://1
     .map(o => o.trim())
     .filter(Boolean);
 
-// Configuración IA (Anthropic)
-const anthropicApiKey = process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.trim() : '';
-const anthropicModel = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
-const iaAnalisisPorHora = parseInt(process.env.IA_ANALISIS_POR_HORA, 10) || 20;
-const iaMaxImagenes = parseInt(process.env.IA_MAX_IMAGENES, 10) || 5;
-const iaMaxMb = parseInt(process.env.IA_MAX_MB, 10) || 5;
+const numeroPositivo = (valor, porDefecto) => {
+    const n = Number(valor);
+    return Number.isFinite(n) && n > 0 ? n : porDefecto;
+};
 
 module.exports = {
     port:       process.env.PORT       || 3000,
     jwtSecret,
     jwtExpires: process.env.JWT_EXPIRES_IN || '8h',
     corsOrigins,
-    anthropicApiKey,
-    anthropicModel,
-    iaAnalisisPorHora,
-    iaMaxImagenes,
-    iaMaxMb,
-    iaHabilitada: Boolean(anthropicApiKey),
+
+    // Inventario con IA (foto -> productos y cantidades con Google Gemini o Anthropic).
+    ia: {
+        geminiApiKey: process.env.GEMINI_API_KEY || '',
+        geminiModel:  process.env.GEMINI_MODEL || 'gemini-3.5-flash',
+        apiKey:       process.env.ANTHROPIC_API_KEY || '',
+        model:        process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5',
+        baseUrl:      (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com').replace(/\/+$/, ''),
+    },
+
+    // Videos de recepción/entrega, guardados en Supabase Storage (bucket privado).
+    // Opcional: si falta la configuración, solo los videos responden 503.
+    almacenamiento: {
+        supabaseUrl: (process.env.SUPABASE_URL || '').replace(/\/+$/, ''),
+        serviceKey:  process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+        bucket:      process.env.VIDEOS_BUCKET || 'videos-ordenes',
+        videoMaxMb:  numeroPositivo(process.env.VIDEO_MAX_MB, 50),
+    },
 };

@@ -31,3 +31,7 @@ n8n-data/
 # Archivos subidos por usuarios
 backend/uploads/
 uploads/
+
+frontend-react/.env
+frontend-react/.env.local
+
