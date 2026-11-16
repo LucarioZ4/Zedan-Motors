@@ -212,3 +212,59 @@ La aplicación SPA en React queda disponible en [http://localhost:5173](http://l
 - Las contraseñas se almacenan hasheadas con bcrypt, nunca en texto plano.
 - El archivo `.env` está excluido del control de versiones (`.gitignore`); nunca debe subirse al repositorio.
 - No compartir el contenido de `backend/.env` fuera del equipo del proyecto.
+
+---
+
+## IA en el inventario (Actualización con fotos)
+
+Esta funcionalidad permite a los usuarios autorizados subir de 1 a 5 fotografías (remisiones/facturas de proveedores, empaques con etiqueta o piezas mecánicas sueltas) para que un modelo multimodal con visión extraiga los repuestos, los cruce inteligentemente con el catálogo existente y proponga las actualizaciones de stock.
+
+> ⚠️ **Principio de seguridad fundamental:** **La IA propone, el usuario confirma.** El stock NUNCA se actualiza de forma automática; una persona revisa los candidatos detectados, resuelve ambigüedades, y solo tras presionar el botón **Confirmar** se ejecuta la transacción atómica en la base de datos.
+
+### Variables de entorno
+
+Agrega las siguientes variables a tu archivo `backend/.env` o en el entorno de Docker Compose:
+
+```ini
+# API Key de Anthropic (deja vacía para deshabilitar la función sin detener el backend)
+ANTHROPIC_API_KEY=sk-ant-api03-...
+
+# Modelo de visión recomendado
+ANTHROPIC_MODEL=claude-sonnet-5-5
+
+# Límites de consumo y cuotas
+IA_ANALISIS_POR_HORA=20
+IA_MAX_IMAGENES=5
+IA_MAX_MB=5
+```
+
+- **Fail-safe:** Si `ANTHROPIC_API_KEY` falta o está vacía, el servidor arranca normalmente y la API reporta `habilitado: false` en `GET /api/inventario/ia/estado`. El frontend oculta el botón *"Actualizar con IA"*.
+
+### Tabla de roles y permisos
+
+| Rol | ¿Puede ver el botón? | ¿Puede subir fotos y analizar? | ¿Puede confirmar/descartar? |
+|---|:---:|:---:|:---:|
+| **Administrador** | ✅ Sí | ✅ Sí | ✅ Sí (cualquier análisis) |
+| **Jefe de taller** | ✅ Sí | ✅ Sí | ✅ Sí (sus propios análisis) |
+| **Mecánico** | ❌ No | ❌ No (403) | ❌ No (403) |
+| **Recepcionista** | ❌ No | ❌ No (403) | ❌ No (403) |
+| **Electricista / Técnico** | ❌ No | ❌ No (403) | ❌ No (403) |
+
+### Límites de uso y costos estimados
+
+1. **Límite de peticiones:** Controlado por usuario mediante `express-rate-limit` con `IA_ANALISIS_POR_HORA` (por defecto 20 análisis/hora por usuario).
+2. **Optimización de imágenes:** Antes de ser enviadas a la API de Anthropic, el frontend comprime y escala cada imagen en el navegador mediante HTML5 Canvas a un máximo de ~1568 px por el lado largo en formato JPEG calidad 0.85.
+3. **Costo aproximado por análisis:**
+   - 1 a 3 fotos procesadas con Claude 3.5 Sonnet consumen ~1.200 a 2.500 tokens de entrada y ~400 a 800 tokens de salida estructurada.
+   - Costo promedio: **~$0,01 a $0,02 USD por análisis completo**, ideal para talleres de alto volumen.
+
+### Migración de Base de Datos para instalaciones existentes
+
+Para habilitar la funcionalidad en una base de datos ya existente sin perder datos, ejecuta el script idempotente ubicado en `database/migrations/2026-11-inventario-ia.sql`:
+
+```bash
+psql -U postgres -d zedan_motors -f database/migrations/2026-11-inventario-ia.sql
+```
+*(O copia y ejecuta su contenido directamente desde pgAdmin / DBeaver / Azure Data Studio).*
+
+El script crea la extensión `pg_trgm`, agrega las columnas opcionales `referencia` y `codigo_barras` a la tabla `inventario`, y crea las tablas `analisis_ia`, `inventario_movimiento` y `repuesto_alias`.
