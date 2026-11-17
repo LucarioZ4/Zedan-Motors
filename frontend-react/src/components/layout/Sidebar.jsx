@@ -27,9 +27,9 @@ const navItems = [
   },
   {
     section: 'Gestión', items: [
-      { label: 'Diagnósticos', path: '/diagnosticos', icon: ClipboardCheck },
       { label: 'Clientes', path: '/clientes', icon: Users },
       { label: 'Vehículos', path: '/vehiculos', icon: Car },
+      { label: 'Diagnósticos', path: '/diagnosticos', icon: ClipboardCheck },
       { label: 'Empleados', path: '/empleados', icon: UserCheck },
       { label: 'Servicios', path: '/servicios', icon: Wrench }
     ]
