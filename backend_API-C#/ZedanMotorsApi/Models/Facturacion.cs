@@ -16,6 +16,12 @@ namespace ZedanMotorsApi.Models
         public string metodoPago { get; set; } = string.Empty;
         [Column("id_orden")]
         public int idOrden { get; set; }
+        [Column("servicios_detalle", TypeName = "jsonb")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public string serviciosDetalle { get; set; } = "[]";
+        [Column("repuestos_detalle", TypeName = "jsonb")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public string repuestosDetalle { get; set; } = "[]";
         public OrdenTrabajo Orden { get; set; } = null!;
     }
 }

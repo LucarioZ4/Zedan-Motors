@@ -31,6 +31,7 @@ const getById = async (req, res) => {
         const result = await pool.query(`
             SELECT
                 f.id_factura, f.fecha, f.total, f.metodo_pago, f.id_orden,
+                f.servicios_detalle, f.repuestos_detalle,
                 cl.nombre || ' ' || cl.apellido AS cliente,
                 cl.telefono, cl.correo,
                 v.placa || ' - ' || v.marca || ' ' || v.modelo AS vehiculo,
@@ -47,27 +48,8 @@ const getById = async (req, res) => {
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Factura no encontrada' });
 
-        // Traer servicios y repuestos
-        const servicios = await pool.query(`
-            SELECT s.nombre_servicio, s.costo
-            FROM orden_servicio os
-            INNER JOIN servicio s ON os.id_servicio = s.id_servicio
-            WHERE os.id_orden = $1
-        `, [result.rows[0].id_orden]);
-
-        const repuestos = await pool.query(`
-            SELECT i.nombre, i.marca, oi.cantidad,
-                   i.precio, (i.precio * oi.cantidad) AS total
-            FROM orden_inventario oi
-            INNER JOIN inventario i ON oi.id_repuesto = i.id_repuesto
-            WHERE oi.id_orden = $1
-        `, [result.rows[0].id_orden]);
-
-        res.json({
-            ...result.rows[0],
-            servicios: servicios.rows,
-            repuestos: repuestos.rows
-        });
+        const { servicios_detalle, repuestos_detalle, ...factura } = result.rows[0];
+        res.json({ ...factura, servicios: servicios_detalle, repuestos: repuestos_detalle });
 
     } catch (err) {
         console.error(err);
@@ -135,7 +117,7 @@ const create = async (req, res) => {
             const datosFactus = {
                 referencia: factura.id_factura.toString(),
                 fecha: new Date().toISOString().split('T')[0],
-                total: total,
+                total: Number(factura.total),
                 metodo_pago: metodo_pago
             };
             

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ZedanMotorsApi.Services;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
@@ -75,19 +76,7 @@ namespace ZedanMotorsApi.Controllers
                     observaciones = f.Orden.observaciones,
                     fechaInicio = f.Orden.fechaInicio,
                     fechaFin = f.Orden.fechaFin,
-                    servicios = f.Orden.Servicios.Select(s => new FacturaServicioDTO
-                    {
-                        nombreServicio = s.Servicio.nombreServicio,
-                        costo = s.Servicio.costo
-                    }).ToList(),
-                    repuestos = f.Orden.Repuestos.Select(r => new FacturaRepuestoDTO
-                    {
-                        nombre = r.Repuesto.nombre,
-                        marca = r.Repuesto.marca,
-                        cantidad = r.cantidad,
-                        precio = r.Repuesto.precio,
-                        total = r.Repuesto.precio * r.cantidad
-                    }).ToList()
+
                 })
                 .FirstOrDefaultAsync();
 
@@ -96,6 +85,11 @@ namespace ZedanMotorsApi.Controllers
                 return NotFound(new { error = "Factura no encontrada" });
             }
 
+            var copia = await _context.Facturas.AsNoTracking().Where(f => f.idFactura == id)
+                .Select(f => new { f.serviciosDetalle, f.repuestosDetalle }).FirstAsync();
+            var opciones = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
+            factura.servicios = JsonSerializer.Deserialize<List<FacturaServicioDTO>>(copia.serviciosDetalle, opciones)!;
+            factura.repuestos = JsonSerializer.Deserialize<List<FacturaRepuestoDTO>>(copia.repuestosDetalle, opciones)!;
             return factura;
         }
 
