@@ -166,6 +166,14 @@ namespace ZedanMotorsApi.Controllers
                 }).ToList();
 
             var idRepuestos = repuestosPedidos.Select(r => r.idRepuesto).ToList();
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            // Orden estable de bloqueo para pedidos con varios repuestos.
+            foreach (var idRepuesto in idRepuestos.OrderBy(id => id))
+            {
+                await _context.Inventario.FromSqlInterpolated(
+                    $"SELECT * FROM inventario WHERE id_repuesto = {idRepuesto} FOR UPDATE")
+                    .AsNoTracking().ToListAsync();
+            }
             var repuestosBD = await _context.Inventario
                 .Where(r => idRepuestos.Contains(r.idRepuesto))
                 .ToDictionaryAsync(r => r.idRepuesto);
@@ -205,6 +213,7 @@ namespace ZedanMotorsApi.Controllers
             _context.OrdenesTrabajo.Add(orden);
             await _context.SaveChangesAsync();
 
+            await transaccion.CommitAsync();
             var respuesta = (await GetOrden(orden.idOrden)).Value;
 
             return CreatedAtAction(nameof(GetOrden), new { id = orden.idOrden }, respuesta);
@@ -351,6 +360,11 @@ namespace ZedanMotorsApi.Controllers
 
             // Si algo falla o se sale antes del Commit, todo se revierte al liberar la transacción
 
+            // Leer la cantidad anterior solo despues de bloquear el repuesto.
+            await _context.Inventario.FromSqlInterpolated(
+                $"SELECT * FROM inventario WHERE id_repuesto = {dto.idRepuesto} FOR UPDATE")
+                .AsNoTracking().ToListAsync();
+
             var repuesto = await _context.Inventario
                 .AsNoTracking()
                 .Where(i => i.idRepuesto == dto.idRepuesto)
@@ -424,6 +438,11 @@ namespace ZedanMotorsApi.Controllers
             {
                 return Conflict(new { error = MensajeOrdenFacturada });
             }
+
+            // Leer la cantidad anterior solo despues de bloquear el repuesto.
+            await _context.Inventario.FromSqlInterpolated(
+                $"SELECT * FROM inventario WHERE id_repuesto = {repuestoId} FOR UPDATE")
+                .AsNoTracking().ToListAsync();
 
             var linea = await _context.OrdenInventarios
                 .FirstOrDefaultAsync(oi => oi.idOrden == id && oi.idRepuesto == repuestoId);
