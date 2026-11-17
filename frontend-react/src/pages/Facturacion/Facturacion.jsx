@@ -31,6 +31,11 @@ const FACTURA_EMPRESA = {
   contacto: 'Tel. (57)-318 6950825'
 };
 
+// Todo valor interpolado en el comprobante se trata como texto, nunca como HTML.
+const escaparHtml = (valor) => String(valor ?? '').replace(/[&<>"']/g, (caracter) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+})[caracter]);
+
 export default function Facturacion() {
   const [facturas, setFacturas] = useState([]);
   const [todasFacturas, setTodasFacturas] = useState([]);
@@ -220,7 +225,7 @@ export default function Facturacion() {
         <html>
         <head>
           <meta charset="utf-8">
-          <title>Factura #${data.id_factura} — ${FACTURA_EMPRESA.nombre}</title>
+          <title>Factura #${escaparHtml(data.id_factura)} — ${escaparHtml(FACTURA_EMPRESA.nombre)}</title>
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1e293b; padding: 36px; max-width: 780px; margin: 0 auto; }
             .header { display: flex; justify-content: space-between; border-bottom: 2px solid #1e3a8a; padding-bottom: 16px; margin-bottom: 24px; }
@@ -245,23 +250,23 @@ export default function Facturacion() {
         <body>
           <div class="header">
             <div class="company">
-              <h1>${FACTURA_EMPRESA.nombre}</h1>
-              <p>NIT: ${FACTURA_EMPRESA.nit}</p>
-              <p>${FACTURA_EMPRESA.direccion}</p>
-              <p>${FACTURA_EMPRESA.contacto}</p>
+              <h1>${escaparHtml(FACTURA_EMPRESA.nombre)}</h1>
+              <p>NIT: ${escaparHtml(FACTURA_EMPRESA.nit)}</p>
+              <p>${escaparHtml(FACTURA_EMPRESA.direccion)}</p>
+              <p>${escaparHtml(FACTURA_EMPRESA.contacto)}</p>
             </div>
             <div class="fac-badge">
               <span>Factura Electrónica de Venta</span>
-              <h2>#FE-${String(data.id_factura).padStart(6, '0')}</h2>
+              <h2>#FE-${escaparHtml(String(data.id_factura).padStart(6, '0'))}</h2>
               <span>Emisión: ${new Date(data.fecha).toLocaleDateString('es-ES')}</span>
             </div>
           </div>
 
           <div class="info-grid">
-            <div><b>Cliente:</b> ${data.cliente || 'Consumidor final'}</div>
-            <div><b>Teléfono:</b> ${data.telefono || 'No registrado'}</div>
-            <div><b>Vehículo:</b> ${data.vehiculo || 'No registrado'}</div>
-            <div><b>Método de Pago:</b> ${data.metodo_pago || 'Efectivo'}</div>
+            <div><b>Cliente:</b> ${escaparHtml(data.cliente || 'Consumidor final')}</div>
+            <div><b>Teléfono:</b> ${escaparHtml(data.telefono || 'No registrado')}</div>
+            <div><b>Vehículo:</b> ${escaparHtml(data.vehiculo || 'No registrado')}</div>
+            <div><b>Método de Pago:</b> ${escaparHtml(data.metodo_pago || 'Efectivo')}</div>
           </div>
 
           <table>
@@ -277,7 +282,7 @@ export default function Facturacion() {
           .map(
             (s) => `
                 <tr>
-                  <td>${s.nombre_servicio}</td>
+                  <td>${escaparHtml(s.nombre_servicio)}</td>
                   <td>Servicio</td>
                   <td class="text-right">$${parseFloat(s.costo).toLocaleString('es-CO')}</td>
                 </tr>`
@@ -287,7 +292,7 @@ export default function Facturacion() {
           .map(
             (r) => `
                 <tr>
-                  <td>${r.nombre} ${r.marca ? '(' + r.marca + ')' : ''} x${r.cantidad}</td>
+                  <td>${escaparHtml(r.nombre)} ${escaparHtml(r.marca ? '(' + r.marca + ')' : '')} x${escaparHtml(r.cantidad)}</td>
                   <td>Repuesto</td>
                   <td class="text-right">$${parseFloat(r.total).toLocaleString('es-CO')}</td>
                 </tr>`
@@ -304,7 +309,7 @@ export default function Facturacion() {
           </div>
 
           <div class="footer">
-            <p>Gracias por confiar en ${FACTURA_EMPRESA.nombre} — Comprobante oficial de venta</p>
+            <p>Gracias por confiar en ${escaparHtml(FACTURA_EMPRESA.nombre)} — Comprobante oficial de venta</p>
           </div>
           <script>window.print();</script>
         </body>

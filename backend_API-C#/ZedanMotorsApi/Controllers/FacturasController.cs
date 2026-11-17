@@ -1,3 +1,5 @@
+using System.Text.Json;
+using ZedanMotorsApi.Services;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -74,19 +76,7 @@ namespace ZedanMotorsApi.Controllers
                     observaciones = f.Orden.observaciones,
                     fechaInicio = f.Orden.fechaInicio,
                     fechaFin = f.Orden.fechaFin,
-                    servicios = f.Orden.Servicios.Select(s => new FacturaServicioDTO
-                    {
-                        nombreServicio = s.Servicio.nombreServicio,
-                        costo = s.Servicio.costo
-                    }).ToList(),
-                    repuestos = f.Orden.Repuestos.Select(r => new FacturaRepuestoDTO
-                    {
-                        nombre = r.Repuesto.nombre,
-                        marca = r.Repuesto.marca,
-                        cantidad = r.cantidad,
-                        precio = r.Repuesto.precio,
-                        total = r.Repuesto.precio * r.cantidad
-                    }).ToList()
+
                 })
                 .FirstOrDefaultAsync();
 
@@ -95,6 +85,11 @@ namespace ZedanMotorsApi.Controllers
                 return NotFound(new { error = "Factura no encontrada" });
             }
 
+            var copia = await _context.Facturas.AsNoTracking().Where(f => f.idFactura == id)
+                .Select(f => new { f.serviciosDetalle, f.repuestosDetalle }).FirstAsync();
+            var opciones = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
+            factura.servicios = JsonSerializer.Deserialize<List<FacturaServicioDTO>>(copia.serviciosDetalle, opciones)!;
+            factura.repuestos = JsonSerializer.Deserialize<List<FacturaRepuestoDTO>>(copia.repuestosDetalle, opciones)!;
             return factura;
         }
 
@@ -123,7 +118,8 @@ namespace ZedanMotorsApi.Controllers
         [HttpPost]
         public async Task<ActionResult<FacturaDTO>> PostFactura(FacturaCreateDTO facturaCreate)
         {
-            if (!await _context.OrdenesTrabajo.AnyAsync(o => o.idOrden == facturaCreate.idOrden))
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            if (!await _context.BloquearOrdenAsync(facturaCreate.idOrden))
             {
                 return BadRequest(new { error = "La orden de trabajo indicada no existe." });
             }
@@ -171,6 +167,7 @@ namespace ZedanMotorsApi.Controllers
                 return Conflict(new { error = "Esa orden de trabajo ya tiene una factura." });
             }
 
+            await transaccion.CommitAsync();
             var respuesta = await _context.Facturas.Where(f => f.idFactura == factura.idFactura)
                 .Select(ToDto).FirstAsync();
 

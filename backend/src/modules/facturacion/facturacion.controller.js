@@ -31,6 +31,7 @@ const getById = async (req, res) => {
         const result = await pool.query(`
             SELECT
                 f.id_factura, f.fecha, f.total, f.metodo_pago, f.id_orden,
+                f.servicios_detalle, f.repuestos_detalle,
                 cl.nombre || ' ' || cl.apellido AS cliente,
                 cl.telefono, cl.correo,
                 v.placa || ' - ' || v.marca || ' ' || v.modelo AS vehiculo,
@@ -47,27 +48,8 @@ const getById = async (req, res) => {
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Factura no encontrada' });
 
-        // Traer servicios y repuestos
-        const servicios = await pool.query(`
-            SELECT s.nombre_servicio, s.costo
-            FROM orden_servicio os
-            INNER JOIN servicio s ON os.id_servicio = s.id_servicio
-            WHERE os.id_orden = $1
-        `, [result.rows[0].id_orden]);
-
-        const repuestos = await pool.query(`
-            SELECT i.nombre, i.marca, oi.cantidad,
-                   i.precio, (i.precio * oi.cantidad) AS total
-            FROM orden_inventario oi
-            INNER JOIN inventario i ON oi.id_repuesto = i.id_repuesto
-            WHERE oi.id_orden = $1
-        `, [result.rows[0].id_orden]);
-
-        res.json({
-            ...result.rows[0],
-            servicios: servicios.rows,
-            repuestos: repuestos.rows
-        });
+        const { servicios_detalle, repuestos_detalle, ...factura } = result.rows[0];
+        res.json({ ...factura, servicios: servicios_detalle, repuestos: repuestos_detalle });
 
     } catch (err) {
         console.error(err);
@@ -76,18 +58,32 @@ const getById = async (req, res) => {
 };
 
 const create = async (req, res) => {
+    let client;
     try {
+        client = await pool.connect();
+        await client.query('BEGIN');
         const { id_orden, metodo_pago } = req.body;
 
+        const orden = await client.query('SELECT 1 FROM orden_trabajo WHERE id_orden=$1 FOR UPDATE', [id_orden]);
+        if (!orden.rows.length) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Orden no encontrada' });
+        }
+        const existente = await client.query('SELECT 1 FROM facturacion WHERE id_orden=$1', [id_orden]);
+        if (existente.rows.length) {
+            await client.query('ROLLBACK');
+            return res.status(409).json({ error: 'Esta orden ya tiene una factura generada' });
+        }
+
         // Calcular total desde servicios y repuestos
-        const resServ = await pool.query(`
+        const resServ = await client.query(`
             SELECT COALESCE(SUM(s.costo), 0) AS total
             FROM orden_servicio os
             INNER JOIN servicio s ON os.id_servicio = s.id_servicio
             WHERE os.id_orden = $1
         `, [id_orden]);
 
-        const resRep = await pool.query(`
+        const resRep = await client.query(`
             SELECT COALESCE(SUM(i.precio * oi.cantidad), 0) AS total
             FROM orden_inventario oi
             INNER JOIN inventario i ON oi.id_repuesto = i.id_repuesto
@@ -97,18 +93,23 @@ const create = async (req, res) => {
         const total = parseFloat(resServ.rows[0].total) +
                       parseFloat(resRep.rows[0].total);
 
-        if (total <= 0)
+        if (total <= 0) {
+            await client.query('ROLLBACK');
             return res.status(400).json({
                 error: 'La orden no tiene servicios ni repuestos. Agrega items antes de facturar.'
             });
+        }
 
-        const result = await pool.query(`
+        const result = await client.query(`
             INSERT INTO facturacion (fecha, total, metodo_pago, id_orden)
             VALUES (CURRENT_DATE, $1, $2, $3)
             RETURNING *
         `, [total, metodo_pago, id_orden]);
 
         let factura = result.rows[0];
+        await client.query('COMMIT');
+        client.release();
+        client = null;
 
         // Integración con Factus (Mock)
         try {
@@ -116,7 +117,7 @@ const create = async (req, res) => {
             const datosFactus = {
                 referencia: factura.id_factura.toString(),
                 fecha: new Date().toISOString().split('T')[0],
-                total: total,
+                total: Number(factura.total),
                 metodo_pago: metodo_pago
             };
             
@@ -132,10 +133,13 @@ const create = async (req, res) => {
         res.status(201).json(factura);
 
     } catch (err) {
+        if (client) await client.query('ROLLBACK').catch(() => {});
         if (err.code === '23505')
-            return res.status(400).json({ error: 'Esta orden ya tiene una factura generada' });
+            return res.status(409).json({ error: 'Esta orden ya tiene una factura generada' });
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
+    } finally {
+        if (client) client.release();
     }
 };
 

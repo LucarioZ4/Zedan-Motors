@@ -112,24 +112,31 @@ export default function Dashboard() {
   const fetchData = async () => {
     try {
       setError(null);
-      const [kpisData, citasData, graficasData] = await Promise.all([
-        getDashboardKPIs(),
-        getCitasHoy(),
-        getGraficas()
+      const resultados = await Promise.allSettled([
+        getDashboardKPIs(), getCitasHoy(), getGraficas()
       ]);
-      setKpis({
-        citasHoy: kpisData.citasHoy ?? 0,
-        ordenes: kpisData.ordenes ?? 0,
-        stockBajo: kpisData.stockBajo ?? 0,
-        facturas: kpisData.facturas ?? 0
-      });
-      setCitas(citasData || []);
-      setGraficas({
-        ingresos: graficasData.ingresos || [],
-        citasPorEstado: graficasData.citasPorEstado || [],
-        topServicios: graficasData.topServicios || [],
-        stockCritico: graficasData.stockCritico || []
-      });
+      const [indicadores, agenda, charts] = resultados;
+      if (indicadores.status === 'fulfilled') {
+        const data = indicadores.value;
+        setKpis({
+          citasHoy: data.citasHoy ?? 0, ordenes: data.ordenes ?? 0,
+          stockBajo: data.stockBajo ?? 0, facturas: data.facturas ?? 0
+        });
+      }
+      if (agenda.status === 'fulfilled') setCitas(agenda.value || []);
+      if (charts.status === 'fulfilled') {
+        const data = charts.value;
+        setGraficas({
+          ingresos: data.ingresos || [], citasPorEstado: data.citasPorEstado || [],
+          topServicios: data.topServicios || [], stockCritico: data.stockCritico || []
+        });
+      }
+      const secciones = ['indicadores', 'citas de hoy', 'graficas'];
+      const fallidas = resultados.flatMap((resultado, i) =>
+        resultado.status === 'rejected' ? [secciones[i]] : []);
+      if (fallidas.length) {
+        setError(`No se pudo actualizar: ${fallidas.join(', ')}. Las secciones afectadas pueden no tener datos actualizados.`);
+      }
     } catch (err) {
       console.error('Error al cargar datos del dashboard:', err);
       setError('No se pudo conectar con el servidor o cargar las métricas.');

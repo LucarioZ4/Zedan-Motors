@@ -1,5 +1,31 @@
 const pool = require('../../config/database');
 
+const bloquearOrdenEditable = async (client, id) => {
+    const orden = await client.query('SELECT 1 FROM orden_trabajo WHERE id_orden=$1 FOR UPDATE', [id]);
+    if (!orden.rows.length) throw new ErrorNegocio(404, 'Orden no encontrada');
+    const factura = await client.query('SELECT 1 FROM facturacion WHERE id_orden=$1', [id]);
+    if (factura.rows.length)
+        throw new ErrorNegocio(409, 'La orden ya tiene factura: no se puede modificar ni eliminar.');
+};
+
+const conOrdenEditable = (accion) => async (req, res) => {
+    let client;
+    try {
+        client = await pool.connect();
+        await client.query('BEGIN');
+        await bloquearOrdenEditable(client, req.params.id);
+        const resultado = await accion(client, req);
+        await client.query('COMMIT');
+        res.status(resultado.status || 200).json(resultado.body);
+    } catch (err) {
+        if (client) await client.query('ROLLBACK').catch(() => {});
+        res.status(err instanceof ErrorNegocio ? err.status : 500).json({ error: err.message });
+    } finally {
+        if (client) client.release();
+    }
+};
+
+
 const getAll = async (req, res) => {
     try {
         const result = await pool.query(`
@@ -83,45 +109,19 @@ const create = async (req, res) => {
     }
 };
 
-const update = async (req, res) => {
-    try {
-        const { fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado } = req.body;
+const update = conOrdenEditable(async (client, req) => {
+    const { fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado } = req.body;
+    const result = await client.query(`
+        UPDATE orden_trabajo SET fecha_inicio=$1, fecha_fin=$2, observaciones=$3,
+            id_cita=$4, id_empleado=$5 WHERE id_orden=$6 RETURNING *`,
+        [fecha_inicio, fecha_fin || null, observaciones || null, id_cita, id_empleado, req.params.id]);
+    return { body: result.rows[0] };
+});
 
-        const result = await pool.query(`
-            UPDATE orden_trabajo SET
-                fecha_inicio  = $1,
-                fecha_fin     = $2,
-                observaciones = $3,
-                id_cita       = $4,
-                id_empleado   = $5
-            WHERE id_orden = $6
-            RETURNING *
-        `, [fecha_inicio, fecha_fin || null, observaciones || null,
-            id_cita, id_empleado, req.params.id]);
-
-        if (result.rows.length === 0)
-            return res.status(404).json({ error: 'Orden no encontrada' });
-
-        res.json(result.rows[0]);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-
-const remove = async (req, res) => {
-    try {
-        const result = await pool.query(
-            'DELETE FROM orden_trabajo WHERE id_orden = $1 RETURNING *',
-            [req.params.id]
-        );
-        if (result.rows.length === 0)
-            return res.status(404).json({ error: 'Orden no encontrada' });
-
-        res.json({ mensaje: 'Orden eliminada correctamente' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
+const remove = conOrdenEditable(async (client, req) => {
+    await client.query('DELETE FROM orden_trabajo WHERE id_orden=$1', [req.params.id]);
+    return { body: { mensaje: 'Orden eliminada correctamente' } };
+});
 
 const getServicios = async (req, res) => {
     try {
@@ -138,35 +138,18 @@ const getServicios = async (req, res) => {
     }
 };
 
-const addServicio = async (req, res) => {
-    try {
-        const { id_servicio } = req.body;
-        if (!id_servicio)
-            return res.status(400).json({ error: 'Seleccione un servicio' });
+const addServicio = conOrdenEditable(async (client, req) => {
+    if (!req.body.id_servicio) throw new ErrorNegocio(400, 'Seleccione un servicio');
+    await client.query(`INSERT INTO orden_servicio (id_orden, id_servicio)
+        VALUES ($1, $2) ON CONFLICT DO NOTHING`, [req.params.id, req.body.id_servicio]);
+    return { status: 201, body: { mensaje: 'Servicio agregado' } };
+});
 
-        await pool.query(`
-            INSERT INTO orden_servicio (id_orden, id_servicio)
-            VALUES ($1, $2)
-            ON CONFLICT DO NOTHING
-        `, [req.params.id, id_servicio]);
-
-        res.status(201).json({ mensaje: 'Servicio agregado' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-
-const removeServicio = async (req, res) => {
-    try {
-        await pool.query(
-            'DELETE FROM orden_servicio WHERE id_orden=$1 AND id_servicio=$2',
-            [req.params.id, req.params.sid]
-        );
-        res.json({ mensaje: 'Servicio eliminado' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
+const removeServicio = conOrdenEditable(async (client, req) => {
+    await client.query('DELETE FROM orden_servicio WHERE id_orden=$1 AND id_servicio=$2',
+        [req.params.id, req.params.sid]);
+    return { body: { mensaje: 'Servicio eliminado' } };
+});
 
 const getRepuestos = async (req, res) => {
     try {
@@ -211,11 +194,7 @@ const addRepuesto = async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        const orden = await client.query(
-            'SELECT 1 FROM orden_trabajo WHERE id_orden = $1', [idOrden]
-        );
-        if (orden.rows.length === 0)
-            throw new ErrorNegocio(404, 'Orden no encontrada');
+        await bloquearOrdenEditable(client, idOrden);
 
         // FOR UPDATE bloquea la fila del repuesto hasta el COMMIT:
         // dos usuarios no pueden descontar el mismo stock al mismo tiempo.
@@ -281,6 +260,7 @@ const removeRepuesto = async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
+        await bloquearOrdenEditable(client, idOrden);
 
         // Mismo orden de bloqueo que addRepuesto (inventario → orden_inventario) para evitar deadlocks
         await client.query(
@@ -306,7 +286,7 @@ const removeRepuesto = async (req, res) => {
 
     } catch (err) {
         await client.query('ROLLBACK').catch(() => {});
-        res.status(500).json({ error: err.message });
+        res.status(err instanceof ErrorNegocio ? err.status : 500).json({ error: err.message });
     } finally {
         client.release();
     }
