@@ -1,3 +1,4 @@
+using ZedanMotorsApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -102,6 +103,13 @@ namespace ZedanMotorsApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutOrden(int id, OrdenTrabajoUpdateDTO ordenUpdate)
         {
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            if (!await _context.BloquearOrdenAsync(id))
+                return NotFound(new { error = "Orden no encontrada" });
+
+            if (await _context.Facturas.AnyAsync(f => f.idOrden == id))
+                return Conflict(new { error = MensajeOrdenFacturada });
+
             var orden = await _context.OrdenesTrabajo.FindAsync(id);
             if (orden == null)
             {
@@ -123,6 +131,7 @@ namespace ZedanMotorsApi.Controllers
 
             await _context.SaveChangesAsync();
 
+            await transaccion.CommitAsync();
             return Ok(new { mensaje = "Orden actualizada" });
         }
 
@@ -206,6 +215,13 @@ namespace ZedanMotorsApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrden(int id)
         {
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            if (!await _context.BloquearOrdenAsync(id))
+                return NotFound(new { error = "Orden no encontrada" });
+
+            if (await _context.Facturas.AnyAsync(f => f.idOrden == id))
+                return Conflict(new { error = MensajeOrdenFacturada });
+
             var orden = await _context.OrdenesTrabajo.FindAsync(id);
             if (orden == null)
             {
@@ -215,6 +231,7 @@ namespace ZedanMotorsApi.Controllers
             _context.OrdenesTrabajo.Remove(orden);
             await _context.SaveChangesAsync();
 
+            await transaccion.CommitAsync();
             return Ok(new { mensaje = "Orden eliminada" });
         }
 
@@ -222,7 +239,7 @@ namespace ZedanMotorsApi.Controllers
         // Misma forma de respuesta que el backend Node. Una orden con factura queda cerrada:
         // el total ya facturado no debe cambiar.
         private const string MensajeOrdenFacturada =
-            "La orden ya tiene factura: no se pueden modificar sus servicios ni repuestos.";
+            "La orden ya tiene factura: no se puede modificar ni eliminar.";
 
         // GET: api/ordenes/5/servicios
         [HttpGet("{id}/servicios")]
@@ -244,10 +261,9 @@ namespace ZedanMotorsApi.Controllers
         [HttpPost("{id}/servicios")]
         public async Task<IActionResult> AddServicioAOrden(int id, OrdenServicioAddDTO dto)
         {
-            if (!await _context.OrdenesTrabajo.AnyAsync(o => o.idOrden == id))
-            {
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            if (!await _context.BloquearOrdenAsync(id))
                 return NotFound(new { error = "Orden no encontrada" });
-            }
 
             if (!await _context.Servicios.AnyAsync(s => s.idServicio == dto.idServicio))
             {
@@ -266,17 +282,10 @@ namespace ZedanMotorsApi.Controllers
             if (!yaEsta)
             {
                 _context.OrdenServicios.Add(new OrdenServicio { idOrden = id, idServicio = dto.idServicio });
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateException ex) when (
-                    ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
-                {
-                    // Otra solicitud lo agregó al mismo tiempo: el resultado es el mismo
-                }
+                await _context.SaveChangesAsync();
             }
 
+            await transaccion.CommitAsync();
             return StatusCode(StatusCodes.Status201Created, new { mensaje = "Servicio agregado" });
         }
 
@@ -284,6 +293,10 @@ namespace ZedanMotorsApi.Controllers
         [HttpDelete("{id}/servicios/{servicioId}")]
         public async Task<IActionResult> RemoveServicioDeOrden(int id, int servicioId)
         {
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            if (!await _context.BloquearOrdenAsync(id))
+                return NotFound(new { error = "Orden no encontrada" });
+
             if (await _context.Facturas.AnyAsync(f => f.idOrden == id))
             {
                 return Conflict(new { error = MensajeOrdenFacturada });
@@ -298,6 +311,7 @@ namespace ZedanMotorsApi.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            await transaccion.CommitAsync();
             return Ok(new { mensaje = "Servicio eliminado" });
         }
 
@@ -326,10 +340,9 @@ namespace ZedanMotorsApi.Controllers
         [HttpPost("{id}/repuestos")]
         public async Task<IActionResult> AddRepuestoAOrden(int id, OrdenRepuestoCreateDTO dto)
         {
-            if (!await _context.OrdenesTrabajo.AnyAsync(o => o.idOrden == id))
-            {
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            if (!await _context.BloquearOrdenAsync(id))
                 return NotFound(new { error = "Orden no encontrada" });
-            }
 
             if (await _context.Facturas.AnyAsync(f => f.idOrden == id))
             {
@@ -337,7 +350,6 @@ namespace ZedanMotorsApi.Controllers
             }
 
             // Si algo falla o se sale antes del Commit, todo se revierte al liberar la transacción
-            await using var transaccion = await _context.Database.BeginTransactionAsync();
 
             var repuesto = await _context.Inventario
                 .AsNoTracking()
@@ -404,12 +416,14 @@ namespace ZedanMotorsApi.Controllers
         [HttpDelete("{id}/repuestos/{repuestoId}")]
         public async Task<IActionResult> RemoveRepuestoDeOrden(int id, int repuestoId)
         {
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            if (!await _context.BloquearOrdenAsync(id))
+                return NotFound(new { error = "Orden no encontrada" });
+
             if (await _context.Facturas.AnyAsync(f => f.idOrden == id))
             {
                 return Conflict(new { error = MensajeOrdenFacturada });
             }
-
-            await using var transaccion = await _context.Database.BeginTransactionAsync();
 
             var linea = await _context.OrdenInventarios
                 .FirstOrDefaultAsync(oi => oi.idOrden == id && oi.idRepuesto == repuestoId);

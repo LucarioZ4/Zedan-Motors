@@ -1,3 +1,4 @@
+using ZedanMotorsApi.Services;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -123,7 +124,8 @@ namespace ZedanMotorsApi.Controllers
         [HttpPost]
         public async Task<ActionResult<FacturaDTO>> PostFactura(FacturaCreateDTO facturaCreate)
         {
-            if (!await _context.OrdenesTrabajo.AnyAsync(o => o.idOrden == facturaCreate.idOrden))
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
+            if (!await _context.BloquearOrdenAsync(facturaCreate.idOrden))
             {
                 return BadRequest(new { error = "La orden de trabajo indicada no existe." });
             }
@@ -171,6 +173,7 @@ namespace ZedanMotorsApi.Controllers
                 return Conflict(new { error = "Esa orden de trabajo ya tiene una factura." });
             }
 
+            await transaccion.CommitAsync();
             var respuesta = await _context.Facturas.Where(f => f.idFactura == factura.idFactura)
                 .Select(ToDto).FirstAsync();
 
