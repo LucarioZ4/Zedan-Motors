@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -12,7 +12,11 @@ import {
   Save,
   RotateCw,
   Clock,
-  User
+  User,
+  Search,
+  ChevronDown,
+  X,
+  Phone
 } from 'lucide-react';
 import {
   crearDiagnostico,
@@ -58,6 +62,19 @@ export default function DiagnosticoForm() {
 
   // Archivos locales en cola para subir tras crear el diagnóstico
   const [colaLocal, setColaLocal] = useState([]);
+  const [busquedaVehiculo, setBusquedaVehiculo] = useState('');
+  const [dropdownAbierto, setDropdownAbierto] = useState(false);
+  const comboboxRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickAfuera = (e) => {
+      if (comboboxRef.current && !comboboxRef.current.contains(e.target)) {
+        setDropdownAbierto(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickAfuera);
+    return () => document.removeEventListener('mousedown', handleClickAfuera);
+  }, []);
 
   useEffect(() => {
     const cargarDatosIniciales = async () => {
@@ -181,9 +198,31 @@ export default function DiagnosticoForm() {
     }
   };
 
+  const vehiculosFiltrados = vehiculos.filter((v) => {
+    if (!busquedaVehiculo.trim()) return true;
+    const q = busquedaVehiculo.toLowerCase();
+    const placa = (v.placa || '').toLowerCase();
+    const marca = (v.marca || '').toLowerCase();
+    const modelo = (v.modelo || '').toLowerCase();
+    const cliente = (v.cliente || v.nombre_cliente || '').toLowerCase();
+    return placa.includes(q) || marca.includes(q) || modelo.includes(q) || cliente.includes(q);
+  });
+
   const vehiculoSeleccionado = vehiculos.find(
     (v) => String(v.id_vehiculo) === String(form.id_vehiculo)
   );
+
+  const handleSeleccionarVehiculo = (vehiculo) => {
+    setForm((prev) => ({ ...prev, id_vehiculo: vehiculo.id_vehiculo }));
+    setBusquedaVehiculo('');
+    setDropdownAbierto(false);
+  };
+
+  const handleQuitarVehiculo = () => {
+    setForm((prev) => ({ ...prev, id_vehiculo: '', id_cita: '' }));
+    setBusquedaVehiculo('');
+    setDropdownAbierto(false);
+  };
 
   if (loading) {
     return (
@@ -231,29 +270,129 @@ export default function DiagnosticoForm() {
           </h3>
 
           <div className="form-grid-2">
-            {/* Selección de Vehículo */}
+            {/* Buscador y Selección de Vehículo Unificado (Combobox) */}
             <div className="form-group-custom">
               <label>
                 Vehículo Registrado <span className="req">*</span>
               </label>
-              <select
-                name="id_vehiculo"
-                value={form.id_vehiculo}
-                onChange={handleChange}
-                required
-                disabled={isEdit}
-                className="form-control-custom"
-              >
-                <option value="">-- Seleccionar vehículo por placa o cliente --</option>
-                {vehiculos.map((v) => (
-                  <option key={v.id_vehiculo} value={v.id_vehiculo}>
-                    {v.placa} — {v.marca} {v.modelo} ({v.nombre_cliente || 'Sin cliente'})
-                  </option>
-                ))}
-              </select>
-              {vehiculoSeleccionado && (
-                <div style={{ marginTop: '4px', fontSize: '12px', color: '#1e3a8a', background: '#eff6ff', padding: '6px 10px', borderRadius: '6px' }}>
-                  <strong>{vehiculoSeleccionado.placa}</strong> • {vehiculoSeleccionado.marca} {vehiculoSeleccionado.modelo} ({vehiculoSeleccionado.color || 'Color no especificado'}) • Cliente: {vehiculoSeleccionado.nombre_cliente}
+
+              {/* Si ya hay un vehículo seleccionado */}
+              {vehiculoSeleccionado ? (
+                <div className="vehiculo-selected-card">
+                  <div className="vehiculo-selected-details">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span className="placa-badge">{vehiculoSeleccionado.placa}</span>
+                      <strong style={{ fontSize: '14px', color: '#1e3a8a' }}>
+                        {vehiculoSeleccionado.marca} {vehiculoSeleccionado.modelo}
+                      </strong>
+                      {vehiculoSeleccionado.anio && (
+                        <span style={{ color: '#64748b', fontSize: '12.5px' }}>({vehiculoSeleccionado.anio})</span>
+                      )}
+                      {vehiculoSeleccionado.color && (
+                        <span style={{ color: '#64748b', fontSize: '12.5px' }}>• Color: {vehiculoSeleccionado.color}</span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#334155', fontSize: '12.5px', marginTop: '2px', flexWrap: 'wrap' }}>
+                      <User size={14} style={{ color: '#2563eb' }} />
+                      <span>
+                        <strong>Cliente:</strong> {vehiculoSeleccionado.cliente || vehiculoSeleccionado.nombre_cliente || 'Sin cliente asignado'}
+                      </span>
+                      {vehiculoSeleccionado.telefono_cliente && (
+                        <span style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                          • <Phone size={12} /> {vehiculoSeleccionado.telefono_cliente}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {!isEdit && (
+                    <button
+                      type="button"
+                      onClick={handleQuitarVehiculo}
+                      className="btn-secondary-custom"
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                      title="Cambiar vehículo seleccionado"
+                    >
+                      <X size={14} />
+                      <span>Cambiar</span>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                /* Barra de búsqueda interactiva desplegable */
+                <div className="vehiculo-combobox-wrapper" ref={comboboxRef}>
+                  <div className="vehiculo-search-input-wrapper">
+                    <Search size={16} className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Buscar por placa, marca, modelo o cliente..."
+                      value={busquedaVehiculo}
+                      onChange={(e) => {
+                        setBusquedaVehiculo(e.target.value);
+                        setDropdownAbierto(true);
+                      }}
+                      onFocus={() => setDropdownAbierto(true)}
+                      className="form-control-custom"
+                      style={{ paddingLeft: '40px', paddingRight: '36px' }}
+                      autoComplete="off"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setDropdownAbierto((v) => !v)}
+                      className="clear-icon-btn"
+                      title="Desplegar lista de vehículos"
+                    >
+                      <ChevronDown
+                        size={18}
+                        style={{
+                          transform: dropdownAbierto ? 'rotate(180deg)' : 'none',
+                          transition: 'transform 0.2s'
+                        }}
+                      />
+                    </button>
+                  </div>
+
+                  {dropdownAbierto && (
+                    <div className="vehiculo-dropdown-menu">
+                      {vehiculosFiltrados.length === 0 ? (
+                        <div className="vehiculo-dropdown-empty">
+                          No se encontraron vehículos que coincidan con "{busquedaVehiculo}".
+                        </div>
+                      ) : (
+                        vehiculosFiltrados.map((v) => {
+                          const nombreCliente = v.cliente || v.nombre_cliente || 'Sin cliente asignado';
+                          return (
+                            <div
+                              key={v.id_vehiculo}
+                              onClick={() => handleSeleccionarVehiculo(v)}
+                              className="vehiculo-dropdown-item"
+                            >
+                              <div className="vehiculo-dropdown-item-header">
+                                <span className="placa-badge">{v.placa}</span>
+                                <strong style={{ color: '#1e293b', fontSize: '13.5px' }}>
+                                  {v.marca} {v.modelo}
+                                </strong>
+                                {v.color && (
+                                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                    ({v.color})
+                                  </span>
+                                )}
+                              </div>
+                              <div className="vehiculo-dropdown-item-meta">
+                                <span className="vehiculo-dropdown-item-cliente">
+                                  <User size={13} />
+                                  <span>{nombreCliente}</span>
+                                </span>
+                                {v.telefono_cliente && (
+                                  <span>Tel: {v.telefono_cliente}</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

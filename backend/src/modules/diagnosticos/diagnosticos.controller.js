@@ -86,12 +86,13 @@ const listar = async (req, res) => {
     const { vehiculo, cliente, fechaDesde, fechaHasta, estado } = req.query;
     let sql = `
       SELECT d.*, v.placa, v.marca, v.modelo, v.color, v.anio,
-             cl.nombre || ' ' || cl.apellido AS cliente, cl.telefono AS cliente_telefono,
+             COALESCE(cl.nombre || ' ' || cl.apellido, 'Sin cliente') AS cliente,
+             cl.telefono AS cliente_telefono,
              (SELECT COUNT(*) FROM diagnostico_accesorio WHERE id_diagnostico = d.id_diagnostico)::int AS total_accesorios,
              (SELECT COUNT(*) FROM diagnostico_archivo WHERE id_diagnostico = d.id_diagnostico)::int AS total_archivos
       FROM diagnostico d
       JOIN vehiculo v ON d.id_vehiculo = v.id_vehiculo
-      JOIN cliente cl ON v.id_cliente = cl.id_cliente
+      LEFT JOIN cliente cl ON v.id_cliente = cl.id_cliente
       WHERE 1=1`;
     const params = [];
     let idx = 1;
@@ -115,11 +116,12 @@ const detalle = async (req, res) => {
     const d = await pool.query(`
       SELECT d.*, v.placa, v.marca, v.modelo, v.anio, v.color,
              cl.id_cliente, cl.nombre AS cliente_nombre, cl.apellido AS cliente_apellido,
-             cl.nombre || ' ' || cl.apellido AS cliente, cl.telefono AS cliente_telefono, cl.correo AS cliente_correo,
+             COALESCE(cl.nombre || ' ' || cl.apellido, 'Sin cliente') AS cliente,
+             cl.telefono AS cliente_telefono, cl.correo AS cliente_correo,
              c.fecha AS cita_fecha, c.hora AS cita_hora, c.motivo AS cita_motivo
       FROM diagnostico d
       JOIN vehiculo v ON d.id_vehiculo = v.id_vehiculo
-      JOIN cliente cl ON v.id_cliente = cl.id_cliente
+      LEFT JOIN cliente cl ON v.id_cliente = cl.id_cliente
       LEFT JOIN cita c ON d.id_cita = c.id_cita
       WHERE d.id_diagnostico=$1`, [id]);
     if (d.rowCount === 0) return res.status(404).json({ error: 'Diagnóstico no encontrado' });

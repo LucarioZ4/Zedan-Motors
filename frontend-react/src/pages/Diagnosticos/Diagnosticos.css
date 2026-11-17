@@ -978,3 +978,125 @@
     to { transform: translateY(0); opacity: 1; }
 }
 
+/* ── Autocomplete / Buscador de Vehículos Unificado ── */
+.vehiculo-combobox-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.vehiculo-search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.vehiculo-search-input-wrapper .search-icon {
+    position: absolute;
+    left: 14px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.vehiculo-search-input-wrapper .clear-icon-btn {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+}
+
+.vehiculo-search-input-wrapper .clear-icon-btn:hover {
+    color: #1e293b;
+    background: #f1f5f9;
+}
+
+.vehiculo-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    max-height: 290px;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #dbe4f0;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+    z-index: 100;
+    padding: 6px;
+    animation: fadeIn 0.15s ease;
+}
+
+.vehiculo-dropdown-empty {
+    padding: 16px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.vehiculo-dropdown-item {
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.vehiculo-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.vehiculo-dropdown-item:hover, .vehiculo-dropdown-item.focused {
+    background: #eff6ff;
+}
+
+.vehiculo-dropdown-item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vehiculo-dropdown-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: #64748b;
+    flex-wrap: wrap;
+}
+
+.vehiculo-dropdown-item-cliente {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #1e3a8a;
+    font-weight: 600;
+}
+
+/* Ficha del vehículo seleccionado */
+.vehiculo-selected-card {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.05);
+}
+
+.vehiculo-selected-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+

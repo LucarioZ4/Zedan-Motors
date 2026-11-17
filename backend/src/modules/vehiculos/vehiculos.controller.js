@@ -6,9 +6,12 @@ const getAll = async (req, res) => {
         let sql = `
             SELECT v.id_vehiculo, v.placa, v.marca, v.modelo,
                    v.anio, v.color, v.id_cliente,
-                   c.nombre || ' ' || c.apellido AS cliente
+                   COALESCE(c.nombre || ' ' || c.apellido, 'Sin cliente asignado') AS cliente,
+                   COALESCE(c.nombre || ' ' || c.apellido, 'Sin cliente asignado') AS nombre_cliente,
+                   c.telefono AS telefono_cliente,
+                   c.correo AS correo_cliente
             FROM vehiculo v
-            INNER JOIN cliente c ON v.id_cliente = c.id_cliente
+            LEFT JOIN cliente c ON v.id_cliente = c.id_cliente
         `;
         const params = [];
 
@@ -37,9 +40,12 @@ const getById = async (req, res) => {
         const result = await pool.query(
             `SELECT v.id_vehiculo, v.placa, v.marca, v.modelo,
                     v.anio, v.color, v.id_cliente,
-                    c.nombre || ' ' || c.apellido AS cliente
+                    COALESCE(c.nombre || ' ' || c.apellido, 'Sin cliente asignado') AS cliente,
+                    COALESCE(c.nombre || ' ' || c.apellido, 'Sin cliente asignado') AS nombre_cliente,
+                    c.telefono AS telefono_cliente,
+                    c.correo AS correo_cliente
              FROM vehiculo v
-             INNER JOIN cliente c ON v.id_cliente = c.id_cliente
+             LEFT JOIN cliente c ON v.id_cliente = c.id_cliente
              WHERE v.id_vehiculo = $1`,
             [req.params.id]
         );
