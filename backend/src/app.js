@@ -91,7 +91,7 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
     app.listen(port, () => {
         console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
-        console.log(`📦 Base de datos: ${process.env.DB_NAME}`);
+        console.log(`📦 Base de datos configurada: ${require('./config/databaseInfo')()}`);
     });
 }
 

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { Pool } = require('pg');
+const getDatabaseInfo = require('./databaseInfo');
 
 const poolConfig = process.env.DATABASE_URL
     ? {
@@ -21,7 +22,7 @@ pool.connect((err, client, release) => {
     if (err) {
         console.error('❌ Error conectando a PostgreSQL:', err.message);
     } else {
-        console.log('✅ Conectado a PostgreSQL —', process.env.DB_NAME);
+        console.log(`✅ Conectado a ${getDatabaseInfo()}`);
         release();
     }
 });
