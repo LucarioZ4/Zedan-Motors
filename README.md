@@ -268,3 +268,5 @@ psql -U postgres -d zedan_motors -f database/migrations/2026-11-inventario-ia.sq
 *(O copia y ejecuta su contenido directamente desde pgAdmin / DBeaver / Azure Data Studio).*
 
 El script crea la extensión `pg_trgm`, agrega las columnas opcionales `referencia` y `codigo_barras` a la tabla `inventario`, y crea las tablas `analisis_ia`, `inventario_movimiento` y `repuesto_alias`.
+
+El [contrato HTTP de Node y C#](docs/contrato-apis.md) incluye las rutas y la configuración de proveedores.

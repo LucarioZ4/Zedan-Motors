@@ -61,7 +61,7 @@ namespace ZedanMotorsApi.DTOs
 
     public class OrdenTrabajoCreateDTO
     {
-        [Required]
+        [System.Text.Json.Serialization.JsonRequired]
         public DateOnly fechaInicio { get; set; }
         public DateOnly? fechaFin { get; set; }
         [StringLength(300)]
@@ -75,7 +75,7 @@ namespace ZedanMotorsApi.DTOs
     // Para PUT: solo datos propios de la orden (servicios y repuestos se fijan al crearla)
     public class OrdenTrabajoUpdateDTO
     {
-        [Required]
+        [System.Text.Json.Serialization.JsonRequired]
         public DateOnly fechaInicio { get; set; }
         public DateOnly? fechaFin { get; set; }
         [StringLength(300)]

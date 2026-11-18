@@ -56,6 +56,7 @@ namespace ZedanMotorsApi.Data
 
             modelBuilder.Entity<MensajeCliente>()
                 .Property(m => m.fecha)
+                .HasColumnType("timestamp without time zone")
                 .HasDefaultValueSql("current_timestamp");
         }
     }

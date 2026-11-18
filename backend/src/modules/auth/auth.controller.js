@@ -33,7 +33,11 @@ const login = async (req, res) => {
             nombre: fila.nombre
         };
 
-        const token = jwt.sign(datos, jwtSecret, { expiresIn: jwtExpires });
+        const token = jwt.sign(datos, jwtSecret, {
+            expiresIn: jwtExpires,
+            issuer: process.env.JWT_ISSUER || 'ZedanMotorsApi',
+            audience: process.env.JWT_AUDIENCE || 'ZedanMotorsFrontend'
+        });
 
         res.json({ token, usuario: datos });
 
@@ -44,7 +48,8 @@ const login = async (req, res) => {
 };
 
 const verificar = (req, res) => {
-    res.json({ usuario: req.usuario });
+    const { id, id_empleado, usuario, rol, nombre } = req.usuario;
+    res.json({ usuario: { id, id_empleado, usuario, rol, nombre } });
 };
 
 module.exports = { login, verificar };

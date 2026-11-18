@@ -43,7 +43,7 @@ namespace ZedanMotorsApi.Controllers
             var query = _context.Vehiculos.AsQueryable();
             if (!string.IsNullOrWhiteSpace(buscar))
             {
-                var patron = $"%{buscar.Trim()}%";
+                var patron = BusquedaHelper.PatronContiene(buscar);
                 query = query.Where(v =>
                     EF.Functions.ILike(v.placa, patron) ||
                     EF.Functions.ILike(v.marca, patron) ||
@@ -81,12 +81,13 @@ namespace ZedanMotorsApi.Controllers
                 return NotFound(new { error = "Vehículo no encontrado" });
             }
 
+            if (vehiculoUpdate.anio > FechaColombia.Hoy().Year + 1) return BadRequest(new {error="Año no válido"});
             if (!await _context.Clientes.AnyAsync(c => c.idCliente == vehiculoUpdate.idCliente))
             {
                 return BadRequest(new { error = "El cliente indicado no existe." });
             }
 
-            vehiculo.placa = vehiculoUpdate.placa;
+            vehiculo.placa = vehiculoUpdate.placa.Trim().ToUpperInvariant();
             vehiculo.modelo = vehiculoUpdate.modelo;
             vehiculo.anio = vehiculoUpdate.anio;
             vehiculo.marca = vehiculoUpdate.marca;
@@ -102,13 +103,14 @@ namespace ZedanMotorsApi.Controllers
                 return Conflict(new { error = "Ya existe un vehículo con esa placa." });
             }
 
-            return Ok(new { mensaje = "Vehículo actualizado" });
+            return Ok((await GetVehiculo(id)).Value);
         }
 
         // POST: api/Vehiculos
         [HttpPost]
         public async Task<ActionResult<VehiculoDTO>> PostVehiculo(VehiculoCreateDTO vehiculoCreate)
         {
+            if (vehiculoCreate.anio > FechaColombia.Hoy().Year + 1) return BadRequest(new {error="Año no válido"});
             if (!await _context.Clientes.AnyAsync(c => c.idCliente == vehiculoCreate.idCliente))
             {
                 return BadRequest(new { error = "El cliente indicado no existe." });
@@ -116,7 +118,7 @@ namespace ZedanMotorsApi.Controllers
 
             var vehiculo = new Vehiculo
             {
-                placa = vehiculoCreate.placa,
+                placa = vehiculoCreate.placa.Trim().ToUpperInvariant(),
                 modelo = vehiculoCreate.modelo,
                 anio = vehiculoCreate.anio,
                 marca = vehiculoCreate.marca,

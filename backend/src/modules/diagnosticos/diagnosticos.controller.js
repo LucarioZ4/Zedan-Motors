@@ -15,68 +15,48 @@ const responderError = (res, err, mensajeGen) => {
   return res.status(500).json({ error: mensajeGen });
 };
 
-// Verifica existencia de vehículo
-const vehiculoExiste = async id => {
-  const r = await pool.query('SELECT 1 FROM vehiculo WHERE id_vehiculo=$1', [id]);
-  return r.rowCount > 0;
-};
-// Verifica existencia de cita (opcional)
-const citaExiste = async id => {
-  if (!id) return true;
-  const r = await pool.query('SELECT 1 FROM cita WHERE id_cita=$1', [id]);
-  return r.rowCount > 0;
-};
+const guardar = async (req, res) => {
+  const id = req.params.id;
+  const { id_vehiculo, id_cita, fecha_ingreso, kilometraje, nivel_gasolina, observaciones, estado, accesorios } = req.body;
+  if ((!id && (!id_vehiculo || kilometraje == null || !nivel_gasolina)) ||
+      (kilometraje != null && (!Number.isInteger(Number(kilometraje)) || Number(kilometraje) < 0)) ||
+      (accesorios != null && !Array.isArray(accesorios)))
+    return res.status(400).json({ error: 'Datos de diagnóstico inválidos' });
 
-/* ---------- CRUD ---------- */
-
-// POST /api/diagnosticos
-const crear = async (req, res) => {
+  let client;
   try {
-    const {
-      id_vehiculo,
-      id_cita,
-      fecha_ingreso,
-      kilometraje,
-      nivel_gasolina,
-      observaciones,
-      estado,
-      accesorios = []
-    } = req.body;
-
-    if (!await vehiculoExiste(id_vehiculo))
-      return res.status(404).json({ error: 'Vehículo no encontrado' });
-    if (!await citaExiste(id_cita))
-      return res.status(404).json({ error: 'Cita no encontrada' });
-
-    const r = await pool.query(
-      `INSERT INTO diagnostico (id_vehiculo, id_cita, fecha_ingreso, kilometraje,
-                                 nivel_gasolina, observaciones, estado)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-      [
-        id_vehiculo,
-        id_cita || null,
-        fecha_ingreso || new Date(),
-        kilometraje,
-        nivel_gasolina,
-        observaciones || null,
-        estado || 'En proceso',
-      ]
-    );
-    const diagnostico = r.rows[0];
-
-    // Insertar accesorios (si los hay)
-    const insAcc = accesorios.map(a =>
-      pool.query(
-        `INSERT INTO diagnostico_accesorio (id_diagnostico, nombre, estado, observacion)
-         VALUES ($1,$2,$3,$4)`,
-        [diagnostico.id_diagnostico, a.nombre, a.estado, a.observacion || null]
-      )
-    );
-    await Promise.all(insAcc);
-
-    res.status(201).json(diagnostico);
+    client = await pool.connect();
+    await client.query('BEGIN');
+    const result = id
+      ? await client.query(
+          `UPDATE diagnostico SET fecha_ingreso=COALESCE($1,fecha_ingreso),kilometraje=COALESCE($2,kilometraje),
+               nivel_gasolina=COALESCE($3,nivel_gasolina),observaciones=COALESCE($4,observaciones),estado=COALESCE($5,estado)
+           WHERE id_diagnostico=$6 RETURNING *`,[fecha_ingreso,kilometraje,nivel_gasolina,observaciones,estado,id])
+      : await client.query(
+          `INSERT INTO diagnostico(id_vehiculo,id_cita,fecha_ingreso,kilometraje,nivel_gasolina,observaciones,estado)
+           VALUES($1,$2,COALESCE($3::timestamp,LOCALTIMESTAMP),$4,$5,$6,$7) RETURNING *`,
+          [id_vehiculo,id_cita,fecha_ingreso,kilometraje,nivel_gasolina,observaciones,estado || 'En proceso']);
+    const diagnostico = result.rows[0];
+    if (!diagnostico) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Diagnóstico no encontrado' });
+    }
+    if (accesorios != null) {
+      await client.query('DELETE FROM diagnostico_accesorio WHERE id_diagnostico=$1',[diagnostico.id_diagnostico]);
+      for (const a of accesorios)
+        await client.query('INSERT INTO diagnostico_accesorio(id_diagnostico,nombre,estado,observacion) VALUES($1,$2,$3,$4)',
+          [diagnostico.id_diagnostico,a?.nombre,a?.estado,a?.observacion || null]);
+    }
+    await client.query('COMMIT');
+    res.status(id ? 200 : 201).json(diagnostico);
   } catch (err) {
-    responderError(res, err, 'Error al crear diagnóstico');
+    if (client) await client.query('ROLLBACK').catch(() => {});
+    if (err.code === '23503') return res.status(404).json({ error: 'Vehículo o cita no encontrados' });
+    if (['23505','23514','23502','22001','22007','22P02'].includes(err.code))
+      return res.status(400).json({ error: 'Datos del diagnóstico o accesorios inválidos' });
+    responderError(res,err,'Error al guardar diagnóstico');
+  } finally {
+    if (client) client.release();
   }
 };
 
@@ -127,65 +107,15 @@ const detalle = async (req, res) => {
   }
 };
 
-// PUT /api/diagnosticos/:id
-const actualizar = async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const {
-      fecha_ingreso,
-      kilometraje,
-      nivel_gasolina,
-      observaciones,
-      estado,
-      accesorios
-    } = req.body;
-
-    const d = await pool.query('SELECT * FROM diagnostico WHERE id_diagnostico=$1', [id]);
-    if (d.rowCount === 0) return res.status(404).json({ error: 'Diagnóstico no encontrado' });
-
-    await pool.query(
-      `UPDATE diagnostico SET
-         fecha_ingreso = $1,
-         kilometraje = $2,
-         nivel_gasolina = $3,
-         observaciones = $4,
-         estado = $5
-       WHERE id_diagnostico = $6`,
-      [
-        fecha_ingreso || d.rows[0].fecha_ingreso,
-        kilometraje ?? d.rows[0].kilometraje,
-        nivel_gasolina || d.rows[0].nivel_gasolina,
-        observaciones ?? d.rows[0].observaciones,
-        estado || d.rows[0].estado,
-        id,
-      ]
-    );
-
-    if (Array.isArray(accesorios)) {
-      await pool.query('DELETE FROM diagnostico_accesorio WHERE id_diagnostico=$1', [id]);
-      const ins = accesorios.map(a =>
-        pool.query(
-          `INSERT INTO diagnostico_accesorio (id_diagnostico, nombre, estado, observacion)
-           VALUES ($1,$2,$3,$4)`,
-          [id, a.nombre, a.estado, a.observacion || null]
-        )
-      );
-      await Promise.all(ins);
-    }
-    const actualizado = await pool.query('SELECT * FROM diagnostico WHERE id_diagnostico=$1', [id]);
-    res.json(actualizado.rows[0]);
-  } catch (err) {
-    responderError(res, err, 'Error al actualizar diagnóstico');
-  }
-};
-
 // DELETE /api/diagnosticos/:id
 const remover = async (req, res) => {
   try {
     const id = Number(req.params.id);
     // borrar archivos físicos primero
     const archivos = await pool.query('SELECT ruta FROM diagnostico_archivo WHERE id_diagnostico=$1', [id]);
-    if (archivos.rowCount) await storage.eliminar(archivos.rows.map(r => r.ruta));
+    const rutas = archivos.rows.map(r => r.ruta);
+    await storage.eliminar(rutas.filter(r => r.startsWith('archivos/')), diagBucket);
+    await storage.eliminar(rutas.filter(r => !r.startsWith('archivos/')));
     // cascade eliminará accesorios y registros de archivo
     await pool.query('DELETE FROM diagnostico WHERE id_diagnostico=$1', [id]);
     res.json({ mensaje: 'Diagnóstico eliminado' });
@@ -212,17 +142,20 @@ const subirArchivo = async (req, res) => {
     if (tamano > maxBytes)
       return res.status(413).json({ error: `Archivo supera ${diagMaxMb} MB` });
 
-    const ext = path.extname(nombre_original) || (tipo === 'video' ? '.mp4' : '.jpg');
-    const ruta = `${diagBucket}/${id}/${tipo}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`;
+    if (!Number.isSafeInteger(tamano) || tamano <= 0 || typeof nombre_original !== 'string')
+      return res.status(400).json({ error: 'Nombre o tamaño de archivo inválido' });
+    const extension = path.extname(nombre_original);
+    const ext = /^[.][a-z0-9]{1,6}$/i.test(extension) ? extension : (tipo === 'video' ? '.mp4' : '.jpg');
+    const ruta = `archivos/${id}/${tipo}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`;
 
-    const firma = await storage.crearSubidaFirmada(ruta);
+    const firma = await storage.crearSubidaFirmada(ruta, diagBucket);
     // Guardamos registro provisional (se completará después de la subida real)
     await pool.query(
       `INSERT INTO diagnostico_archivo (id_diagnostico, ruta, tipo, nombre_original, tamano, descripcion)
        VALUES ($1,$2,$3,$4,$5,$6)`,
       [id, ruta, tipo, nombre_original, tamano, descripcion || null]
     );
-    res.json({ ruta: firma.ruta, token: firma.token, bucket: storage.bucket });
+    res.json({ ruta: firma.ruta, token: firma.token, bucket: diagBucket });
   } catch (err) {
     responderError(res, err, 'Error al preparar subida de archivo');
   }
@@ -238,7 +171,7 @@ const eliminarArchivo = async (req, res) => {
     );
     if (r.rowCount === 0) return res.status(404).json({ error: 'Archivo no encontrado' });
     const ruta = r.rows[0].ruta;
-    await storage.eliminar([ruta]);
+    await storage.eliminar([ruta], ruta.startsWith('archivos/') ? diagBucket : storage.bucket);
     await pool.query('DELETE FROM diagnostico_archivo WHERE id_archivo=$1', [archivoId]);
     res.json({ mensaje: 'Archivo eliminado' });
   } catch (err) {
@@ -247,10 +180,10 @@ const eliminarArchivo = async (req, res) => {
 };
 
 module.exports = {
-  crear,
+  crear: guardar,
   listar,
   detalle,
-  actualizar,
+  actualizar: guardar,
   remover,
   subirArchivo,
   eliminarArchivo,

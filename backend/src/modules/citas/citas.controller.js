@@ -1,3 +1,4 @@
+const patronContiene = require('../../utils/patronContiene');
 const pool = require('../../config/database');
 
 const getAll = async (req, res) => {
@@ -18,16 +19,16 @@ const getAll = async (req, res) => {
             FROM cita c
             INNER JOIN vehiculo v  ON c.id_vehiculo = v.id_vehiculo
             INNER JOIN cliente cl  ON v.id_cliente  = cl.id_cliente
-            INNER JOIN estado e    ON c.id_estado   = e.id_estado
+            LEFT JOIN estado e    ON c.id_estado   = e.id_estado
         `;
         const params = [];
 
-        if (buscar) {
+        if (typeof buscar === 'string' && buscar.trim()) {
             sql += ` WHERE UPPER(cl.nombre)  LIKE UPPER($1)
                      OR    UPPER(cl.apellido) LIKE UPPER($1)
                      OR    UPPER(v.placa)     LIKE UPPER($1)
                      OR    UPPER(c.motivo)    LIKE UPPER($1)`;
-            params.push(`%${buscar}%`);
+            params.push(patronContiene(buscar));
         }
 
         sql += ' ORDER BY c.fecha DESC, c.hora ASC';
@@ -41,9 +42,7 @@ const getAll = async (req, res) => {
     }
 };
 
-const getById = async (req, res) => {
-    try {
-        const result = await pool.query(
+const consultarDetalle = id => pool.query(
             `SELECT c.id_cita, c.fecha,
                     TO_CHAR(c.hora, 'HH24:MI') AS hora,
                     c.motivo, c.id_vehiculo, c.id_estado,
@@ -54,10 +53,14 @@ const getById = async (req, res) => {
              FROM cita c
              INNER JOIN vehiculo v ON c.id_vehiculo = v.id_vehiculo
              INNER JOIN cliente cl ON v.id_cliente  = cl.id_cliente
-             INNER JOIN estado e   ON c.id_estado   = e.id_estado
+             LEFT JOIN estado e   ON c.id_estado   = e.id_estado
              WHERE c.id_cita = $1`,
-            [req.params.id]
+            [id]
         );
+
+const getById = async (req, res) => {
+    try {
+        const result = await consultarDetalle(req.params.id);
 
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Cita no encontrada' });
@@ -81,9 +84,10 @@ const create = async (req, res) => {
             [fecha, hora, motivo || null, id_vehiculo, id_estado || 1]
         );
 
-        res.status(201).json(result.rows[0]);
+        res.status(201).json((await consultarDetalle(result.rows[0].id_cita)).rows[0]);
 
     } catch (err) {
+        if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
@@ -108,9 +112,10 @@ const update = async (req, res) => {
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Cita no encontrada' });
 
-        res.json(result.rows[0]);
+        res.json((await consultarDetalle(result.rows[0].id_cita)).rows[0]);
 
     } catch (err) {
+        if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
     }

@@ -19,7 +19,10 @@ const conOrdenEditable = (accion) => async (req, res) => {
         res.status(resultado.status || 200).json(resultado.body);
     } catch (err) {
         if (client) await client.query('ROLLBACK').catch(() => {});
-        res.status(err instanceof ErrorNegocio ? err.status : 500).json({ error: err.message });
+        if (err instanceof ErrorNegocio) return res.status(err.status).json({ error: err.message });
+        if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     } finally {
         if (client) client.release();
     }
@@ -40,11 +43,13 @@ const getAll = async (req, res) => {
                 cl.nombre || ' ' || cl.apellido AS cliente,
                 v.placa || ' - ' || v.marca || ' ' || v.modelo AS vehiculo,
                 e.nombre || ' ' || e.apellido AS empleado,
-                est.nombre_estado AS estado
+                est.nombre_estado AS estado,
+                (SELECT COUNT(*)::int FROM orden_servicio WHERE id_orden=o.id_orden) AS total_servicios,
+                (SELECT COUNT(*)::int FROM orden_inventario WHERE id_orden=o.id_orden) AS total_repuestos
             FROM orden_trabajo o
-            INNER JOIN cita c        ON o.id_cita      = c.id_cita
-            INNER JOIN vehiculo v    ON c.id_vehiculo   = v.id_vehiculo
-            INNER JOIN cliente cl    ON v.id_cliente    = cl.id_cliente
+            LEFT JOIN cita c        ON o.id_cita      = c.id_cita
+            LEFT JOIN vehiculo v    ON c.id_vehiculo   = v.id_vehiculo
+            LEFT JOIN cliente cl    ON v.id_cliente    = cl.id_cliente
             LEFT  JOIN empleado e    ON o.id_empleado   = e.id_empleado
             LEFT  JOIN estado est    ON c.id_estado     = est.id_estado
             ORDER BY o.fecha_inicio DESC
@@ -55,9 +60,7 @@ const getAll = async (req, res) => {
     }
 };
 
-const getById = async (req, res) => {
-    try {
-        const result = await pool.query(`
+const consultarOrden = (db, id) => db.query(`
             SELECT
                 o.id_orden,
                 o.fecha_inicio,
@@ -68,15 +71,25 @@ const getById = async (req, res) => {
                 cl.nombre || ' ' || cl.apellido AS cliente,
                 v.placa || ' - ' || v.marca || ' ' || v.modelo AS vehiculo,
                 e.nombre || ' ' || e.apellido AS empleado,
-                est.nombre_estado AS estado
+                est.nombre_estado AS estado,
+                COALESCE((SELECT jsonb_agg(jsonb_build_object('id_servicio',s.id_servicio,'nombre_servicio',s.nombre_servicio,'costo',s.costo) ORDER BY s.id_servicio)
+                          FROM orden_servicio os JOIN servicio s USING(id_servicio) WHERE os.id_orden=o.id_orden),'[]') AS servicios,
+                COALESCE((SELECT jsonb_agg(jsonb_build_object('id_repuesto',i.id_repuesto,'nombre',i.nombre,'precio',i.precio,'cantidad',oi.cantidad) ORDER BY i.id_repuesto)
+                          FROM orden_inventario oi JOIN inventario i USING(id_repuesto) WHERE oi.id_orden=o.id_orden),'[]') AS repuestos,
+                (SELECT jsonb_build_object('id_factura',id_factura,'fecha',to_char(fecha,'YYYY-MM-DD"T"00:00:00'),'total',total,'metodo_pago',metodo_pago,'id_orden',id_orden)
+                 FROM facturacion WHERE id_orden=o.id_orden) AS factura
             FROM orden_trabajo o
-            INNER JOIN cita c        ON o.id_cita      = c.id_cita
-            INNER JOIN vehiculo v    ON c.id_vehiculo   = v.id_vehiculo
-            INNER JOIN cliente cl    ON v.id_cliente    = cl.id_cliente
+            LEFT JOIN cita c        ON o.id_cita      = c.id_cita
+            LEFT JOIN vehiculo v    ON c.id_vehiculo   = v.id_vehiculo
+            LEFT JOIN cliente cl    ON v.id_cliente    = cl.id_cliente
             LEFT  JOIN empleado e    ON o.id_empleado   = e.id_empleado
             LEFT  JOIN estado est    ON c.id_estado     = est.id_estado
             WHERE o.id_orden = $1
-        `, [req.params.id]);
+        `, [id]);
+
+const getById = async (req, res) => {
+    try {
+        const result = await consultarOrden(pool, req.params.id);
 
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Orden no encontrada' });
@@ -87,35 +100,54 @@ const getById = async (req, res) => {
     }
 };
 
-const create = async (req, res) => {
+const create = async (req, res, next) => {
+    const { fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado, id_servicios = [], repuestos = [] } = req.body;
+    let client;
     try {
-        const { fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado } = req.body;
-
-        if (!fecha_inicio || !id_cita || !id_empleado)
-            return res.status(400).json({
-                error: 'Fecha inicio, cita y empleado son obligatorios'
-            });
-
-        const result = await pool.query(`
-            INSERT INTO orden_trabajo
-                (fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING *
-        `, [fecha_inicio, fecha_fin || null, observaciones || null, id_cita, id_empleado]);
-
-        res.status(201).json(result.rows[0]);
+        if (!Array.isArray(id_servicios) || !Array.isArray(repuestos))
+            throw new ErrorNegocio(400, 'Servicios y repuestos deben ser listas');
+        const pedidos = new Map();
+        for (const item of repuestos) {
+            if (!Number.isInteger(item?.id_repuesto) || !Number.isInteger(item.cantidad) || item.cantidad < 1)
+                throw new ErrorNegocio(400, 'Repuesto o cantidad inválidos');
+            pedidos.set(item.id_repuesto, (pedidos.get(item.id_repuesto) || 0) + item.cantidad);
+        }
+        client = await pool.connect();
+        await client.query('BEGIN');
+        const orden = await client.query(
+            'INSERT INTO orden_trabajo(fecha_inicio,fecha_fin,observaciones,id_cita,id_empleado) VALUES($1,$2,$3,$4,$5) RETURNING id_orden',
+            [fecha_inicio,fecha_fin || null,observaciones || null,id_cita,id_empleado]);
+        const id = orden.rows[0].id_orden;
+        for (const sid of new Set(id_servicios)) {
+            if (!Number.isInteger(sid)) throw new ErrorNegocio(400, 'Servicio inválido');
+            await client.query('INSERT INTO orden_servicio(id_orden,id_servicio) VALUES($1,$2)',[id,sid]);
+        }
+        for (const rid of [...pedidos.keys()].sort((a,b) => a-b)) {
+            const cantidad = pedidos.get(rid);
+            const ajustado = await client.query('UPDATE inventario SET stock=stock-$1 WHERE id_repuesto=$2 AND stock >= $1',[cantidad,rid]);
+            if (!ajustado.rowCount) throw new ErrorNegocio(400, 'Repuesto inexistente o stock insuficiente');
+            await client.query('INSERT INTO orden_inventario(id_orden,id_repuesto,cantidad) VALUES($1,$2,$3)',[id,rid,cantidad]);
+        }
+        const detalle = await consultarOrden(client,id);
+        await client.query('COMMIT');
+        res.status(201).json(detalle.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        if (client) await client.query('ROLLBACK').catch(() => {});
+        if (err instanceof ErrorNegocio) return res.status(err.status).json({ error: err.message });
+        if (err.code === '23503') return res.status(400).json({ error: 'Referencia inexistente' });
+        next(err);
+    } finally {
+        if (client) client.release();
     }
 };
 
 const update = conOrdenEditable(async (client, req) => {
     const { fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado } = req.body;
-    const result = await client.query(`
+    await client.query(`
         UPDATE orden_trabajo SET fecha_inicio=$1, fecha_fin=$2, observaciones=$3,
             id_cita=$4, id_empleado=$5 WHERE id_orden=$6 RETURNING *`,
         [fecha_inicio, fecha_fin || null, observaciones || null, id_cita, id_empleado, req.params.id]);
-    return { body: result.rows[0] };
+    return { body: (await consultarOrden(client,req.params.id)).rows[0] };
 });
 
 const remove = conOrdenEditable(async (client, req) => {
@@ -140,6 +172,8 @@ const getServicios = async (req, res) => {
 
 const addServicio = conOrdenEditable(async (client, req) => {
     if (!req.body.id_servicio) throw new ErrorNegocio(400, 'Seleccione un servicio');
+    const servicio = await client.query('SELECT 1 FROM servicio WHERE id_servicio=$1',[req.body.id_servicio]);
+    if (!servicio.rowCount) throw new ErrorNegocio(404, 'Servicio no encontrado');
     await client.query(`INSERT INTO orden_servicio (id_orden, id_servicio)
         VALUES ($1, $2) ON CONFLICT DO NOTHING`, [req.params.id, req.body.id_servicio]);
     return { status: 201, body: { mensaje: 'Servicio agregado' } };
@@ -286,7 +320,10 @@ const removeRepuesto = async (req, res) => {
 
     } catch (err) {
         await client.query('ROLLBACK').catch(() => {});
-        res.status(err instanceof ErrorNegocio ? err.status : 500).json({ error: err.message });
+        if (err instanceof ErrorNegocio) return res.status(err.status).json({ error: err.message });
+        if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
     } finally {
         client.release();
     }

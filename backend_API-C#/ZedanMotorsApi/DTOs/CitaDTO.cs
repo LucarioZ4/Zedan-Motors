@@ -18,14 +18,14 @@ namespace ZedanMotorsApi.DTOs
 
     public class CitaCreateDTO
     {
-        [Required]
+        [System.Text.Json.Serialization.JsonRequired]
         public DateOnly fecha { get; set; }
-        [Required]
+        [System.Text.Json.Serialization.JsonRequired]
         public TimeOnly hora { get; set; }
         [StringLength(200)]
         public string? motivo { get; set; }
         [Required]
         public int idVehiculo { get; set; }
-        public int? idEstado { get; set; }
+        public int? idEstado { get; set; } = 1;
     }
 }

@@ -3,66 +3,8 @@
 const axios = require('axios');
 const { ia } = require('../../config/env');
 
-const HERRAMIENTA = 'registrar_conteo';
-
-const SISTEMA = `Eres el asistente experto de inventario de un taller mecánico automotriz en Colombia (especializado en repuestos, suspensión, frenos, transmisión, dirección, motor, lubricantes, filtros, embragues, rodamientos, baterías e insumos).
-Recibirás una foto y el catálogo actual del inventario del taller. Tu misión es identificar meticulosamente cada repuesto o producto que aparezca y contar cuántas unidades visibles hay de cada uno.
-
-Reglas fundamentales:
-1. NUNCA DEVOLVER ITEMS VACÍO SI HAY REPUESTOS: Si en la imagen se observa cualquier pieza mecánica, repuesto, componente de carro, herramienta o insumo automotriz, es OBLIGATORIO incluirlo en el arreglo "items".
-2. FOTOS CON MÚLTIPLES PIEZAS O SURTIDOS: Si la imagen muestra un conjunto variado o despiece de repuestos (por ejemplo: amortiguadores, resortes espirales, ejes de transmisión/palieres, juntas homocinéticas, fuelles/guardapolvos, crucetas, rodamientos/balineras, discos de freno, cáliper/mordazas, terminales de dirección, etc.), desglosa y agrupa cada categoría de repuesto en una fila de "items" con la cantidad de unidades que logres contar o estimar en la foto.
-3. COINCIDENCIA CON EL CATÁLOGO:
-   - Si la pieza pertenece claramente a un tipo de repuesto presente en el catálogo (por ejemplo, identificas amortiguadores y en el catálogo hay "Amortiguador delantero a gas", o identificas fuelles y en el catálogo hay "Guardapolvo / Fuelle de junta homocinética", o discos de freno y hay "Disco de freno delantero"), asigna el "id_repuesto" numérico correspondiente de ese ítem del catálogo.
-   - Si dudas entre varias líneas similares del catálogo (ej. delantero vs trasero), elige la opción más representativa o afín y ajusta la confianza.
-   - Si la pieza visible NO coincide con ningún repuesto del catálogo provisto, DEBES agregarla igualmente con "id_repuesto": null, especificando su nombre automotriz estándar en español en "nombre_detectado" (ej: "Guardapolvo / fuelle de transmisión", "Eje homocinético", "Cruceta de cardán", "Rodamiento de bola").
-4. CALIDAD Y CONFIANZA:
-   - confianza: "alta" si la pieza o marca es inequívoca y el conteo es exacto; "media" en tomas con varias piezas o ángulos oblicuos; "baja" si hay piezas parcialmente superpuestas u ocultas.
-   - Si la foto está totalmente desenfocada, negra, blanca o NO contiene absolutamente ningún repuesto ni pieza de taller (ej. foto de un animal, paisaje, persona), entonces devuelve "items": [] y explica detalladamente la razón en "observaciones".
-5. IDIOMA Y FORMATO:
-   - Responde siempre en español.
-   - Responde ÚNICAMENTE un JSON estrictamente válido con la siguiente estructura:
-{
-  "items": [
-    {
-      "id_repuesto": integer o null,
-      "nombre_detectado": "string",
-      "marca_detectada": "string o null",
-      "cantidad": integer,
-      "confianza": "alta" | "media" | "baja",
-      "nota": "string o null"
-    }
-  ],
-  "observaciones": "string",
-  "calidad_imagen": "buena" | "regular" | "mala"
-}`;
-
-const DEFINICION_HERRAMIENTA = {
-    name: HERRAMIENTA,
-    description: 'Registra los productos automotrices identificados en la foto con su cantidad.',
-    input_schema: {
-        type: 'object',
-        properties: {
-            items: {
-                type: 'array',
-                items: {
-                    type: 'object',
-                    properties: {
-                        id_repuesto:      { type: ['integer', 'null'], description: 'id del catálogo si coincide; null si no.' },
-                        nombre_detectado: { type: 'string', description: 'Nombre del producto o tipo de repuesto tal como se ve.' },
-                        marca_detectada:  { type: ['string', 'null'] },
-                        cantidad:         { type: 'integer', minimum: 1, description: 'Unidades visibles contadas.' },
-                        confianza:        { type: 'string', enum: ['alta', 'media', 'baja'] },
-                        nota:             { type: ['string', 'null'], description: 'Aclaración breve si hace falta.' },
-                    },
-                    required: ['id_repuesto', 'nombre_detectado', 'cantidad', 'confianza'],
-                },
-            },
-            observaciones: { type: 'string', description: 'Comentario general sobre la foto o las piezas encontradas.' },
-            calidad_imagen: { type: 'string', enum: ['buena', 'regular', 'mala'] },
-        },
-        required: ['items'],
-    },
-};
+const { sistema: SISTEMA, herramienta: DEFINICION_HERRAMIENTA } = require('./analisis-inventario.json');
+const HERRAMIENTA = DEFINICION_HERRAMIENTA.name;
 
 const errorHttp = (status, mensaje) => {
     const err = new Error(mensaje);
@@ -110,7 +52,7 @@ const analizarConGemini = async ({ base64, mediaType, lineasCatalogo }) => {
     let ultimoError = null;
 
     for (const modelo of modelosUnicos) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${ia.geminiApiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`;
 
         try {
             const res = await axios.post(
@@ -139,7 +81,7 @@ const analizarConGemini = async ({ base64, mediaType, lineasCatalogo }) => {
                         temperature: 0.1
                     }
                 },
-                { timeout: 50000 }
+                { timeout: 50000, headers: { 'x-goog-api-key': ia.geminiApiKey } }
             );
 
             const textoRespuesta = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -157,7 +99,7 @@ const analizarConGemini = async ({ base64, mediaType, lineasCatalogo }) => {
         }
     }
 
-    if (ultimoError.status) throw ultimoError;
+    if (!axios.isAxiosError(ultimoError) && ultimoError.status) throw ultimoError;
     const status = ultimoError.response?.status;
     if (ultimoError.code === 'ECONNABORTED') throw errorHttp(504, 'La IA tardó demasiado en responder.');
     if (status === 400 || status === 403) throw errorHttp(502, 'Error de autenticación con Gemini. Revisa GEMINI_API_KEY en .env');
@@ -217,7 +159,14 @@ const analizarFoto = async ({ base64, mediaType, catalogo }) => {
     if (usaGemini) {
         resultadoCrudo = await analizarConGemini({ base64, mediaType, lineasCatalogo });
     } else {
-        resultadoCrudo = await analizarConClaude({ base64, mediaType, lineasCatalogo });
+        try {
+            resultadoCrudo = await analizarConClaude({ base64, mediaType, lineasCatalogo });
+        } catch (err) {
+            if (!axios.isAxiosError(err)) throw err;
+            if (err.code === 'ECONNABORTED') throw errorHttp(504, 'La IA tardó demasiado en responder.');
+            if (err.response?.status === 429) throw errorHttp(429, 'Límite de peticiones de IA excedido.');
+            throw errorHttp(502, 'Error al comunicarse con la IA.');
+        }
     }
 
     return normalizarResultado(resultadoCrudo, catalogo);

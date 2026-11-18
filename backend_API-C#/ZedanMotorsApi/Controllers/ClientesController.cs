@@ -63,7 +63,7 @@ namespace ZedanMotorsApi.Controllers
                     telefono = c.telefono,
                     correo = c.correo,
                     direccion = c.direccion,
-                    Vehiculos = c.Vehiculos.Select(v => new VehiculoDTO
+                    Vehiculos = c.Vehiculos.OrderBy(v => v.marca).ThenBy(v => v.modelo).ThenBy(v => v.idVehiculo).Select(v => new VehiculoDTO
                     {
                         idVehiculo = v.idVehiculo,
                         placa = v.placa,
@@ -71,7 +71,8 @@ namespace ZedanMotorsApi.Controllers
                         anio = v.anio,
                         marca = v.marca,
                         color = v.color,
-                        idCliente = v.idCliente
+                        idCliente = v.idCliente,
+                        cliente = c.nombre + " " + c.apellido
                     }).ToList()
                 }).FirstOrDefaultAsync();
 
@@ -89,6 +90,7 @@ namespace ZedanMotorsApi.Controllers
         {
             var vehiculos = await _context.Vehiculos
                 .Where(v => v.idCliente == id)
+                .OrderBy(v => v.marca).ThenBy(v => v.modelo).ThenBy(v => v.idVehiculo)
                 .Select(v => new VehiculoDTO
                 {
                     idVehiculo = v.idVehiculo,
@@ -129,7 +131,7 @@ namespace ZedanMotorsApi.Controllers
                 return Conflict(new { error = "El teléfono o el correo ya están registrados." });
             }
 
-            return Ok(new { mensaje = "Cliente actualizado" });
+            return Ok((await GetCliente(id)).Value);
         }
 
         // POST: api/Clientes

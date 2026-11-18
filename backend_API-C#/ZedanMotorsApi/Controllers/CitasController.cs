@@ -92,17 +92,18 @@ namespace ZedanMotorsApi.Controllers
             cita.hora = citaUpdate.hora;
             cita.motivo = citaUpdate.motivo;
             cita.idVehiculo = citaUpdate.idVehiculo;
-            cita.idEstado = citaUpdate.idEstado;
+            cita.idEstado = citaUpdate.idEstado ?? 1;
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { mensaje = "Cita actualizada" });
+            return Ok((await GetCita(id)).Value);
         }
 
         // POST: api/Citas
         [HttpPost]
         public async Task<ActionResult<CitaDTO>> PostCita(CitaCreateDTO citaCreate)
         {
+            if (citaCreate.fecha < FechaColombia.Hoy()) return BadRequest(new { error = "No puede agendar citas en fechas pasadas" });
             var error = await ValidarRelaciones(citaCreate);
             if (error != null)
             {
@@ -115,7 +116,7 @@ namespace ZedanMotorsApi.Controllers
                 hora = citaCreate.hora,
                 motivo = citaCreate.motivo,
                 idVehiculo = citaCreate.idVehiculo,
-                idEstado = citaCreate.idEstado
+                idEstado = citaCreate.idEstado ?? 1
             };
             _context.Citas.Add(cita);
             await _context.SaveChangesAsync();

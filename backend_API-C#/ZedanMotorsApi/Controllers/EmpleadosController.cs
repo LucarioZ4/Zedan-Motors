@@ -85,7 +85,7 @@ namespace ZedanMotorsApi.Controllers
                 return Conflict(new { error = "El teléfono o el correo ya están registrados." });
             }
 
-            return Ok(new { mensaje = "Empleado actualizado" });
+            return Ok((await GetEmpleado(id)).Value);
         }
 
         // POST: api/Empleados

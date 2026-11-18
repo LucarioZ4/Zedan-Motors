@@ -35,17 +35,19 @@ const getAll = async (req, res) => {
     }
 };
 
-const getById = async (req, res) => {
-    try {
-        const result = await pool.query(`
+const consultarDetalle = id => pool.query(`
             SELECT
                 e.id_empleado, e.nombre, e.apellido,
-                e.telefono, e.correo, e.id_cargo,
+                e.telefono, e.correo, e.id_cargo, e.nombre || ' ' || e.apellido AS nombre_completo,
                 c.nombre_cargo AS cargo
             FROM empleado e
             LEFT JOIN cargo c ON e.id_cargo = c.id_cargo
             WHERE e.id_empleado = $1
-        `, [req.params.id]);
+        `, [id]);
+
+const getById = async (req, res) => {
+    try {
+        const result = await consultarDetalle(req.params.id);
 
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Empleado no encontrado' });
@@ -75,11 +77,12 @@ const create = async (req, res) => {
             RETURNING *
         `, [nombre, apellido, telefono, correo || null, id_cargo]);
 
-        res.status(201).json(result.rows[0]);
+        res.status(201).json((await consultarDetalle(result.rows[0].id_empleado)).rows[0]);
 
     } catch (err) {
+        if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
         if (err.code === '23505')
-            return res.status(400).json({
+            return res.status(409).json({
                 error: 'El teléfono o correo ya está registrado'
             });
         console.error(err);
@@ -113,11 +116,12 @@ const update = async (req, res) => {
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Empleado no encontrado' });
 
-        res.json(result.rows[0]);
+        res.json((await consultarDetalle(result.rows[0].id_empleado)).rows[0]);
 
     } catch (err) {
+        if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
         if (err.code === '23505')
-            return res.status(400).json({
+            return res.status(409).json({
                 error: 'El teléfono o correo ya está registrado'
             });
         console.error(err);

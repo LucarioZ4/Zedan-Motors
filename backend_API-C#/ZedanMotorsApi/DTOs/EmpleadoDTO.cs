@@ -20,10 +20,11 @@ namespace ZedanMotorsApi.DTOs
         public string nombre { get; set; } = string.Empty;
         [Required, StringLength(100)]
         public string apellido { get; set; } = string.Empty;
-        [Required, StringLength(20)]
+        [Required, RegularExpression(@"^[0-9+\-\s]{7,20}$", ErrorMessage = "Teléfono inválido")]
         public string telefono { get; set; } = string.Empty;
         [EmailAddress, StringLength(100)]
         public string? correo { get; set; }
+        [Required]
         public int? idCargo { get; set; }
     }
 }

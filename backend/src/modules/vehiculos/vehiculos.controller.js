@@ -1,3 +1,4 @@
+const patronContiene = require('../../utils/patronContiene');
 const pool = require('../../config/database');
 
 const getAll = async (req, res) => {
@@ -12,13 +13,14 @@ const getAll = async (req, res) => {
         `;
         const params = [];
 
-        if (buscar) {
+        if (typeof buscar === 'string' && buscar.trim()) {
             sql += ` WHERE UPPER(v.placa)   LIKE UPPER($1)
                      OR    UPPER(v.marca)   LIKE UPPER($1)
                      OR    UPPER(v.modelo)  LIKE UPPER($1)
                      OR    UPPER(c.nombre)  LIKE UPPER($1)
-                     OR    UPPER(c.apellido) LIKE UPPER($1)`;
-            params.push(`%${buscar}%`);
+                     OR    UPPER(c.apellido) LIKE UPPER($1)
+                     OR    UPPER(c.nombre || ' ' || c.apellido) LIKE UPPER($1)`;
+            params.push(patronContiene(buscar));
         }
 
         sql += ' ORDER BY v.marca, v.modelo';
@@ -32,17 +34,19 @@ const getAll = async (req, res) => {
     }
 };
 
-const getById = async (req, res) => {
-    try {
-        const result = await pool.query(
+const consultarDetalle = id => pool.query(
             `SELECT v.id_vehiculo, v.placa, v.marca, v.modelo,
                     v.anio, v.color, v.id_cliente,
                     c.nombre || ' ' || c.apellido AS cliente
              FROM vehiculo v
              INNER JOIN cliente c ON v.id_cliente = c.id_cliente
              WHERE v.id_vehiculo = $1`,
-            [req.params.id]
+            [id]
         );
+
+const getById = async (req, res) => {
+    try {
+        const result = await consultarDetalle(req.params.id);
 
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Vehículo no encontrado' });
@@ -72,11 +76,12 @@ const create = async (req, res) => {
             [placa.toUpperCase(), marca, modelo, anio || null, color || null, id_cliente]
         );
 
-        res.status(201).json(result.rows[0]);
+        res.status(201).json((await consultarDetalle(result.rows[0].id_vehiculo)).rows[0]);
 
     } catch (err) {
+        if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
         if (err.code === '23505')
-            return res.status(400).json({ error: 'La placa ya está registrada' });
+            return res.status(409).json({ error: 'La placa ya está registrada' });
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
@@ -105,11 +110,12 @@ const update = async (req, res) => {
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Vehículo no encontrado' });
 
-        res.json(result.rows[0]);
+        res.json((await consultarDetalle(result.rows[0].id_vehiculo)).rows[0]);
 
     } catch (err) {
+        if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
         if (err.code === '23505')
-            return res.status(400).json({ error: 'La placa ya está registrada' });
+            return res.status(409).json({ error: 'La placa ya está registrada' });
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
@@ -136,8 +142,9 @@ const remove = async (req, res) => {
 const importar = async (req, res) => {
     const client = await pool.connect();
     try {
-        const items = Array.isArray(req.body) ? req.body : req.body.items;
-        const idClienteDefecto = req.body.idClienteDefecto ? parseInt(req.body.idClienteDefecto) : null;
+        const items = Array.isArray(req.body) ? req.body : req.body?.items;
+        if (items?.length > 1000) return res.status(400).json({ error: 'Máximo 1000 filas por importación.' });
+        const idClienteDefecto = req.body?.idClienteDefecto ? parseInt(req.body.idClienteDefecto) : null;
 
         if (!items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ error: 'No se enviaron datos para importar' });
@@ -158,12 +165,12 @@ const importar = async (req, res) => {
         const errores = [];
 
         for (let i = 0; i < items.length; i++) {
-            const item = items[i];
+            const item = items[i] || {};
             const fila = i + 1;
             const placa = item.placa ? String(item.placa).trim().toUpperCase() : '';
             const marca = item.marca ? String(item.marca).trim() : '';
             const modelo = item.modelo ? String(item.modelo).trim() : '';
-            const anio = item.anio ? parseInt(item.anio) : null;
+            const anio = item.anio ? Number(item.anio) : null;
             const color = item.color ? String(item.color).trim() : null;
 
             let id_cliente = item.id_cliente ? parseInt(item.id_cliente) : null;
@@ -177,6 +184,10 @@ const importar = async (req, res) => {
                 id_cliente = idClienteDefecto;
             }
 
+            if (placa.length > 10 || modelo.length > 50 || marca.length > 50 || color?.length > 20) {
+                errores.push("Fila " + fila + ": Los datos del vehículo exceden la longitud permitida.");
+                continue;
+            }
             if (!placa) {
                 errores.push(`Fila ${fila}: La placa es obligatoria.`);
                 continue;
@@ -193,7 +204,7 @@ const importar = async (req, res) => {
                 errores.push(`Fila ${fila} (${placa}): Debe especificar un cliente válido existente.`);
                 continue;
             }
-            if (anio && (anio < 1900 || anio > new Date().getFullYear() + 1)) {
+            if (anio !== null && (!Number.isInteger(anio) || anio < 1900 || anio > new Date().getFullYear() + 1)) {
                 errores.push(`Fila ${fila} (${placa}): Año no válido (${item.anio}).`);
                 continue;
             }
@@ -210,7 +221,7 @@ const importar = async (req, res) => {
                  VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
                 [placa, marca, modelo, anio || null, color || null, id_cliente]
             );
-            insertados.push(result.rows[0]);
+            insertados.push({ ...result.rows[0], cliente: null });
         }
 
         await client.query('COMMIT');

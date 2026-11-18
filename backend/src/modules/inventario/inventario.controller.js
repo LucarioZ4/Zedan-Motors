@@ -1,3 +1,4 @@
+const patronContiene = require('../../utils/patronContiene');
 const pool = require('../../config/database');
 
 const getAll = async (req, res) => {
@@ -10,10 +11,10 @@ const getAll = async (req, res) => {
         `;
         const params = [];
 
-        if (buscar) {
+        if (typeof buscar === 'string' && buscar.trim()) {
             sql += ` WHERE UPPER(nombre) LIKE UPPER($1)
                      OR    UPPER(marca)  LIKE UPPER($1)`;
-            params.push(`%${buscar}%`);
+            params.push(patronContiene(buscar));
         }
 
         sql += ' ORDER BY nombre';
@@ -27,14 +28,16 @@ const getAll = async (req, res) => {
     }
 };
 
-const getById = async (req, res) => {
-    try {
-        const result = await pool.query(
+const consultarDetalle = id => pool.query(
             `SELECT id_repuesto, nombre, marca, precio, stock,
                     CASE WHEN stock < 5 THEN true ELSE false END AS stock_bajo
              FROM inventario WHERE id_repuesto = $1`,
-            [req.params.id]
+            [id]
         );
+
+const getById = async (req, res) => {
+    try {
+        const result = await consultarDetalle(req.params.id);
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Repuesto no encontrado' });
         res.json(result.rows[0]);
@@ -50,10 +53,10 @@ const create = async (req, res) => {
 
         const result = await pool.query(
             `INSERT INTO inventario (nombre, marca, precio, stock)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
+             VALUES ($1, $2, $3, $4) RETURNING id_repuesto, nombre, marca, precio, stock`,
             [nombre, marca || null, precio, stock || 0]
         );
-        res.status(201).json(result.rows[0]);
+        res.status(201).json((await consultarDetalle(result.rows[0].id_repuesto)).rows[0]);
 
     } catch (err) {
         console.error(err);
@@ -70,11 +73,11 @@ const update = async (req, res) => {
                 nombre = $1, marca = $2,
                 precio = $3, stock = $4
              WHERE id_repuesto = $5 RETURNING *`,
-            [nombre, marca || null, precio, stock, req.params.id]
+            [nombre, marca || null, precio, stock ?? 0, req.params.id]
         );
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Repuesto no encontrado' });
-        res.json(result.rows[0]);
+        res.json((await consultarDetalle(result.rows[0].id_repuesto)).rows[0]);
 
     } catch (err) {
         console.error(err);
@@ -100,7 +103,8 @@ const remove = async (req, res) => {
 const importar = async (req, res) => {
     const client = await pool.connect();
     try {
-        const items = Array.isArray(req.body) ? req.body : req.body.items;
+        const items = Array.isArray(req.body) ? req.body : req.body?.items;
+        if (items?.length > 1000) return res.status(400).json({ error: 'Máximo 1000 filas por importación.' });
 
         if (!items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ error: 'No se enviaron datos para importar' });
@@ -111,32 +115,36 @@ const importar = async (req, res) => {
         const errores = [];
 
         for (let i = 0; i < items.length; i++) {
-            const item = items[i];
+            const item = items[i] || {};
             const fila = i + 1;
             const nombre = item.nombre ? String(item.nombre).trim() : '';
             const marca = item.marca ? String(item.marca).trim() : null;
-            const precio = parseFloat(item.precio);
-            const stock = item.stock !== undefined && item.stock !== '' ? parseInt(item.stock) : 0;
+            const precio = Number(item.precio);
+            const stock = item.stock !== undefined && item.stock !== '' ? Number(item.stock) : 0;
 
+            if (nombre.length > 100 || marca?.length > 50) {
+                errores.push("Fila " + fila + ": Nombre o marca demasiado largos.");
+                continue;
+            }
             if (!nombre) {
                 errores.push(`Fila ${fila}: El nombre es obligatorio.`);
                 continue;
             }
-            if (isNaN(precio) || precio <= 0) {
+            if (!Number.isFinite(precio) || precio <= 0 || precio > 99999999.99) {
                 errores.push(`Fila ${fila} (${nombre}): Precio inválido (${item.precio}). Debe ser mayor a cero.`);
                 continue;
             }
-            if (isNaN(stock) || stock < 0) {
+            if (!Number.isInteger(stock) || stock < 0 || stock > 2147483647) {
                 errores.push(`Fila ${fila} (${nombre}): Stock inválido (${item.stock}). No puede ser negativo.`);
                 continue;
             }
 
             const result = await client.query(
                 `INSERT INTO inventario (nombre, marca, precio, stock)
-                 VALUES ($1, $2, $3, $4) RETURNING *`,
+                 VALUES ($1, $2, $3, $4) RETURNING id_repuesto, nombre, marca, precio, stock`,
                 [nombre, marca, precio, stock]
             );
-            insertados.push(result.rows[0]);
+            insertados.push({ ...result.rows[0], stock_bajo: stock < 5 });
         }
 
         await client.query('COMMIT');

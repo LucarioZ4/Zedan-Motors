@@ -27,11 +27,14 @@ const validar = (req, res, next) => {
     next();
 };
 
-router.get('/cargos',  auth, controller.getCargos);
-router.get('/',         auth, controller.getAll);
-router.get('/:id',      auth, controller.getById);
-router.post('/',        auth, roles('Administrador'), validarEmpleado, validar, controller.create);
-router.put('/:id',      auth, roles('Administrador'), validarEmpleado, validar, controller.update);
-router.delete('/:id',   auth, roles('Administrador'), controller.remove);
+router.use(auth);
+router.param('id', require('../../middleware/idEntero'));
+
+router.get('/cargos',  controller.getCargos);
+router.get('/',         controller.getAll);
+router.get('/:id',      controller.getById);
+router.post('/',        roles('Administrador'), validarEmpleado, validar, controller.create);
+router.put('/:id',      roles('Administrador'), validarEmpleado, validar, controller.update);
+router.delete('/:id',   roles('Administrador'), controller.remove);
 
 module.exports = router;

@@ -16,7 +16,7 @@ namespace ZedanMotorsApi.DTOs
 
     public class VehiculoCreateDTO
     {
-        [Required, StringLength(10)]
+        [Required, RegularExpression(@"^\s*[A-Za-z]{3}[0-9]{2}[0-9A-Za-z]\s*$", ErrorMessage = "Placa inválida")]
         public string placa { get; set; } = string.Empty;
         [Required, StringLength(50)]
         public string modelo { get; set; } = string.Empty;

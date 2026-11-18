@@ -75,7 +75,8 @@ const aplicar = async (req, res) => {
         const fila = i + 1;
         const cantidad = Number(it.cantidad);
 
-        if (!Number.isInteger(cantidad) || cantidad < 0 || cantidad > 100000)
+        if (it.cantidad == null || it.cantidad === '' || typeof it.cantidad === 'boolean' ||
+            !Number.isInteger(cantidad) || cantidad < 0 || cantidad > 100000)
             return res.status(400).json({ error: `Fila ${fila}: la cantidad debe ser un entero entre 0 y 100000` });
 
         if (it.nuevo) {
@@ -87,7 +88,7 @@ const aplicar = async (req, res) => {
                 return res.status(400).json({ error: `Fila ${fila}: el nombre del repuesto nuevo es obligatorio (máx. 100 caracteres)` });
             if (marca.length > 50)
                 return res.status(400).json({ error: `Fila ${fila}: la marca es muy larga (máx. 50 caracteres)` });
-            if (!Number.isFinite(precio) || precio <= 0)
+            if (!Number.isFinite(precio) || precio <= 0 || precio > 99999999.99)
                 return res.status(400).json({ error: `Fila ${fila} (${nombre}): el precio debe ser mayor a cero` });
 
             nuevos.push({ nombre, marca: marca || null, precio, cantidad });
@@ -112,8 +113,9 @@ const aplicar = async (req, res) => {
     const tipoMov = modo === 'sumar' ? 'ingreso' : 'conteo';
     const idUsuario = Number.isInteger(req.usuario?.id) ? req.usuario.id : null;
 
-    const client = await pool.connect();
+    let client;
     try {
+        client = await pool.connect();
         await client.query('BEGIN');
         const resultados = [];
 
@@ -173,10 +175,10 @@ const aplicar = async (req, res) => {
 
         res.json({ mensaje: `Inventario actualizado: ${partes.join(' y ')}.`, total: resultados.length, resultados });
     } catch (err) {
-        await client.query('ROLLBACK').catch(() => {});
+        if (client) await client.query('ROLLBACK').catch(() => {});
         responderError(res, err, 'Error al actualizar el inventario');
     } finally {
-        client.release();
+        if (client) client.release();
     }
 };
 

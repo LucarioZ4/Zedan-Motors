@@ -67,13 +67,13 @@ namespace ZedanMotorsApi.Controllers
                         : o.Cita.Vehiculo.placa + " - " + o.Cita.Vehiculo.marca + " " + o.Cita.Vehiculo.modelo,
                     empleado = o.Empleado == null ? null : o.Empleado.nombre + " " + o.Empleado.apellido,
                     estado = o.Cita == null || o.Cita.Estado == null ? null : o.Cita.Estado.nombreEstado,
-                    Servicios = o.Servicios.Select(s => new OrdenServicioDTO
+                    Servicios = o.Servicios.OrderBy(s => s.idServicio).Select(s => new OrdenServicioDTO
                     {
                         idServicio = s.idServicio,
                         nombreServicio = s.Servicio.nombreServicio,
                         costo = s.Servicio.costo
                     }).ToList(),
-                    Repuestos = o.Repuestos.Select(r => new OrdenRepuestoDTO
+                    Repuestos = o.Repuestos.OrderBy(r => r.idRepuesto).Select(r => new OrdenRepuestoDTO
                     {
                         idRepuesto = r.idRepuesto,
                         nombre = r.Repuesto.nombre,
@@ -132,7 +132,7 @@ namespace ZedanMotorsApi.Controllers
             await _context.SaveChangesAsync();
 
             await transaccion.CommitAsync();
-            return Ok(new { mensaje = "Orden actualizada" });
+            return Ok((await GetOrden(id)).Value);
         }
 
         // POST: api/OrdenesTrabajo

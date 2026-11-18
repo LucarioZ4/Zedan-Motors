@@ -1,3 +1,4 @@
+const patronContiene = require('../../utils/patronContiene');
 const pool = require('../../config/database');
 
 const getAll = async (req, res) => {
@@ -9,10 +10,10 @@ const getAll = async (req, res) => {
         `;
         const params = [];
 
-        if (buscar) {
+        if (typeof buscar === 'string' && buscar.trim()) {
             sql += ` WHERE UPPER(nombre_servicio) LIKE UPPER($1)
                      OR    UPPER(descripcion)      LIKE UPPER($1)`;
-            params.push(`%${buscar}%`);
+            params.push(patronContiene(buscar));
         }
 
         sql += ' ORDER BY nombre_servicio';
@@ -55,7 +56,7 @@ const create = async (req, res) => {
 
     } catch (err) {
         if (err.code === '23505')
-            return res.status(400).json({ error: 'Ya existe un servicio con ese nombre' });
+            return res.status(409).json({ error: 'Ya existe un servicio con ese nombre' });
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
@@ -79,7 +80,7 @@ const update = async (req, res) => {
 
     } catch (err) {
         if (err.code === '23505')
-            return res.status(400).json({ error: 'Ya existe un servicio con ese nombre' });
+            return res.status(409).json({ error: 'Ya existe un servicio con ese nombre' });
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
     }

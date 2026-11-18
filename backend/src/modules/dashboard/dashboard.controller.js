@@ -15,13 +15,13 @@ const getKPIs = async (req, res) => {
         );
         const citasHoy = await pool.query(
             `SELECT COUNT(*) FROM cita
-             WHERE fecha = CURRENT_DATE
+             WHERE fecha = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Bogota')::date
              AND id_estado IN (1,2)`
         );
         const facturasMes = await pool.query(
             `SELECT COUNT(*) FROM facturacion
-             WHERE EXTRACT(MONTH FROM fecha) = EXTRACT(MONTH FROM CURRENT_DATE)
-             AND   EXTRACT(YEAR  FROM fecha) = EXTRACT(YEAR  FROM CURRENT_DATE)`
+             WHERE EXTRACT(MONTH FROM fecha) = EXTRACT(MONTH FROM (CURRENT_TIMESTAMP AT TIME ZONE 'America/Bogota')::date)
+             AND   EXTRACT(YEAR  FROM fecha) = EXTRACT(YEAR  FROM (CURRENT_TIMESTAMP AT TIME ZONE 'America/Bogota')::date)`
         );
 
         res.json({
@@ -53,7 +53,7 @@ const getCitasHoy = async (req, res) => {
             INNER JOIN vehiculo v  ON c.id_vehiculo = v.id_vehiculo
             INNER JOIN cliente cl  ON v.id_cliente  = cl.id_cliente
             INNER JOIN estado e    ON c.id_estado   = e.id_estado
-            WHERE c.fecha = CURRENT_DATE
+            WHERE c.fecha = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Bogota')::date
             ORDER BY c.hora ASC
         `);
 
@@ -77,8 +77,8 @@ const getGraficas = async (req, res) => {
                     TO_CHAR(m.mes, 'YYYY-MM') AS periodo,
                     COALESCE(SUM(f.total), 0)::float AS total
                 FROM generate_series(
-                    date_trunc('month', CURRENT_DATE)::timestamp - INTERVAL '5 months',
-                    date_trunc('month', CURRENT_DATE)::timestamp,
+                    date_trunc('month', (CURRENT_TIMESTAMP AT TIME ZONE 'America/Bogota')::date)::timestamp - INTERVAL '5 months',
+                    date_trunc('month', (CURRENT_TIMESTAMP AT TIME ZONE 'America/Bogota')::date)::timestamp,
                     INTERVAL '1 month'
                 ) AS m(mes)
                 LEFT JOIN facturacion f

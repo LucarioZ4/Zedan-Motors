@@ -90,7 +90,7 @@ namespace ZedanMotorsApi.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { mensaje = "Repuesto actualizado" });
+            return Ok((await GetRepuesto(id)).Value);
         }
 
         // POST: api/Inventario
