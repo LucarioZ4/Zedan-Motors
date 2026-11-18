@@ -1,5 +1,11 @@
 require('dotenv').config();
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
+
+// Conserva las fechas de calendario y publica los importes como números JSON.
+types.setTypeParser(types.builtins.DATE, value => value + 'T00:00:00');
+types.setTypeParser(types.builtins.NUMERIC, Number);
+types.setTypeParser(types.builtins.TIMESTAMP, value => value.replace(' ', 'T'));
+const getDatabaseInfo = require('./databaseInfo');
 
 const poolConfig = process.env.DATABASE_URL
     ? {
@@ -21,7 +27,7 @@ pool.connect((err, client, release) => {
     if (err) {
         console.error('❌ Error conectando a PostgreSQL:', err.message);
     } else {
-        console.log('✅ Conectado a PostgreSQL —', process.env.DB_NAME);
+        console.log(`✅ Conectado a ${getDatabaseInfo()}`);
         release();
     }
 });

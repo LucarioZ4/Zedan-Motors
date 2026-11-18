@@ -1,3 +1,4 @@
+const patronContiene = require('../../utils/patronContiene');
 const pool = require('../../config/database');
 
 const getAll = async (req, res) => {
@@ -5,16 +6,17 @@ const getAll = async (req, res) => {
         const { buscar } = req.query;
         let sql = `
             SELECT id_cliente, nombre, apellido, telefono, correo, direccion,
-                   nombre || ' ' || apellido AS nombre_completo
+                   nombre || ' ' || apellido AS nombre_completo,
+                   (SELECT COUNT(*)::int FROM vehiculo v WHERE v.id_cliente = cliente.id_cliente) AS total_vehiculos
             FROM cliente
         `;
         const params = [];
 
-        if (buscar) {
+        if (typeof buscar === 'string' && buscar.trim()) {
             sql += ` WHERE UPPER(nombre)   LIKE UPPER($1)
                      OR    UPPER(apellido) LIKE UPPER($1)
                      OR    telefono        LIKE $1`;
-            params.push(`%${buscar}%`);
+            params.push(patronContiene(buscar));
         }
 
         sql += ' ORDER BY apellido, nombre';
@@ -28,13 +30,18 @@ const getAll = async (req, res) => {
     }
 };
 
+const consultarDetalle = id => pool.query(
+            `SELECT id_cliente, nombre, apellido, telefono, correo, direccion,
+                    nombre || ' ' || apellido AS nombre_completo,
+                    COALESCE((SELECT jsonb_agg(jsonb_build_object('id_vehiculo',v.id_vehiculo,'placa',v.placa,'marca',v.marca,'modelo',v.modelo,'anio',v.anio,'color',v.color,'id_cliente',v.id_cliente,'cliente',cliente.nombre || ' ' || cliente.apellido) ORDER BY v.marca,v.modelo,v.id_vehiculo)
+                              FROM vehiculo v WHERE v.id_cliente=cliente.id_cliente),'[]') AS vehiculos
+             FROM cliente WHERE id_cliente = $1`,
+            [id]
+        );
+
 const getById = async (req, res) => {
     try {
-        const result = await pool.query(
-            `SELECT id_cliente, nombre, apellido, telefono, correo, direccion
-             FROM cliente WHERE id_cliente = $1`,
-            [req.params.id]
-        );
+        const result = await consultarDetalle(req.params.id);
 
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Cliente no encontrado' });
@@ -58,11 +65,11 @@ const create = async (req, res) => {
             [nombre, apellido, telefono, correo || null, direccion || null]
         );
 
-        res.status(201).json(result.rows[0]);
+        res.status(201).json((await consultarDetalle(result.rows[0].id_cliente)).rows[0]);
 
     } catch (err) {
         if (err.code === '23505')
-            return res.status(400).json({ error: 'El teléfono o correo ya está registrado' });
+            return res.status(409).json({ error: 'El teléfono o correo ya está registrado' });
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
@@ -87,11 +94,11 @@ const update = async (req, res) => {
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Cliente no encontrado' });
 
-        res.json(result.rows[0]);
+        res.json((await consultarDetalle(result.rows[0].id_cliente)).rows[0]);
 
     } catch (err) {
         if (err.code === '23505')
-            return res.status(400).json({ error: 'El teléfono o correo ya está registrado' });
+            return res.status(409).json({ error: 'El teléfono o correo ya está registrado' });
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
@@ -118,9 +125,9 @@ const remove = async (req, res) => {
 const getVehiculos = async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT id_vehiculo, placa, marca, modelo, anio, color
-             FROM vehiculo
-             WHERE id_cliente = $1
+            `SELECT v.id_vehiculo, placa, marca, modelo, anio, color, v.id_cliente, c.nombre || ' ' || c.apellido AS cliente
+             FROM vehiculo v JOIN cliente c USING(id_cliente)
+             WHERE v.id_cliente = $1
              ORDER BY marca, modelo`,
             [req.params.id]
         );

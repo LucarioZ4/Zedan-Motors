@@ -19,9 +19,12 @@ namespace ZedanMotorsApi.Controllers
     {
         private readonly AppDBContext _context;
 
-        public FacturasController(AppDBContext context)
+        private readonly FactusService _factus;
+
+        public FacturasController(AppDBContext context, FactusService factus)
         {
             _context = context;
+            _factus = factus;
         }
 
         private static readonly Expression<Func<Facturacion, FacturaDTO>> ToDto = f => new FacturaDTO
@@ -121,7 +124,7 @@ namespace ZedanMotorsApi.Controllers
             await using var transaccion = await _context.Database.BeginTransactionAsync();
             if (!await _context.BloquearOrdenAsync(facturaCreate.idOrden))
             {
-                return BadRequest(new { error = "La orden de trabajo indicada no existe." });
+                return NotFound(new { error = "Orden no encontrada" });
             }
 
             if (await _context.Facturas.AnyAsync(f => f.idOrden == facturaCreate.idOrden))
@@ -171,7 +174,20 @@ namespace ZedanMotorsApi.Controllers
             var respuesta = await _context.Facturas.Where(f => f.idFactura == factura.idFactura)
                 .Select(ToDto).FirstAsync();
 
-            return CreatedAtAction(nameof(GetFactura), new { id = factura.idFactura }, respuesta);
+            var emision = new Dictionary<string, object?>
+            {
+                ["id_factura"] = respuesta.idFactura, ["id_orden"] = respuesta.idOrden,
+                ["fecha"] = respuesta.fecha, ["metodo_pago"] = respuesta.metodoPago, ["total"] = respuesta.total
+            };
+            try
+            {
+                emision["factus"] = await _factus.Emitir(respuesta);
+            }
+            catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or JsonException or UriFormatException)
+            {
+                emision["factusError"] = "No se pudo emitir la factura electrónica";
+            }
+            return CreatedAtAction(nameof(GetFactura), new { id = factura.idFactura }, emision);
         }
 
         // Fecha de emisión en hora de Colombia (UTC-5, sin horario de verano), no la del servidor:

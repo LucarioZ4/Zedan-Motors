@@ -47,12 +47,14 @@ const createMensaje = async (req, res) => {
     try {
         const query = `
             INSERT INTO mensajes_cliente (id_orden, numero_cliente, plataforma, tipo_mensaje, mensaje, fecha)
-            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP AT TIME ZONE 'America/Bogota')
             RETURNING *
         `;
         const { rows } = await pool.query(query, [id_orden, numero_cliente, plataforma, tipo_mensaje, mensaje]);
         res.status(201).json(rows[0]);
     } catch (error) {
+        if (['23503', '23514', '22001', '22P02'].includes(error.code))
+            return res.status(400).json({ error: 'Datos del mensaje no válidos' });
         console.error('Error al registrar mensaje:', error);
         res.status(500).json({ error: 'Error al registrar mensaje' });
     }

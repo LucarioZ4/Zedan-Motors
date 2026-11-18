@@ -21,9 +21,9 @@ const reglasBase = [
 // Solo al crear: no se pueden agendar citas en una fecha ya pasada.
 // Al editar no se exige (puede que estés registrando una cita que ya ocurrió).
 const noFechaPasada = body('fecha').custom(fecha => {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    if (new Date(fecha) < hoy)
+    const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota',
+        year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    if (String(fecha).slice(0,10) < hoy)
         throw new Error('No puede agendar citas en fechas pasadas');
     return true;
 });
@@ -37,10 +37,13 @@ const validar = (req, res, next) => {
     next();
 };
 
-router.get('/',       auth, controller.getAll);
-router.get('/:id',    auth, controller.getById);
-router.post('/',      auth, [...reglasBase, noFechaPasada], validar, controller.create);
-router.put('/:id',    auth, reglasBase, validar, controller.update);
-router.delete('/:id', auth, roles('Administrador'), controller.remove);
+router.use(auth);
+router.param('id', require('../../middleware/idEntero'));
+
+router.get('/',       controller.getAll);
+router.get('/:id',    controller.getById);
+router.post('/',      [...reglasBase, noFechaPasada], validar, controller.create);
+router.put('/:id',    reglasBase, validar, controller.update);
+router.delete('/:id', roles('Administrador'), controller.remove);
 
 module.exports = router;

@@ -2,10 +2,10 @@
 // El navegador sube el archivo DIRECTO a Supabase con una URL firmada: así no pasa por
 // Vercel (que limita el cuerpo de cada petición a 4.5 MB). Aquí solo se firma, se verifica
 // y se borra. La clave service_role vive únicamente en el servidor.
-const { almacenamiento: cfg } = require('../config/env');
+const { almacenamiento: cfg, diagBucket, diagMaxMb, diagAllowedMime } = require('../config/env');
 
 let cliente = null;
-let bucketListo = false;
+const bucketsListos = new Set();
 
 const configurado = () => Boolean(cfg.supabaseUrl && cfg.serviceKey);
 
@@ -27,26 +27,26 @@ const getCliente = () => {
 };
 
 // Crea el bucket (privado, solo videos) la primera vez que se usa.
-const asegurarBucket = async () => {
-    if (bucketListo) return;
+const asegurarBucket = async (bucket) => {
+    if (bucketsListos.has(bucket)) return;
     const sb = getCliente();
 
-    const { data } = await sb.storage.getBucket(cfg.bucket);
+    const { data } = await sb.storage.getBucket(bucket);
     if (!data) {
-        const { error } = await sb.storage.createBucket(cfg.bucket, {
+        const { error } = await sb.storage.createBucket(bucket, {
             public: false,
-            fileSizeLimit: `${cfg.videoMaxMb}MB`,
-            allowedMimeTypes: ['video/*'],
+            fileSizeLimit: (bucket === diagBucket ? diagMaxMb : cfg.videoMaxMb) * 1024 * 1024,
+            allowedMimeTypes: bucket === diagBucket ? diagAllowedMime : ['video/*'],
         });
         if (error && !/already exists/i.test(error.message || '')) throw error;
     }
-    bucketListo = true;
+    bucketsListos.add(bucket);
 };
 
 // URL + token de un solo uso para que el navegador suba un archivo a `ruta`.
-const crearSubidaFirmada = async (ruta) => {
-    await asegurarBucket();
-    const { data, error } = await getCliente().storage.from(cfg.bucket).createSignedUploadUrl(ruta);
+const crearSubidaFirmada = async (ruta, bucket = cfg.bucket) => {
+    await asegurarBucket(bucket);
+    const { data, error } = await getCliente().storage.from(bucket).createSignedUploadUrl(ruta);
     if (error) throw error;
     return { ruta: data.path || ruta, token: data.token };
 };
@@ -81,9 +81,9 @@ const urlsFirmadas = async (rutas, segundos = 3600) => {
     return mapa;
 };
 
-const eliminar = async (rutas) => {
+const eliminar = async (rutas, bucket = cfg.bucket) => {
     if (rutas.length === 0) return;
-    const { error } = await getCliente().storage.from(cfg.bucket).remove(rutas);
+    const { error } = await getCliente().storage.from(bucket).remove(rutas);
     if (error) throw error;
 };
 

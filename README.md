@@ -338,3 +338,5 @@ Este proyecto está bajo la **Licencia MIT**. Consulta el archivo `LICENSE` para
 ---
 
 *Documentado y actualizado al 2026‑11‑16.*
+
+El [contrato HTTP de Node y C#](docs/contrato-apis.md) incluye las rutas y la configuración de proveedores.

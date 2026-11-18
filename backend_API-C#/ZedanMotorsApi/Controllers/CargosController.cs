@@ -18,9 +18,10 @@ namespace ZedanMotorsApi.Controllers
 
         // GET: api/Cargos
         [HttpGet]
+        [HttpGet("/api/empleados/cargos")]
         public async Task<ActionResult<IEnumerable<CargoDTO>>> GetCargos()
         {
-            return await _context.Cargos.Select(c => new CargoDTO
+            return await _context.Cargos.OrderBy(x => x.nombreCargo).Select(c => new CargoDTO
             {
                 idCargo = c.idCargo,
                 nombreCargo = c.nombreCargo

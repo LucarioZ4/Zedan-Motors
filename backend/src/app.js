@@ -48,11 +48,11 @@ app.use('/api/clientes', require('./modules/clientes/clientes.routes'));
 app.use('/api/vehiculos', require('./modules/vehiculos/vehiculos.routes'));
 app.use('/api/citas', require('./modules/citas/citas.routes'));
 app.use('/api/estados', require('./modules/estados/estados.routes'));
-app.use('/api/ordenes', require('./modules/ordenes/ordenes.routes'));
+app.use(['/api/ordenes', '/api/ordenestrabajo'], require('./modules/ordenes/ordenes.routes'));
 app.use('/api/empleados', require('./modules/empleados/empleados.routes'));
 app.use('/api/servicios', require('./modules/servicios/servicios.routes'));
 app.use('/api/inventario', require('./modules/inventario/inventario.routes'));
-app.use('/api/facturacion', require('./modules/facturacion/facturacion.routes'));
+app.use(['/api/facturacion', '/api/facturas'], require('./modules/facturacion/facturacion.routes'));
 app.use('/api/cargos', require('./modules/cargos/cargos.routes'));
 app.use('/api/historial', require('./modules/historial/historial.routes'));
 app.use('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
@@ -83,6 +83,8 @@ app.use((req, res) => {
 
 // ── Error handler ──
 app.use((err, req, res, next) => {
+    if (err.type === 'entity.too.large') return res.status(413).json({ error: 'Solicitud demasiado grande' });
+    if (err.type === 'entity.parse.failed') return res.status(400).json({ error: 'JSON inválido' });
     console.error(err.stack);
     res.status(500).json({ error: 'Error interno del servidor' });
 });
@@ -91,7 +93,7 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
     app.listen(port, () => {
         console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
-        console.log(`📦 Base de datos: ${process.env.DB_NAME}`);
+        console.log(`📦 Base de datos configurada: ${require('./config/databaseInfo')()}`);
     });
 }
 

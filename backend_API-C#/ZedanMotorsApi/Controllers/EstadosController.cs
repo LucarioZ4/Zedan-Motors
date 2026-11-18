@@ -20,7 +20,7 @@ namespace ZedanMotorsApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EstadoDTO>>> GetEstados()
         {
-            return await _context.Estados.Select(e => new EstadoDTO
+            return await _context.Estados.OrderBy(x => x.idEstado).Select(e => new EstadoDTO
             {
                 idEstado = e.idEstado,
                 nombreEstado = e.nombreEstado

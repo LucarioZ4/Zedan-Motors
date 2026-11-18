@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+router.use(require('../../middleware/auth'));
+router.param('id', require('../../middleware/idEntero'));
+router.param('archivoId', require('../../middleware/idEntero'));
 const ctrl = require('./diagnosticos.controller');
 
 // Crear diagnóstico

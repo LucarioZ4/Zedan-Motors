@@ -45,7 +45,7 @@ const listar = async (req, res) => {
         };
 
         const filas = await pool.query(
-            `SELECT v.id_video, v.tipo, v.ruta, v.nombre_archivo, v.mime, v.tamano, v.fecha,
+            `SELECT v.id_video, v.tipo, v.ruta, v.nombre_archivo, v.mime, v.tamano::float8 AS tamano, v.fecha,
                     u.nombre_usuario AS subido_por
              FROM orden_video v
              LEFT JOIN usuario u ON u.id_usuario = v.id_usuario
@@ -150,14 +150,27 @@ const registrar = async (req, res) => {
         const nombre = (typeof nombreArchivo === 'string' && nombreArchivo.trim()
             ? nombreArchivo.trim() : ruta.split('/').pop()).slice(0, 200);
 
-        const r = await pool.query(
-            `INSERT INTO orden_video (id_orden, tipo, ruta, nombre_archivo, mime, tamano, id_usuario)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
-             RETURNING id_video, tipo, nombre_archivo, mime, tamano, fecha`,
-            [idOrden, tipo, ruta, nombre, info.mime || 'video/mp4', info.tamano, idUsuario]
-        );
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            const orden = await client.query('SELECT 1 FROM orden_trabajo WHERE id_orden=$1 FOR UPDATE', [idOrden]);
+            if (!orden.rowCount) throw Object.assign(new Error('Orden no encontrada'), { status: 404 });
+            const cuenta = await client.query('SELECT COUNT(*)::int AS total FROM orden_video WHERE id_orden=$1 AND tipo=$2', [idOrden,tipo]);
+            if (cuenta.rows[0].total >= MAX_POR_TIPO)
+                throw Object.assign(new Error('Se alcanzó el límite de videos para este tipo'), { status: 409 });
+            const r = await client.query(
+                `INSERT INTO orden_video(id_orden,tipo,ruta,nombre_archivo,mime,tamano,id_usuario)
+                 VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id_video,tipo,nombre_archivo,mime,tamano::float8 AS tamano,fecha`,
+                [idOrden,tipo,ruta,nombre,info.mime || 'video/mp4',info.tamano,idUsuario]);
+            await client.query('COMMIT');
+            res.status(201).json(r.rows[0]);
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
 
-        res.status(201).json(r.rows[0]);
     } catch (err) {
         if (err.code === '23505') return res.status(409).json({ error: 'Este video ya estaba registrado' });
         responderError(res, err, 'Error al registrar el video');

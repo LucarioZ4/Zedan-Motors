@@ -1,3 +1,4 @@
+using ZedanMotorsApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +27,7 @@ namespace ZedanMotorsApi.Controllers
             var query = _context.Servicios.AsQueryable();
             if (!string.IsNullOrWhiteSpace(buscar))
             {
-                var patron = $"%{buscar.Trim()}%";
+                var patron = BusquedaHelper.PatronContiene(buscar);
                 query = query.Where(s => EF.Functions.ILike(s.nombreServicio, patron) ||
                     (s.descripcion != null && EF.Functions.ILike(s.descripcion, patron)));
             }
@@ -71,20 +72,24 @@ namespace ZedanMotorsApi.Controllers
                 return NotFound(new { error = "Servicio no encontrado" });
             }
 
-            servicio.nombreServicio = servicioUpdate.nombreServicio;
-            servicio.descripcion = servicioUpdate.descripcion;
+            servicio.nombreServicio = servicioUpdate.nombreServicio.Trim();
+            servicio.descripcion = string.IsNullOrEmpty(servicioUpdate.descripcion) ? null : servicioUpdate.descripcion;
             servicio.costo = servicioUpdate.costo;
 
             try
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
             {
                 return Conflict(new { error = "Ya existe un servicio con ese nombre." });
             }
 
-            return Ok(new { mensaje = "Servicio actualizado" });
+            return Ok(new ServicioDTO
+            {
+                idServicio = servicio.idServicio, nombreServicio = servicio.nombreServicio,
+                descripcion = servicio.descripcion, costo = servicio.costo
+            });
         }
 
         // POST: api/Servicios
@@ -93,8 +98,8 @@ namespace ZedanMotorsApi.Controllers
         {
             var servicio = new Servicio
             {
-                nombreServicio = servicioCreate.nombreServicio,
-                descripcion = servicioCreate.descripcion,
+                nombreServicio = servicioCreate.nombreServicio.Trim(),
+                descripcion = string.IsNullOrEmpty(servicioCreate.descripcion) ? null : servicioCreate.descripcion,
                 costo = servicioCreate.costo
             };
             _context.Servicios.Add(servicio);
@@ -103,7 +108,7 @@ namespace ZedanMotorsApi.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
             {
                 return Conflict(new { error = "Ya existe un servicio con ese nombre." });
             }

@@ -31,6 +31,11 @@ var jwtSettings = new JwtSettings(
     Audience: builder.Configuration["Jwt:Audience"] ?? "ZedanMotorsFrontend",
     ExpiresHours: builder.Configuration.GetValue<int?>("Jwt:ExpiresHours") ?? 8);
 
+builder.Services.AddSingleton(_ => Npgsql.NpgsqlDataSource.Create(
+    builder.Configuration.GetConnectionString("ZedanMotorsConexion") ?? throw new InvalidOperationException("Falta la conexión PostgreSQL")));
+builder.Services.AddHttpClient<AlmacenamientoSupabase>();
+builder.Services.AddHttpClient<FactusService>();
+builder.Services.AddHttpClient<AnalisisInventario>(c => c.Timeout = TimeSpan.FromSeconds(50));
 builder.Services.AddSingleton(jwtSettings);
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<LoginAttemptTracker>();
@@ -42,6 +47,10 @@ var ventanaMinutos = builder.Configuration.GetValue<int?>("RateLimit:WindowMinut
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("analisis", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.User.FindFirst("id")?.Value ?? "desconocido",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromHours(1), QueueLimit = 0 }));
 
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
     {
@@ -72,8 +81,8 @@ builder.Services.AddRateLimiter(options =>
 });
 
 // Add services to the container.
-builder.Services.AddDbContext<AppDBContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("ZedanMotorsConexion")));
+builder.Services.AddDbContext<AppDBContext>((services, options) =>
+    options.UseNpgsql(services.GetRequiredService<Npgsql.NpgsqlDataSource>()));
 
 // Controladores + JSON en snake_case (idCliente -> id_cliente)
 builder.Services.AddControllers()
@@ -184,6 +193,13 @@ var app = builder.Build();
 app.UseExceptionHandler(errorApp =>
     errorApp.Run(async context =>
     {
+        var fallo = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+        if (fallo is ErrorOperacion operacion)
+        {
+            context.Response.StatusCode = operacion.Estado;
+            await context.Response.WriteAsJsonAsync(new { error = operacion.Message });
+            return;
+        }
         context.Response.StatusCode = StatusCodes.Status500InternalServerError;
         await context.Response.WriteAsJsonAsync(new { error = "Error interno del servidor" });
     }));
@@ -214,9 +230,8 @@ app.UseHttpsRedirection();
 
 app.UseCors("Frontend");
 
-app.UseRateLimiter();
-
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();

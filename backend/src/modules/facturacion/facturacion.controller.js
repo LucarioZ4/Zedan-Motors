@@ -14,9 +14,9 @@ const getAll = async (req, res) => {
                 v.placa || ' - ' || v.marca || ' ' || v.modelo AS vehiculo
             FROM facturacion f
             INNER JOIN orden_trabajo o ON f.id_orden    = o.id_orden
-            INNER JOIN cita c          ON o.id_cita     = c.id_cita
-            INNER JOIN vehiculo v      ON c.id_vehiculo = v.id_vehiculo
-            INNER JOIN cliente cl      ON v.id_cliente  = cl.id_cliente
+            LEFT JOIN cita c          ON o.id_cita     = c.id_cita
+            LEFT JOIN vehiculo v      ON c.id_vehiculo = v.id_vehiculo
+            LEFT JOIN cliente cl      ON v.id_cliente  = cl.id_cliente
             ORDER BY f.fecha DESC
         `);
         res.json(result.rows);
@@ -39,9 +39,9 @@ const getById = async (req, res) => {
                 o.fecha_inicio, o.fecha_fin
             FROM facturacion f
             INNER JOIN orden_trabajo o ON f.id_orden    = o.id_orden
-            INNER JOIN cita c          ON o.id_cita     = c.id_cita
-            INNER JOIN vehiculo v      ON c.id_vehiculo = v.id_vehiculo
-            INNER JOIN cliente cl      ON v.id_cliente  = cl.id_cliente
+            LEFT JOIN cita c          ON o.id_cita     = c.id_cita
+            LEFT JOIN vehiculo v      ON c.id_vehiculo = v.id_vehiculo
+            LEFT JOIN cliente cl      ON v.id_cliente  = cl.id_cliente
             WHERE f.id_factura = $1
         `, [req.params.id]);
 
@@ -102,8 +102,8 @@ const create = async (req, res) => {
 
         const result = await client.query(`
             INSERT INTO facturacion (fecha, total, metodo_pago, id_orden)
-            VALUES (CURRENT_DATE, $1, $2, $3)
-            RETURNING *
+            VALUES ((CURRENT_TIMESTAMP AT TIME ZONE 'America/Bogota')::date, $1, $2, $3)
+            RETURNING id_factura, fecha, total, metodo_pago, id_orden
         `, [total, metodo_pago, id_orden]);
 
         let factura = result.rows[0];
@@ -116,7 +116,7 @@ const create = async (req, res) => {
             // Preparamos los datos básicos para Factus (Estructura de ejemplo)
             const datosFactus = {
                 referencia: factura.id_factura.toString(),
-                fecha: new Date().toISOString().split('T')[0],
+                fecha: factura.fecha.slice(0, 10),
                 total: Number(factura.total),
                 metodo_pago: metodo_pago
             };
@@ -146,7 +146,7 @@ const create = async (req, res) => {
 const remove = async (req, res) => {
     try {
         const result = await pool.query(
-            'DELETE FROM facturacion WHERE id_factura = $1 RETURNING *',
+            'DELETE FROM facturacion WHERE id_factura = $1 RETURNING id_factura, fecha, total, metodo_pago, id_orden',
             [req.params.id]
         );
         if (result.rows.length === 0)
@@ -158,4 +158,14 @@ const remove = async (req, res) => {
     }
 };
 
-module.exports = { getAll, getById, create, remove };
+const update = async (req, res, next) => {
+    try {
+        const result = await pool.query('UPDATE facturacion SET metodo_pago=$1 WHERE id_factura=$2', [req.body.metodo_pago, req.params.id]);
+        if (!result.rowCount) return res.status(404).json({ error: 'Factura no encontrada' });
+        res.json({ mensaje: 'Factura actualizada' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+module.exports = { update, getAll, getById, create, remove };
