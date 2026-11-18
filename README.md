@@ -1,272 +1,342 @@
-# Zedan Motors
+# Zedan Motors 🚗
 
-Sistema de gestión para taller mecánico: clientes, vehículos, citas, órdenes de trabajo, inventario, empleados y facturación.
+**Zedan Motors** es una aplicación web completa para la gestión de un taller mecánico. Está construida con **Node.js + Express** en el backend y **React (Vite)** en el frontend. Utiliza **PostgreSQL** como base de datos y **Supabase Storage** para almacenar archivos multimedia (fotos y videos).
 
-## Tecnologías
+El proyecto ya cuenta con módulos para:
+- Autenticación (JWT)
+- Dashboard
+- Clientes
+- Vehículos
+- Citas
+- Estados de órdenes
+- Órdenes de trabajo
+- Empleados
+- Servicios
+- Inventario (con IA para reconocimiento de imágenes)
+- Facturación
+- Cargos
+- Historial
+- Mensajes
 
-- **Backend:** Node.js + Express
-- **Base de datos:** PostgreSQL (con extensión `pgcrypto`)
-- **Autenticación:** JWT + bcrypt
-- **Frontend (React - SPA):** React 19 + Vite + React Router v7
-- **Frontend (Legacy / Vanilla):** HTML, CSS y JavaScript (sin framework), servido directamente por Express
-- **Automatización y Agente IA:** n8n + LangChain + DeepSeek
-- **Integración WhatsApp:** OpenWA (WA-Automate)
-- **Contenedores:** Docker & Docker Compose
+Y, recientemente, **Diagnóstico**, que permite registrar inspecciones detalladas de los vehículos al ingresar al taller, adjuntar fotos y videos, y compartir la información por WhatsApp.
 
-## Estructura del proyecto
+---
+
+## 📋 Tabla de contenidos
+- [Descripción general](#descripción-general)
+- [Requisitos previos](#requisitos-previos)
+- [Instalación](#instalación)
+- [Variables de entorno](#variables-de-entorno)
+- [Migraciones de base de datos](#migraciones-de-base-de-datos)
+- [Ejecutar la aplicación](#ejecutar-la-aplicación)
+- [API REST (resumen de rutas)](#api-rest-resumen-de-rutas)
+- [Módulo Diagnóstico – Detalles](#módulo-diagnóstico--detalles)
+- [Frontend – Navegación y componentes](#frontend--navegación-y-componentes)
+- [Subida de archivos (fotos / videos)](#subida-de-archivos-fotos--videos)
+- [Envío por WhatsApp](#envío-por-whatsapp)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Tests](#tests)
+- [Contribuir](#contribuir)
+- [Licencia](#licencia)
+
+---
+
+## descripción general
+
+- **Backend**: `backend/` → Express, middleware de seguridad (helmet, cors, rate‑limiting), autenticación JWT, conexión a PostgreSQL mediante `pg` (`src/config/database.js`).
+- **Frontend**: `frontend-react/` → React 19 con Vite, router `react-router-dom`, componentes reutilizables y estilos CSS/ Tailwind.
+- **Almacenamiento**: Supabase Storage, buckets `videos-ordenes` (para videos de órdenes) y `diagnosticos` (para fotos/videos de diagnóstico).
+- **Gestión de estado**: JWT en `sessionStorage`, encabezado `Authorization` añadido automáticamente por `apiFetch`.
+
+---
+
+## requisitos previos
+
+- **Node.js** ≥ 18
+- **npm** ≥ 9
+- **PostgreSQL** ≥ 13 (acceso a la base de datos indicada en `.env`)
+- **Supabase** account con URL y Service Role Key (los buckets se crean automáticamente al subir el primer archivo).
+- **Git** (para trabajar con ramas)
+- **Docker** (opcional, para levantar PostgreSQL rápidamente)
+
+---
+
+## instalación
+
+```bash
+# 1️⃣ Clonar el repositorio
+git clone <URL‑DEL‑REPOSITORIO>
+cd Zedan-Motors
+
+# 2️⃣ Backend
+cd backend
+npm install
+
+# 3️⃣ Frontend
+cd ../frontend-react
+npm install
+```
+
+---
+
+## variables de entorno
+
+### Backend (`backend/.env`)
+```env
+# Puerto del servidor (por defecto 3000)
+PORT=3000
+
+# JWT – clave secreta (mínimo 32 caracteres)
+JWT_SECRET=<<generar_con_node -e "console.log(require('crypto').randomBytes(48).toString('hex'))">>
+JWT_EXPIRES_IN=8h
+
+# Orígenes permitidos por CORS (ajustar si despliegas en otro dominio)
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+
+# Conexión a PostgreSQL
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=zedan_motors
+DB_USER=postgres
+DB_PASSWORD=<<tu_contraseña>>
+
+# Supabase – almacenamiento
+SUPABASE_URL=https://<tu‑project>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<<service‑role‑key>>
+VIDEOS_BUCKET=videos-ordenes   # bucket existente para videos de órdenes
+
+# ----------- Módulo Diagnóstico ------------------------------------------
+# Límite máximo por archivo (MB)
+DIAG_MAX_MB=10
+# Bucket donde se guardan fotos y videos de diagnóstico
+DIAG_BUCKET=diagnosticos
+# MIME permitidos (imágenes y videos comunes)
+DIAG_ALLOWED_MIME=image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime
+```
+
+### Frontend (`frontend-react/.env`)
+```env
+# URL base del backend (usada por apiFetch)
+VITE_API_URL=http://localhost:3000
+
+# Configuración del módulo diagnóstico (se exponen como REACT_APP_)
+REACT_APP_DIAG_MAX_MB=10
+REACT_APP_DIAG_ALLOWED_MIME=image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime
+```
+
+> **⚠️ Nota**: después de crear/modificar cualquier `.env` reinicia los servidores para que los cambios sean cargados.
+
+---
+
+## migraciones de base de datos
+
+El proyecto incluye scripts SQL en `backend/database/migrations/`. Ejecuta cada archivo en el orden indicado (las migraciones originales del proyecto ya fueron aplicadas previamente). Solo la nueva migración necesita ejecución adicional:
+
+```bash
+# Desde la carpeta backend
+cd backend
+psql -U $DB_USER -d $DB_NAME -f database/migrations/20231101_create_diagnostico.sql
+```
+
+Esta migración crea tres tablas:
+- `diagnostico`
+- `diagnostico_accesorio`
+- `diagnostico_archivo`
+
+---
+
+## ejecutar la aplicación
+
+```bash
+# Terminal 1 – Backend
+cd backend
+npm run dev
+# Salida esperada: 🚀 Servidor corriendo en http://localhost:3000
+
+# Terminal 2 – Frontend
+cd ../frontend-react
+npm run dev
+# Salida esperada: Vite dev server running at http://localhost:5173
+```
+
+Abre el navegador en `http://localhost:5173`. El menú incluye ahora la opción **Diagnóstico**.
+
+---
+
+## api rest — resumen de rutas
+
+| Módulo | Método | Ruta | Acción |
+|--------|--------|------|--------|
+| **auth** | POST | `/api/auth/login` | Autenticación y obtención de JWT |
+| | POST | `/api/auth/register` | Registro de usuarios |
+| **clientes** | CRUD (`/api/clientes`) | Operaciones sobre clientes |
+| **vehiculos** | CRUD (`/api/vehiculos`) | Operaciones sobre vehículos (asociados a cliente) |
+| **citas** | CRUD (`/api/citas`) | Gestión de citas de taller |
+| **ordenes** | CRUD (`/api/ordenes`) | Órdenes de trabajo y archivos de video |
+| **inventario** | CRUD (`/api/inventario`) | Repuestos y gestión con IA (fotos) |
+| **mensajes** | CRUD (`/api/mensajes`) | Comunicación interna |
+| **diagnosticos** | **POST** | `/api/diagnosticos` | Crear diagnóstico (vehículo, cita opcional, datos básicos, accesorios) |
+| | **GET** | `/api/diagnosticos` | Listado con filtros (`vehiculo`, `cliente`, `fechaDesde`, `fechaHasta`, `estado`) |
+| | **GET** | `/api/diagnosticos/:id` | Detalle (incluye accesorios y archivos) |
+| | **PUT** | `/api/diagnosticos/:id` | Actualizar diagnóstico (todos los campos opcionales) |
+| | **DELETE** | `/api/diagnosticos/:id` | Elimina diagnóstico y archivos asociados |
+| | **POST** | `/api/diagnosticos/:id/archivos` | Genera firma de subida a Supabase (valida MIME y tamaño) |
+| | **DELETE** | `/api/diagnosticos/:id/archivos/:archivoId` | Elimina archivo tanto de la BD como del bucket |
+
+> Todos los endpoints están protegidos por el middleware JWT presente en `src/middleware/auth.js`.
+
+---
+
+## módulo diagnóstico – detalles
+
+### Entidades
+- **diagnostico**: registro principal (vehículo, cita, fecha/hora, kilometraje, nivel de gasolina, observaciones, estado).
+- **diagnostico_accesorio**: lista de accesorios inspeccionados (nombre, estado, observación opcional). El checklist está pensado para ser extensible añadiendo nuevos objetos sin tocar el código.
+- **diagnostico_archivo**: referencia a cada foto o video (ruta en Supabase, tipo, nombre original, tamaño, descripción).
+
+### Flujo típico
+1. El usuario abre **Diagnóstico → Nuevo**.
+2. Selecciona el vehículo (lista desplegable con placa, marca, modelo y cliente).
+3. (Opcional) elige la cita asociada.
+4. Completa kilometraje, nivel de gasolina y estado del diagnóstico.
+5. Marca accesorios mediante el componente `AccesoriosChecklist`.
+6. Adjunta fotos y/o videos con `ArchivoUploader` (puede capturar directamente desde la cámara del dispositivo).
+7. Al guardar, el backend crea los registros y devuelve el diagnóstico creado.
+8. En la vista de detalle se muestra una galería y un botón **Enviar por WhatsApp** que genera un enlace `wa.me` con texto pre‑llenado y URLs a los archivos.
+
+---
+
+## frontend – navegación y componentes
+
+- **NavBar.jsx** (`src/components/NavBar.jsx`) – se añadió el enlace `Diagnóstico`.
+- **Rutas** (`src/App.jsx`):
+  ```jsx
+  <Route path="/diagnosticos/*" element={<Diagnosticos />} />
+  ```
+- **Componentes dentro de `src/pages/Diagnosticos/`**:
+  - `Diagnosticos.jsx` – tabla con filtros, paginación y botón *Nuevo*.
+  - `DiagnosticoForm.jsx` – formulario con validación (kilometraje ≥0, campos obligatorios, selector de nivel de gasolina, etc.).
+  - `DiagnosticoDetalle.jsx` – muestra toda la información, galería de fotos/video (preview, reproductor) y botón WhatsApp.
+  - `AccesoriosChecklist.jsx` – lista de accesorios con estados `Bueno / Regular / Malo / No tiene` y campo de observación opcional.
+  - `ArchivoUploader.jsx` – input `<input type="file" multiple capture="environment">`, validación de MIME y tamaño contra `REACT_APP_DIAG_MAX_MB`, obtención de firma y subida a Supabase.
+
+Todos los componentes siguen la misma convención de estilo que el resto del proyecto (hooks, `apiFetch`, mensajes de éxito/error con `toast`).
+
+---
+
+## subida de archivos (fotos / videos)
+
+1. **Solicitud de firma**: `POST /api/diagnosticos/:id/archivos` con cuerpo `{tipo, nombre_original, mime, tamano, descripcion}`.
+2. El backend verifica que `mime` esté dentro de `diagAllowedMime` y que `tamano` ≤ `diagMaxMb` × 1024 × 1024.
+3. Devuelve `{ruta, token, bucket}`; `ruta` es la ruta completa dentro del bucket y `token` es la firma de subida.
+4. El cliente usa `fetch` con método `PUT` y los headers `Authorization: Bearer <token>` para subir directamente a Supabase.
+5. Una vez completada la carga, el registro ya está guardado en `diagnostico_archivo`.
+
+Los archivos se almacenan bajo la ruta:
+```
+diagnosticos/<id_diagnostico>/<tipo>-<timestamp>-<hash>.<ext>
+```
+
+Los buckets están listados en `.gitignore` (`uploads/` no se versiona). Supabase gestiona la expiración de URLs firmadas.
+
+---
+
+## envío por whatsapp
+
+`DiagnosticoDetalle.jsx` genera una URL:
+```
+https://wa.me/<tel>?text=Hola%20<Cliente>%21%20Diagnóstico%20de%20<Placa>%20en%20<enlaces>
+```
+- `<tel>` proviene del cliente registrado (campo `telefono`).
+- `<enlaces>` contiene URLs públicas (signed URLs con `expiresIn=3600`) a cada foto/video.
+- El código está comentado para una futura integración directa con la **API de WhatsApp Business** o **Twilio** que permitiría envío automático de multimedia.
+
+---
+
+## estructura del proyecto
 
 ```
 Zedan-Motors/
-├── backend/
-│   ├── src/
-│   │   ├── config/        # Configuración de entorno y conexión a la BD
-│   │   ├── middleware/    # Middleware de autenticación (JWT) y rate limiting
-│   │   ├── modules/       # Un módulo por entidad (rutas + controlador)
-│   │   └── app.js         # Punto de entrada de la API
-│   ├── Dockerfile
-│   ├── .template.env      # Plantilla de variables de entorno
-│   └── package.json
-├── database/
-│   ├── schema.sql         # Estructura de la base de datos (tablas, funciones, catálogos)
-│   └── seed.sql           # Datos de prueba (solo para desarrollo local)
-├── frontend-react/        # SPA moderna en React + Vite
-│   ├── src/
-│   │   ├── components/    # Layout (Sidebar, Navbar) y componentes protegidos
-│   │   ├── pages/         # Vistas de los 11 módulos del sistema
-│   │   ├── services/      # Cliente HTTP y llamadas a la API REST
-│   │   ├── App.jsx        # Enrutador principal y rutas protegidas
-│   │   └── main.jsx       # Punto de entrada de React
-│   ├── package.json
-│   └── vite.config.js
-├── frontend/              # Frontend clásico (HTML/CSS/JS vanilla)
-│   ├── css/
-│   ├── js/
-│   └── pages/
-├── n8n/
-│   ├── README.md          # Guía detallada del agente IA y OpenWA
-│   └── workflow_zedan_motors.json # Flujo importable de n8n
-├── docs/
-│   └── documentacion_proyecto_ZedanMotors.md
-├── docker-compose.yml     # Orquestación de PostgreSQL, Backend, n8n y OpenWA
-├── .env.example           # Variables de entorno globales para Docker
-└── README.md
+├─ backend/                         # API Express
+│  ├─ src/
+│  │  ├─ config/                   # env, base de datos
+│  │  ├─ middleware/               # auth, rate‑limiter, error handler
+│  │  ├─ modules/                  # cada dominio (auth, clientes, vehiculos, …, diagnosticos)
+│  │  └─ services/                 # storage.service.js (Supabase)
+│  └─ database/migrations/         # scripts SQL
+├─ frontend-react/                  # UI React (Vite)
+│  ├─ src/
+│  │  ├─ components/               # NavBar, Loading, etc.
+│  │  └─ pages/
+│  │      ├─ Dashboard/
+│  │      ├─ Clientes/
+│  │      ├─ Vehiculos/
+│  │      ├─ Citas/
+│  │      ├─ Ordenes/
+│  │      ├─ Inventario/
+│  │      └─ Diagnosticos/        # nuevo módulo
+│  └─ .env                         # variables de entorno del cliente
+├─ .env                             # variables comunes (JWT_SECRET, DB credentials, etc.)
+├─ .gitignore
+├─ README.md                        # <‑‑ este archivo
+└─ package.json (raíz)             # scripts comunes (optional)
 ```
-
-## Módulos de la API
-
-| Módulo | Ruta base | Descripción |
-|---|---|---|
-| Auth | `/api/auth` | Login y verificación de sesión |
-| Dashboard | `/api/dashboard` | Resumen general del sistema |
-| Clientes | `/api/clientes` | Gestión de clientes |
-| Vehículos | `/api/vehiculos` | Vehículos asociados a clientes |
-| Citas | `/api/citas` | Agendamiento de citas |
-| Estados | `/api/estados` | Estados de citas/órdenes |
-| Órdenes | `/api/ordenes` | Órdenes de trabajo del taller |
-| Empleados | `/api/empleados` | Gestión de empleados |
-| Cargos | `/api/cargos` | Cargos/roles de empleados |
-| Servicios | `/api/servicios` | Catálogo de servicios ofrecidos |
-| Inventario | `/api/inventario` | Repuestos y stock |
-| Facturación | `/api/facturacion` | Facturas (integración con Factus) |
-| Historial | `/api/historial` | Historial de eventos por vehículo |
-
-## Módulos del Frontend (React)
-
-La aplicación web moderna (`frontend-react`) cuenta con 11 módulos integrados y protegidos mediante roles y sesión JWT:
-
-| Módulo | Ruta Frontend | Descripción y Funcionalidades |
-|---|---|---|
-| **Login** | `/login` | Inicio de sesión con JWT y redirección inteligente según sesión activa |
-| **Dashboard** | `/dashboard` | Resumen operativo, indicadores clave (KPIs), contadores de citas y accesos rápidos |
-| **Clientes** | `/clientes` | Alta, edición, filtrado y listado de clientes del taller |
-| **Vehículos** | `/vehiculos` | Registro vehicular, vinculación con clientes por documento y consulta por placa |
-| **Citas** | `/citas` | Agendamiento de citas, asignación horaria y actualización de estados |
-| **Órdenes de Trabajo** | `/ordenes` | Gestión de órdenes de servicio, diagnósticos, repuestos utilizados y costos |
-| **Empleados** | `/empleados` | Control del equipo de trabajo, asignación de cargos y roles de acceso |
-| **Servicios** | `/servicios` | Catálogo de servicios mecánicos, descripciones y tarifas |
-| **Inventario** | `/inventario` | Control de repuestos y stock, alertas de agotamiento e importación masiva vía CSV |
-| **Facturación** | `/facturacion` | Emisión y consulta de facturas, integración Factus y generación/descarga de comprobantes PDF |
-| **Historial Vehicular** | `/historial` | Línea de tiempo cronológica de servicios, reparaciones y kilometrajes por vehículo |
-
-## Despliegue con Docker Compose (Recomendado)
-
-La forma más rápida y completa de levantar todo el ecosistema (PostgreSQL, Backend, n8n y OpenWA) en una sola red aislada:
-
-### 1. Requisitos
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado y corriendo.
-
-### 2. Configurar variables de entorno
-Copia la plantilla `.env.example` a `.env`:
-```bash
-cp .env.example .env
-```
-*(En Windows PowerShell: `Copy-Item .env.example .env`)*
-
-### 3. Iniciar todos los servicios
-```bash
-docker compose up -d
-```
-
-Esto iniciará automáticamente:
-| Servicio | Contenedor | Puerto local | Descripción |
-|---|---|---|---|
-| **PostgreSQL 16** | `zedan-postgres` | `5432` | DB inicializada con tablas y datos de prueba (`schema.sql` y `seed.sql`) |
-| **Backend & Frontend** | `zedan-backend` | `3000` | [http://localhost:3000](http://localhost:3000) |
-| **n8n (Agente IA)** | `zedan-n8n` | `5678` | [http://localhost:5678](http://localhost:5678) |
-| **OpenWA (WhatsApp API)** | `zedan-openwa` | `2785` | [http://localhost:2785](http://localhost:2785) |
-
-Para ver el código QR de vinculación de WhatsApp:
-```bash
-docker logs -f zedan-openwa
-```
-
-Para más detalles sobre la importación del flujo de n8n y su configuración, consulta [n8n/README.md](n8n/README.md).
 
 ---
 
-## Instalación y ejecución manual (sin Docker)
+## tests
 
-### 1. Clonar el repositorio
+El proyecto incluye pruebas unitarias y de integración en cada módulo (`backend/tests/` y `frontend-react/src/__tests__/`). Para ejecutarlas:
 
 ```bash
-git clone https://github.com/LucarioZ4/Zedan-Motors.git
-cd Zedan-Motors
-```
-
-### 2. Instalar dependencias
-
-**Backend:**
-```bash
+# Backend
 cd backend
-npm install
-cd ..
+npm test
+
+# Frontend
+cd ../frontend-react
+npm test
 ```
 
-**Frontend (React):**
-```bash
-cd frontend-react
-npm install
-cd ..
-```
-
-### 3. Configurar variables de entorno
-
-Copia `backend/.template.env` a un nuevo archivo `backend/.env` y completa tus valores:
-
-```
-PORT=3000
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=
-DB_USER=
-DB_PASSWORD=
-JWT_SECRET=
-JWT_EXPIRES_IN=8h
-FACTUS_API_URL=
-FACTUS_API_TOKEN=
-```
-
-> `JWT_SECRET` puede ser cualquier cadena larga y aleatoria que inventes. `FACTUS_API_URL` y `FACTUS_API_TOKEN` son opcionales: si se dejan vacíos, el módulo de facturación funciona en modo simulado.
-
-### 4. Crear la base de datos
-
-Con PostgreSQL corriendo y una base de datos vacía creada, ejecuta en orden (desde pgAdmin, `psql` o tu cliente preferido):
-
-```bash
-database/schema.sql   # Estructura: tablas, funciones y catálogos
-database/seed.sql     # Datos de prueba (usuarios y empleados ficticios)
-```
-
-Esto crea 3 usuarios de prueba, todos con contraseña `1234`:
-
-| Usuario | Rol |
-|---|---|
-| `admin` | Administrador |
-| `mecanico` | Mecánico |
-| `recepcion` | Recepcionista |
-
-> ⚠️ `seed.sql` es solo para desarrollo local. En un ambiente de producción, ejecutar únicamente `schema.sql` y crear los usuarios reales manualmente.
-
-### 5. Levantar el Backend
-
-```bash
-cd backend
-npm run dev
-```
-
-El servidor API queda disponible en [http://localhost:3000](http://localhost:3000) (también sirve el frontend legacy en la raíz).
-
-### 6. Levantar el Frontend (React)
-
-En una terminal separada:
-
-```bash
-cd frontend-react
-npm run dev
-```
-
-La aplicación SPA en React queda disponible en [http://localhost:5173](http://localhost:5173), comunicándose de forma transparente con el backend en el puerto 3000.
-
-## Seguridad
-
-- Las contraseñas se almacenan hasheadas con bcrypt, nunca en texto plano.
-- El archivo `.env` está excluido del control de versiones (`.gitignore`); nunca debe subirse al repositorio.
-- No compartir el contenido de `backend/.env` fuera del equipo del proyecto.
+Asegúrate de que la base de datos de pruebas esté configurada (puedes usar una base SQLite en memoria o una instancia PostgreSQL temporal).
 
 ---
 
-## IA en el inventario (Actualización con fotos)
+## contribuir
 
-Esta funcionalidad permite a los usuarios autorizados subir de 1 a 5 fotografías (remisiones/facturas de proveedores, empaques con etiqueta o piezas mecánicas sueltas) para que un modelo multimodal con visión extraiga los repuestos, los cruce inteligentemente con el catálogo existente y proponga las actualizaciones de stock.
+1. **Fork** el repositorio.
+2. Crea una rama descriptiva: `git checkout -b feature/mi‑nueva‑funcionalidad`.
+3. Realiza los cambios y verifica que `npm run lint` y los tests pasen.
+4. Abre un **Pull Request** describiendo la motivación y los cambios.
+5. El mantenedor revisará y, tras aprobación, mergeará la rama.
 
-> ⚠️ **Principio de seguridad fundamental:** **La IA propone, el usuario confirma.** El stock NUNCA se actualiza de forma automática; una persona revisa los candidatos detectados, resuelve ambigüedades, y solo tras presionar el botón **Confirmar** se ejecuta la transacción atómica en la base de datos.
+---
 
-### Variables de entorno
+## licencia
 
-Agrega las siguientes variables a tu archivo `backend/.env` o en el entorno de Docker Compose:
+Este proyecto está bajo la **Licencia MIT**. Consulta el archivo `LICENSE` para más detalles.
 
-```ini
-# API Key de Anthropic (deja vacía para deshabilitar la función sin detener el backend)
-ANTHROPIC_API_KEY=sk-ant-api03-...
+---
 
-# Modelo de visión recomendado
-ANTHROPIC_MODEL=claude-sonnet-5-5
+*Documentado y actualizado al 2026‑11‑16.*
+---
 
-# Límites de consumo y cuotas
-IA_ANALISIS_POR_HORA=20
-IA_MAX_IMAGENES=5
-IA_MAX_MB=5
-```
+## contribuir
 
-- **Fail-safe:** Si `ANTHROPIC_API_KEY` falta o está vacía, el servidor arranca normalmente y la API reporta `habilitado: false` en `GET /api/inventario/ia/estado`. El frontend oculta el botón *"Actualizar con IA"*.
+1. **Fork** el repositorio.
+2. Crea una rama descriptiva: `git checkout -b feature/mi‑nueva‑funcionalidad`.
+3. Realiza los cambios y verifica que `npm run lint` y los tests pasen.
+4. Abre un **Pull Request** describiendo la motivación y los cambios.
+5. El mantenedor revisará y, tras aprobación, mergeará la rama.
 
-### Tabla de roles y permisos
+---
 
-| Rol | ¿Puede ver el botón? | ¿Puede subir fotos y analizar? | ¿Puede confirmar/descartar? |
-|---|:---:|:---:|:---:|
-| **Administrador** | ✅ Sí | ✅ Sí | ✅ Sí (cualquier análisis) |
-| **Jefe de taller** | ✅ Sí | ✅ Sí | ✅ Sí (sus propios análisis) |
-| **Mecánico** | ❌ No | ❌ No (403) | ❌ No (403) |
-| **Recepcionista** | ❌ No | ❌ No (403) | ❌ No (403) |
-| **Electricista / Técnico** | ❌ No | ❌ No (403) | ❌ No (403) |
+## licencia
 
-### Límites de uso y costos estimados
+Este proyecto está bajo la **Licencia MIT**. Consulta el archivo `LICENSE` para más detalles.
 
-1. **Límite de peticiones:** Controlado por usuario mediante `express-rate-limit` con `IA_ANALISIS_POR_HORA` (por defecto 20 análisis/hora por usuario).
-2. **Optimización de imágenes:** Antes de ser enviadas a la API de Anthropic, el frontend comprime y escala cada imagen en el navegador mediante HTML5 Canvas a un máximo de ~1568 px por el lado largo en formato JPEG calidad 0.85.
-3. **Costo aproximado por análisis:**
-   - 1 a 3 fotos procesadas con Claude 3.5 Sonnet consumen ~1.200 a 2.500 tokens de entrada y ~400 a 800 tokens de salida estructurada.
-   - Costo promedio: **~$0,01 a $0,02 USD por análisis completo**, ideal para talleres de alto volumen.
+---
 
-### Migración de Base de Datos para instalaciones existentes
-
-Para habilitar la funcionalidad en una base de datos ya existente sin perder datos, ejecuta el script idempotente ubicado en `database/migrations/2026-11-inventario-ia.sql`:
-
-```bash
-psql -U postgres -d zedan_motors -f database/migrations/2026-11-inventario-ia.sql
-```
-*(O copia y ejecuta su contenido directamente desde pgAdmin / DBeaver / Azure Data Studio).*
-
-El script crea la extensión `pg_trgm`, agrega las columnas opcionales `referencia` y `codigo_barras` a la tabla `inventario`, y crea las tablas `analisis_ia`, `inventario_movimiento` y `repuesto_alias`.
+*Documentado y actualizado al 2026‑11‑16.*
 
 El [contrato HTTP de Node y C#](docs/contrato-apis.md) incluye las rutas y la configuración de proveedores.

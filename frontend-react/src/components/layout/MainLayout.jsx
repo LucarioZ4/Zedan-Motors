@@ -6,6 +6,7 @@ import './MainLayout.css';
 
 const routeTitles = {
   '/dashboard': 'Dashboard',
+  '/diagnosticos': 'Diagnóstico y Recepción',
   '/clientes': 'Gestión de Clientes',
   '/vehiculos': 'Flota de Vehículos',
   '/empleados': 'Equipo & Empleados',
@@ -36,7 +37,8 @@ export default function MainLayout() {
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
-  const currentTitle = routeTitles[location.pathname] || 'Zedan Motor\'s';
+  const currentTitle = routeTitles[location.pathname] ||
+    (location.pathname.startsWith('/diagnosticos') ? 'Diagnóstico y Recepción' : 'Zedan Motor\'s');
 
   const hoyTexto = new Date().toLocaleDateString('es-ES', {
     weekday: 'long',
