@@ -8,37 +8,8 @@ Este directorio contiene la configuración y el flujo de automatización de **n8
 
 El flujo combina dos canales de entrada (Web y WhatsApp) procesados por un **Agente IA (DeepSeek)** que interactúa directamente con la base de datos PostgreSQL de Zedan Motors:
 
-```
-                  ┌──────────────────────┐
-                  │   Web Chat Webhook   │──┐
-                  └──────────────────────┘  │
-                                            ▼
-                  ┌──────────────────────┐  Format Input
-                  │    OpenWA Trigger    │──┐
-                  │     (WhatsApp)       │  │
-                  └──────────────────────┘  │
-                                            ▼
-                                   ┌─────────────────┐
-                                   │  AI Agent Zedan │ ◄── [DeepSeek LM]
-                                   │   (LangChain)   │ ◄── [Simple Memory]
-                                   └────────┬────────┘
-                                            │
-               ┌────────────────────────────┼───────────────────────────┐
-               ▼                            ▼                           ▼
-     [Herramienta Postgres]       [Herramienta Postgres]      [Herramienta Postgres]
-         Insert Cliente               Insert Vehículo               Insert Cita
-               │                            │                           │
-               └────────────────────────────┼───────────────────────────┘
-                                            ▼
-                                  ┌───────────────────┐
-                                  │   Route Response  │
-                                  └─────────┬─────────┘
-                                            │
-                       ┌────────────────────┴────────────────────┐
-                       ▼                                         ▼
-            [Canal: WhatsApp]                              [Canal: Web]
-        Send WhatsApp Message (OpenWA)                   Respond to Webhook
-```
+Cada mensaje entra por el webhook web o por OpenWA. El agente conserva el historial por canal y sesión en PostgreSQL. Tras confirmar los datos, llama a `agendar_cita_chat` y devuelve el resultado por el canal de origen. La disponibilidad se controla por vehículo y horario.
+
 
 ---
 
@@ -155,6 +126,16 @@ Usa los datos de la base **de Docker**, tomados del `.env` de la raíz. No uses 
   Get-Content openwa-data\.api-key
   ```
 
+En **OpenWA Trigger**, selecciona la sesión vinculada (el flujo propone `zedan-motors`). Configura `WEBHOOK_URL=http://n8n:5678/` en el entorno de Compose para que OpenWA alcance el callback.
+
+En **Web Chat Webhook**, crea una credencial Header Auth con nombre `X-Chat-Key` y un secreto propio. Guárdalo en el servidor que llama al webhook. Ese servidor debe asignar un identificador de sesión privado por conversación.
+
+Asocia PostgreSQL también al nodo de memoria. Necesita crear y mantener la tabla `n8n_chat_histories`. En bases con volumen existente, aplica la migración desde PowerShell (ajusta usuario y base según tu configuración):
+
+```powershell
+Get-Content -Raw database/migrations/2026-11-agendar-cita-chat.sql | docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d zedan_motors
+```
+
 ### 6. Activar el flujo
 Con el flujo abierto, enciende el interruptor **Active** (arriba a la derecha). **Mientras esté inactivo, el webhook de producción y el trigger de WhatsApp no responden.**
 
@@ -168,6 +149,7 @@ Con el flujo abierto, enciende el interruptor **Active** (arriba a la derecha). 
   ```http
   POST http://localhost:5678/webhook/zedan-web-chat
   Content-Type: application/json
+  X-Chat-Key: <secreto>
 
   {
     "sessionId": "web-usuario-1",
@@ -177,7 +159,7 @@ Con el flujo abierto, enciende el interruptor **Active** (arriba a la derecha). 
   En Windows (PowerShell):
   ```powershell
   Invoke-RestMethod -Method Post -Uri http://localhost:5678/webhook/zedan-web-chat `
-    -ContentType 'application/json' `
+    -Headers @{ 'X-Chat-Key' = $env:ZEDAN_CHAT_KEY } -ContentType 'application/json' `
     -Body '{"sessionId":"web-usuario-1","message":"Hola, quiero agendar una cita para mi carro"}'
   ```
 - **Vía WhatsApp:** Envía un mensaje desde cualquier número de WhatsApp al número vinculado en OpenWA. El Agente responderá automáticamente guiando al usuario por el registro de cliente, vehículo y cita.
@@ -202,9 +184,9 @@ Con el flujo abierto, enciende el interruptor **Active** (arriba a la derecha). 
 
 Esta configuración está pensada para **desarrollo local**. Antes de exponerla a internet:
 
-- **Protege el webhook** `zedan-web-chat` (por ejemplo con *Header Auth* en n8n): ahora mismo cualquiera que conozca la URL puede hablar con el agente, que escribe en la base de datos.
+- Configura la credencial Header Auth descrita arriba.
 - **No publiques el puerto `2785` de OpenWA:** su dashboard administra la sesión de WhatsApp.
-- **Usa un usuario de base de datos con permisos mínimos** para la credencial de n8n (solo `INSERT` en `cliente`, `vehiculo` y `cita`), en lugar del usuario administrador.
+- **Usa un usuario de base de datos con permisos mínimos** para la credencial de n8n (lectura de catálogos y registros, permisos de escritura y secuencias para la reserva y la memoria), en lugar del usuario administrador.
 - Los registros que crea el agente se insertan directamente en la base y **no pasan por las validaciones del backend**; solo aplican las restricciones de la base de datos.
 - **Cambia las contraseñas de los usuarios de prueba** (`seed.sql`) y define tus propios `JWT_SECRET` y `DB_PASSWORD`.
 - No subas al repositorio el `.env`, `openwa-data/` ni capturas con claves.

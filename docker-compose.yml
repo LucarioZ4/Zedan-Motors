@@ -16,6 +16,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       # Inicializa el schema y seed automáticamente en la primera ejecución
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/migrations/2026-11-agendar-cita-chat.sql:/docker-entrypoint-initdb.d/03_agendar.sql:ro
       - ./database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-zedan_motors}"]
@@ -74,7 +75,7 @@ services:
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
       - NODE_ENV=production
-      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://n8n:5678/}
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-America/Bogota}
       - TZ=${TZ:-America/Bogota}
       - N8N_COMMUNITY_PACKAGES_ENABLED=true
