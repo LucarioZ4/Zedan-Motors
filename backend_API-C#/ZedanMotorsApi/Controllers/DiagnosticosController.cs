@@ -6,7 +6,8 @@ using ZedanMotorsApi.Services;
 namespace ZedanMotorsApi.Controllers;
 
 [ApiController, Route("api/diagnosticos")]
-public class DiagnosticosController(NpgsqlDataSource origen, AlmacenamientoSupabase storage, IConfiguration config) : ControllerBase
+public class DiagnosticosController(NpgsqlDataSource origen, AlmacenamientoSupabase storage, IConfiguration config,
+    ILogger<DiagnosticosController> logger) : ControllerBase
 {
     public record Accesorio([Required, MaxLength(50)] string Nombre,
         [RegularExpression("Bueno|Regular|Malo|No tiene")] string Estado, string? Observacion);
@@ -19,24 +20,61 @@ public class DiagnosticosController(NpgsqlDataSource origen, AlmacenamientoSupab
     {
         await using var db = await origen.OpenConnectionAsync();
         return Ok(await db.Filas("""
-            SELECT d.*, v.placa, v.marca, v.modelo, cl.nombre || ' ' || cl.apellido AS cliente
-            FROM diagnostico d JOIN vehiculo v USING(id_vehiculo) JOIN cliente cl USING(id_cliente)
-            WHERE ($1::text IS NULL OR v.placa ILIKE '%' || $1 || '%')
+            SELECT d.*, v.placa, v.marca, v.modelo, v.color, v.anio,
+                   COALESCE(cl.nombre || ' ' || cl.apellido, 'Sin cliente') AS cliente,
+                   cl.telefono AS cliente_telefono,
+                   (SELECT COUNT(*) FROM diagnostico_accesorio WHERE id_diagnostico=d.id_diagnostico)::int AS total_accesorios,
+                   (SELECT COUNT(*) FROM diagnostico_archivo WHERE id_diagnostico=d.id_diagnostico)::int AS total_archivos
+            FROM diagnostico d JOIN vehiculo v ON d.id_vehiculo=v.id_vehiculo
+            LEFT JOIN cliente cl ON v.id_cliente=cl.id_cliente
+            WHERE ($1::text IS NULL OR v.placa ILIKE '%' || $1 || '%' OR v.marca ILIKE '%' || $1 || '%' OR v.modelo ILIKE '%' || $1 || '%')
               AND ($2::text IS NULL OR cl.nombre ILIKE '%' || $2 || '%' OR cl.apellido ILIKE '%' || $2 || '%')
               AND ($3::timestamp IS NULL OR d.fecha_ingreso >= $3)
               AND ($4::timestamp IS NULL OR d.fecha_ingreso <= $4)
               AND ($5::text IS NULL OR d.estado=$5) ORDER BY d.fecha_ingreso DESC
-            """, vehiculo, cliente, fechaDesde, fechaHasta, estado));
+            """, string.IsNullOrEmpty(vehiculo) ? null : vehiculo, string.IsNullOrEmpty(cliente) ? null : cliente,
+            fechaDesde, fechaHasta, string.IsNullOrEmpty(estado) ? null : estado));
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Detalle(int id)
     {
         await using var db = await origen.OpenConnectionAsync();
-        var fila = (await db.Filas("SELECT * FROM diagnostico WHERE id_diagnostico=$1", id)).SingleOrDefault();
+        var fila = (await db.Filas("""
+            SELECT d.*, v.placa, v.marca, v.modelo, v.anio, v.color,
+                   cl.id_cliente, cl.nombre AS cliente_nombre, cl.apellido AS cliente_apellido,
+                   COALESCE(cl.nombre || ' ' || cl.apellido, 'Sin cliente') AS cliente,
+                   cl.telefono AS cliente_telefono, cl.correo AS cliente_correo,
+                   c.fecha AS cita_fecha, c.hora AS cita_hora, c.motivo AS cita_motivo
+            FROM diagnostico d JOIN vehiculo v ON d.id_vehiculo=v.id_vehiculo
+            LEFT JOIN cliente cl ON v.id_cliente=cl.id_cliente
+            LEFT JOIN cita c ON d.id_cita=c.id_cita
+            WHERE d.id_diagnostico=$1
+            """, id)).SingleOrDefault();
         if (fila == null) return NotFound(new { error = "Diagnóstico no encontrado" });
-        fila["accesorios"] = await db.Filas("SELECT nombre, estado, observacion FROM diagnostico_accesorio WHERE id_diagnostico=$1", id);
-        fila["archivos"] = await db.Filas("SELECT * FROM diagnostico_archivo WHERE id_diagnostico=$1", id);
+        fila["accesorios"] = await db.Filas("SELECT id_accesorio, nombre, estado, observacion FROM diagnostico_accesorio WHERE id_diagnostico=$1 ORDER BY id_accesorio ASC", id);
+        var archivos = await db.Filas("SELECT id_archivo, id_diagnostico, ruta, tipo, nombre_original, tamano, descripcion, creado_en FROM diagnostico_archivo WHERE id_diagnostico=$1 ORDER BY creado_en DESC", id);
+        var urls = new Dictionary<string, string>();
+        if (storage.Configurado && archivos.Count > 0)
+        {
+            try
+            {
+                foreach (var grupo in archivos.Select(a => (string)a["ruta"]!).GroupBy(BucketArchivo))
+                    foreach (var enlace in await storage.Enlaces(grupo, grupo.Key))
+                        urls[enlace.Key] = enlace.Value;
+            }
+            catch (Exception e) when (e is ErrorOperacion or HttpRequestException or TaskCanceledException)
+            {
+                urls.Clear();
+                logger.LogWarning("No se pudieron generar URLs firmadas de diagnóstico ({TipoError})", e.GetType().Name);
+            }
+        }
+        foreach (var archivo in archivos)
+        {
+            var ruta = (string)archivo["ruta"]!;
+            archivo["url"] = urls.GetValueOrDefault(ruta, ruta);
+        }
+        fila["archivos"] = archivos;
         return Ok(fila);
     }
 

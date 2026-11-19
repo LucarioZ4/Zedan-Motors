@@ -76,12 +76,12 @@ public class AlmacenamientoSupabase(HttpClient http, IConfiguration config)
         return new { ruta, token, bucket };
     }
 
-    public async Task<Dictionary<string, string>> Enlaces(IEnumerable<string> rutas)
+    public async Task<Dictionary<string, string>> Enlaces(IEnumerable<string> rutas, string? bucket = null)
     {
         var paths = rutas.ToArray();
         var resultado = new Dictionary<string, string>();
         if (paths.Length == 0) return resultado;
-        var items = await Enviar(HttpMethod.Post, $"/object/sign/{Ruta(Bucket)}", new { paths, expiresIn = 3600 });
+        var items = await Enviar(HttpMethod.Post, $"/object/sign/{Ruta(bucket ?? Bucket)}", new { paths, expiresIn = 3600 });
         foreach (var item in items!.AsArray())
             if (item?["path"]?.GetValue<string>() is string path && item["signedURL"]?.GetValue<string>() is string url)
                 resultado[path] = Base + url;

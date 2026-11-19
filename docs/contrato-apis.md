@@ -26,7 +26,9 @@ El frontend puede usar la misma ruta y el mismo cuerpo JSON con Express y con AS
 
 ### Archivos e IA
 
-El servidor firma la subida y devuelve `{ruta, token, bucket}`. El navegador usa estos datos para subir el archivo directamente a Supabase Storage. Los videos requieren además un POST a la colección para registrar el objeto tras verificar el tamaño y MIME almacenados. Los nuevos archivos de diagnóstico se guardan en `DIAG_BUCKET`. Los registros anteriores siguen resolviéndose en el bucket de videos para su eliminación.
+Los vehículos incluyen `cliente`, `nombre_cliente`, `telefono_cliente` y `correo_cliente` en sus respuestas de listado, detalle, creación y actualización. El listado de diagnósticos incluye color, año, teléfono del cliente y los contadores `total_accesorios` y `total_archivos`; el filtro `vehiculo` busca por placa, marca o modelo. Su detalle incluye los datos del cliente y de la cita, accesorios con `id_accesorio` y archivos ordenados por `creado_en`, con `url` para visualizarlos.
+
+El servidor firma la subida y devuelve `{ruta, token, bucket}`. El navegador usa estos datos para subir el archivo directamente a Supabase Storage. Los videos requieren además un POST a la colección para registrar el objeto tras verificar el tamaño y MIME almacenados. Los nuevos archivos de diagnóstico (rutas `archivos/`) se guardan en `DIAG_BUCKET`. Los registros anteriores siguen resolviéndose en el bucket de videos, tanto para consultar enlaces como para eliminarlos. Si el almacenamiento no está configurado o falla la firma, el detalle sigue disponible y `url` conserva la ruta del archivo; esa ruta por sí sola no permite abrir un archivo privado.
 
 El análisis de inventario recibe `{imagen, tipo_media}` y devuelve `{items, observaciones, calidad_imagen}`. El usuario revisa la propuesta y envía `{modo, items, nota}` a `aplicar`. Los modos son `sumar` y `establecer`. Una fila identifica un repuesto mediante `id_repuesto` o un producto nuevo mediante `nuevo: {nombre, marca, precio}`, y lleva `cantidad`. La respuesta contiene `{mensaje, total, resultados}`. El stock y la auditoría en `movimiento_inventario` se guardan juntos.
 

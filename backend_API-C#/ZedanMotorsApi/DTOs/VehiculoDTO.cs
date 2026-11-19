@@ -12,6 +12,9 @@ namespace ZedanMotorsApi.DTOs
         public string? color { get; set; }
         public int idCliente { get; set; }
         public string? cliente { get; set; }
+        public string? nombreCliente { get; set; }
+        public string? telefonoCliente { get; set; }
+        public string? correoCliente { get; set; }
     }
 
     public class VehiculoCreateDTO

@@ -70,9 +70,9 @@ const infoObjeto = async (ruta) => {
 };
 
 // Enlaces temporales de reproducción (el bucket es privado).
-const urlsFirmadas = async (rutas, segundos = 3600) => {
+const urlsFirmadas = async (rutas, segundos = 3600, bucket = cfg.bucket) => {
     if (rutas.length === 0) return {};
-    const { data, error } = await getCliente().storage.from(cfg.bucket).createSignedUrls(rutas, segundos);
+    const { data, error } = await getCliente().storage.from(bucket).createSignedUrls(rutas, segundos);
     if (error) throw error;
     const mapa = {};
     for (const item of data || []) {

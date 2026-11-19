@@ -33,7 +33,10 @@ namespace ZedanMotorsApi.Controllers
             marca = v.marca,
             color = v.color,
             idCliente = v.idCliente,
-            cliente = v.Cliente.nombre + " " + v.Cliente.apellido
+            cliente = (v.Cliente.nombre + " " + v.Cliente.apellido) ?? "Sin cliente asignado",
+            nombreCliente = (v.Cliente.nombre + " " + v.Cliente.apellido) ?? "Sin cliente asignado",
+            telefonoCliente = v.Cliente.telefono,
+            correoCliente = v.Cliente.correo
         };
 
         // GET: api/Vehiculos
