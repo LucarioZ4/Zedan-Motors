@@ -39,12 +39,11 @@ Desde la raíz del proyecto:
 
 ```bash
 docker compose build backend
-docker compose run --rm --no-deps backend node scripts/migrate-chat.js
 docker compose up -d --build
 docker compose ps
 ```
 
-Se levantan el backend en `http://localhost:3000`, n8n en `http://localhost:5678` y OpenWA en `http://localhost:2785`. La migración instala la función de agendamiento en la base indicada por `DATABASE_URL`. Las tablas del negocio deben existir previamente en Supabase.
+Se levantan el backend en `http://localhost:3000`, n8n en `http://localhost:5678` y OpenWA en `http://localhost:2785`. Para instalar o actualizar la función de agendamiento, ejecuta el contenido de [2026-11-agendar-cita-chat.sql](../database/migrations/2026-11-agendar-cita-chat.sql) en el SQL Editor del mismo proyecto de Supabase que usa `DATABASE_URL`. Las tablas del negocio deben existir previamente.
 
 Si queda un contenedor `zedan-postgres` de la configuración anterior, puedes detenerlo con `docker stop zedan-postgres`. Su volumen conserva los datos anteriores.
 

@@ -11,7 +11,6 @@ RUN npm ci --only=production || npm install --production
 WORKDIR /app
 COPY backend ./backend
 COPY frontend ./frontend
-COPY database/migrations/2026-11-agendar-cita-chat.sql ./database/migrations/2026-11-agendar-cita-chat.sql
 
 WORKDIR /app/backend
 EXPOSE 3000
