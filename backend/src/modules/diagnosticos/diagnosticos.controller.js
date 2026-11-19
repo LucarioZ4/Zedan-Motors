@@ -118,7 +118,12 @@ const detalle = async (req, res) => {
     let urls = {};
     if (storage.configurado() && archivos.rows.length > 0) {
       try {
-        urls = await storage.urlsFirmadas(archivos.rows.map(a => a.ruta));
+        const rutas = archivos.rows.map(a => a.ruta);
+        const grupos = await Promise.all([
+          storage.urlsFirmadas(rutas.filter(r => r.startsWith('archivos/')), 3600, diagBucket),
+          storage.urlsFirmadas(rutas.filter(r => !r.startsWith('archivos/'))),
+        ]);
+        urls = Object.assign({}, ...grupos);
       } catch (e) {
         console.warn('No se pudieron generar URLs firmadas:', e.message);
       }
