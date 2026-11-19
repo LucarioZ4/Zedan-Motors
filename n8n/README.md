@@ -29,46 +29,24 @@ Cada mensaje entra por el webhook web o por OpenWA. El agente conserva el histor
 
 ## 🛠️ Paso a Paso para la Puesta en Marcha
 
-### 0. Crear el archivo `.env` de la raíz
-`docker compose` lee el archivo `.env` de la **raíz del proyecto** (no el de `backend/`, que solo se usa cuando corres el backend a mano con `npm run dev`).
+### 0. Configurar Supabase y Docker
+El backend del contenedor carga `backend/.env`, el mismo archivo usado por el backend local. Define `DATABASE_URL` con la conexión PostgreSQL de Supabase, `DB_SSL=true` y los secretos del backend. Puedes partir de `backend/.env.example`.
+
+El archivo `.env` de la raíz configura los puertos y las opciones de Compose. Puedes partir de `.env.example`. El backend toma siempre su conexión de `backend/.env`.
+
+### 1. Reconstruir e iniciar los servicios
+Desde la raíz del proyecto:
 
 ```bash
-# Linux / macOS
-cp .env.example .env
-# Windows (PowerShell)
-Copy-Item .env.example .env
-```
-
-Edita el `.env` y define como mínimo:
-
-- `DB_PASSWORD`: una contraseña propia para la base de datos de Docker.
-- `JWT_SECRET`: un secreto propio de al menos 32 caracteres. Puedes generarlo con:
-  ```bash
-  node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
-  ```
-- `DB_PORT`: puerto de la base de datos **en tu máquina**. Si ya tienes PostgreSQL instalado localmente (usa el `5432`), pon `5433` para evitar el choque. Dentro de Docker la base siempre usa el `5432`.
-
-> En el `.env` de la raíz, `DB_HOST` debe ser `postgres` (el nombre del servicio en Docker), no `localhost`.
-
-### 1. Iniciar los Contenedores con Docker Compose
-En la raíz del proyecto, ejecuta:
-```bash
+docker compose build backend
+docker compose run --rm --no-deps backend node scripts/migrate-chat.js
 docker compose up -d --build
-```
-Esto levantará:
-- **`zedan-postgres`**: Base de datos con las tablas y extensiones (`pgcrypto`) inicializadas (puerto `5433` en tu máquina por defecto, `5432` dentro de Docker).
-- **`zedan-backend`**: API Node.js y Frontend en `http://localhost:3000`.
-- **`zedan-n8n`**: Plataforma n8n en `http://localhost:5678`.
-- **`zedan-openwa`**: API de WhatsApp y su dashboard en `http://localhost:2785`.
-
-Comprueba que los cuatro estén arriba con:
-```bash
 docker compose ps
 ```
 
-> **Sobre la base de datos de Docker:** es una base **independiente** de cualquier PostgreSQL que tengas instalado en tu computador y de Supabase. Lo que cree el agente de n8n queda en esta base y se ve en `http://localhost:3000` (backend del contenedor), no en un backend que corras a mano apuntando a otra base.
->
-> El `schema.sql` y el `seed.sql` se ejecutan **solo la primera vez**, al crearse el volumen. El `seed.sql` crea usuarios de prueba (`admin`, `mecanico`, `recepcion`, todos con contraseña `1234`). Para reiniciar la base desde cero (**esto borra todos los datos**): `docker compose down -v`.
+Se levantan el backend en `http://localhost:3000`, n8n en `http://localhost:5678` y OpenWA en `http://localhost:2785`. La migración instala la función de agendamiento en la base indicada por `DATABASE_URL`. Las tablas del negocio deben existir previamente en Supabase.
+
+Si queda un contenedor `zedan-postgres` de la configuración anterior, puedes detenerlo con `docker stop zedan-postgres`. Su volumen conserva los datos anteriores.
 
 ### 2. Vincular WhatsApp en OpenWA (Escanear QR)
 Para conectar tu número de WhatsApp con OpenWA:
@@ -102,16 +80,18 @@ Para conectar tu número de WhatsApp con OpenWA:
 Dentro del flujo importado, deberás asociar tres credenciales:
 
 #### A. PostgreSQL (`Postgres account`)
-Usa los datos de la base **de Docker**, tomados del `.env` de la raíz. No uses los de un PostgreSQL local de tu computador: dentro de un contenedor, `localhost` es el propio contenedor.
+Usa la misma conexión Supabase de `DATABASE_URL` en `backend/.env`. En Supabase, el panel **Connect** muestra los campos de PostgreSQL.
 
 | Campo | Valor |
 |---|---|
-| **Host** | `postgres` *(nombre del servicio en Docker)* |
-| **Port** | `5432` *(puerto interno de Docker, no el `DB_PORT` publicado en tu máquina)* |
-| **Database** | el `DB_NAME` de tu `.env` (por defecto `zedan_motors`) |
-| **User** | el `DB_USER` de tu `.env` (por defecto `postgres`) |
-| **Password** | el `DB_PASSWORD` de tu `.env` |
-| **SSL** | `disable` |
+| **Host** | Host de la URL de Supabase |
+| **Port** | Puerto de esa URL (6543 para el pooler de transacciones) |
+| **Database** | Nombre de la base en la URL |
+| **User** | Usuario completo de la URL, incluido el identificador de proyecto si usas pooler |
+| **Password** | Contraseña de la base |
+| **SSL** | Activado; permite certificados autofirmados si la conexión lo requiere |
+
+Asocia esta credencial a **Agendar cita** y **Memoria PostgreSQL**. El usuario necesita permisos para la reserva y para crear y mantener `n8n_chat_histories`. Las credenciales guardadas anteriormente en n8n deben actualizarse desde su editor, ya que Compose no las reemplaza.
 
 #### B. DeepSeek (`DeepSeek account`)
 - **API Key:** Tu API Key de DeepSeek (`sk-...`)
@@ -129,12 +109,6 @@ Usa los datos de la base **de Docker**, tomados del `.env` de la raíz. No uses 
 En **OpenWA Trigger**, selecciona la sesión vinculada (el flujo propone `zedan-motors`). Configura `WEBHOOK_URL=http://n8n:5678/` en el entorno de Compose para que OpenWA alcance el callback.
 
 En **Web Chat Webhook**, crea una credencial Header Auth con nombre `X-Chat-Key` y un secreto propio. Guárdalo en el servidor que llama al webhook. Ese servidor debe asignar un identificador de sesión privado por conversación.
-
-Asocia PostgreSQL también al nodo de memoria. Necesita crear y mantener la tabla `n8n_chat_histories`. En bases con volumen existente, aplica la migración desde PowerShell (ajusta usuario y base según tu configuración):
-
-```powershell
-Get-Content -Raw database/migrations/2026-11-agendar-cita-chat.sql | docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d zedan_motors
-```
 
 ### 6. Activar el flujo
 Con el flujo abierto, enciende el interruptor **Active** (arriba a la derecha). **Mientras esté inactivo, el webhook de producción y el trigger de WhatsApp no responden.**
@@ -163,7 +137,7 @@ Con el flujo abierto, enciende el interruptor **Active** (arriba a la derecha). 
     -Body '{"sessionId":"web-usuario-1","message":"Hola, quiero agendar una cita para mi carro"}'
   ```
 - **Vía WhatsApp:** Envía un mensaje desde cualquier número de WhatsApp al número vinculado en OpenWA. El Agente responderá automáticamente guiando al usuario por el registro de cliente, vehículo y cita.
-- **Ver el resultado:** inicia sesión en `http://localhost:3000` (por ejemplo con `admin` / `1234`) y revisa Clientes, Vehículos y Citas.
+- **Ver el resultado:** inicia sesión en `http://localhost:3000` con tu usuario del sistema y revisa Clientes, Vehículos y Citas.
 
 ---
 
@@ -172,11 +146,9 @@ Con el flujo abierto, enciende el interruptor **Active** (arriba a la derecha). 
 | Síntoma | Qué revisar |
 |---|---|
 | El webhook responde 404 | El flujo no está activo (paso 6), o estás usando la URL `/webhook-test/` fuera del modo de prueba. |
-| n8n no conecta con PostgreSQL | El host debe ser `postgres` y el puerto `5432`; la contraseña debe ser la `DB_PASSWORD` del `.env` de la raíz. |
-| `docker compose up` falla por el puerto de la base | Ya tienes otro PostgreSQL en ese puerto. Cambia `DB_PORT` en el `.env` (por ejemplo a `5433`). |
+| n8n no conecta con PostgreSQL | Revisa host, puerto, usuario completo, contraseña y SSL de Supabase en la credencial de n8n. |
 | n8n no puede usar OpenWA (error de autenticación) | Verifica que la API Key coincida con la de `openwa-data/.api-key` y que la Base URL sea `http://openwa:2785`. |
-| Los datos creados por el agente no aparecen en tu backend local | Son bases distintas: el agente escribe en la base de Docker. Mira el backend del contenedor en `http://localhost:3000`. |
-| Cambiaste el esquema y no se refleja | `schema.sql` solo corre al crear el volumen. Usa `docker compose down -v` (borra los datos) y vuelve a levantar. |
+| Los datos del agente no aparecen | Comprueba que la credencial PostgreSQL de n8n y DATABASE_URL del backend apunten al mismo proyecto y base de Supabase. |
 
 ---
 
@@ -188,5 +160,5 @@ Esta configuración está pensada para **desarrollo local**. Antes de exponerla 
 - **No publiques el puerto `2785` de OpenWA:** su dashboard administra la sesión de WhatsApp.
 - **Usa un usuario de base de datos con permisos mínimos** para la credencial de n8n (lectura de catálogos y registros, permisos de escritura y secuencias para la reserva y la memoria), en lugar del usuario administrador.
 - Los registros que crea el agente se insertan directamente en la base y **no pasan por las validaciones del backend**; solo aplican las restricciones de la base de datos.
-- **Cambia las contraseñas de los usuarios de prueba** (`seed.sql`) y define tus propios `JWT_SECRET` y `DB_PASSWORD`.
+- Define un JWT_SECRET propio en backend/.env y usa las credenciales reales de Supabase.
 - No subas al repositorio el `.env`, `openwa-data/` ni capturas con claves.
