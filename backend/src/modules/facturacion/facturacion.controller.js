@@ -27,8 +27,8 @@ const getAll = async (req, res) => {
         `);
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        console.error('Error en getAll facturacion:', err);
+        res.status(500).json({ error: err.message || 'Error interno del servidor al consultar facturas' });
     }
 };
 
