@@ -44,7 +44,7 @@ export const enviarFacturaCorreo = async (id, correo = null) => {
 };
 
 export const enviarFacturaWhatsApp = async (id) => {
-  const res = await apiFetch(`/api/facturas/${id}/enviar-whatsapp`, {
+  const res = await apiFetch(`/api/facturacion/${id}/enviar-whatsapp`, {
     method: 'POST'
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, 'Error al enviar factura por WhatsApp'));

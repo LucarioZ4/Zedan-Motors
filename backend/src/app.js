@@ -59,12 +59,16 @@ safeMount('/api/vehiculos', require('./modules/vehiculos/vehiculos.routes'));
 safeMount('/api/citas', require('./modules/citas/citas.routes'));
 safeMount('/api/estados', require('./modules/estados/estados.routes'));
 safeMount('/api/ordenes', require('./modules/ordenes/ordenes.routes'));
-safeMount('/api/ordenestrabajo', require('./modules/ordenes/ordenes.routes'));
+app.use('/api/ordenestrabajo', (req, res, next) => {
+    require('./modules/ordenes/ordenes.routes')(req, res, next);
+});
 safeMount('/api/empleados', require('./modules/empleados/empleados.routes'));
 safeMount('/api/servicios', require('./modules/servicios/servicios.routes'));
 safeMount('/api/inventario', require('./modules/inventario/inventario.routes'));
 safeMount('/api/facturacion', require('./modules/facturacion/facturacion.routes'));
-safeMount('/api/facturas', require('./modules/facturacion/facturacion.routes'));
+app.use('/api/facturas', (req, res, next) => {
+    require('./modules/facturacion/facturacion.routes')(req, res, next);
+});
 safeMount('/api/cargos', require('./modules/cargos/cargos.routes'));
 safeMount('/api/historial', require('./modules/historial/historial.routes'));
 safeMount('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
