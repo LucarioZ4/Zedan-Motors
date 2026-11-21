@@ -42,3 +42,11 @@ export const enviarFacturaCorreo = async (id, correo = null) => {
   if (!res.ok) throw new Error(await getErrorMessage(res, 'Error al enviar factura por correo'));
   return res.json();
 };
+
+export const enviarFacturaWhatsApp = async (id) => {
+  const res = await apiFetch(`/api/facturas/${id}/enviar-whatsapp`, {
+    method: 'POST'
+  });
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Error al enviar factura por WhatsApp'));
+  return res.json();
+};

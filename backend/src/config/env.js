@@ -59,4 +59,10 @@ module.exports = {
         user: process.env.EMAIL_USER || process.env.GMAIL_USER || '',
         pass: process.env.EMAIL_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASSWORD || ''
     },
+
+    // Webhook WhatsApp (n8n)
+    n8n: {
+        webhookUrl:   process.env.N8N_WEBHOOK_URL || '',
+        webhookToken: process.env.N8N_WEBHOOK_TOKEN || ''
+    },
 };

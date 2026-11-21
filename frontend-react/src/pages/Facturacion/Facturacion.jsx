@@ -23,7 +23,8 @@ import {
   getFacturaById,
   createFactura,
   deleteFactura,
-  enviarFacturaCorreo
+  enviarFacturaCorreo,
+  enviarFacturaWhatsApp
 } from '../../services/facturacionService';
 import { getOrdenes, getServiciosOrden, getRepuestosOrden } from '../../services/ordenesService';
 import './Facturacion.css';
@@ -65,6 +66,7 @@ export default function Facturacion() {
 
   // Estado para envío de correos (Nodemailer + Gmail)
   const [enviandoCorreoId, setEnviandoCorreoId] = useState(null);
+  const [enviandoWhatsAppId, setEnviandoWhatsAppId] = useState(null);
   const [correoEnviadoIds, setCorreoEnviadoIds] = useState(() => {
     try {
       const guardados = localStorage.getItem('facturas_correo_enviadas');
@@ -256,6 +258,21 @@ export default function Facturacion() {
       showToast(err.message || 'Error al enviar la factura por correo', 'error');
     } finally {
       setEnviandoCorreoId(null);
+    }
+  };
+
+  // Envío automático de factura en PDF por WhatsApp (vía n8n)
+  const handleEnviarWhatsApp = async (factura) => {
+    if (!factura?.id_factura) return;
+    try {
+      setEnviandoWhatsAppId(factura.id_factura);
+      showToast(`Enviando factura #${factura.id_factura} por WhatsApp...`, 'info');
+      const res = await enviarFacturaWhatsApp(factura.id_factura);
+      showToast(res.mensaje || 'Factura enviada por WhatsApp exitosamente', 'success');
+    } catch (err) {
+      showToast(err.message || 'Error al enviar por WhatsApp', 'error');
+    } finally {
+      setEnviandoWhatsAppId(null);
     }
   };
 
@@ -559,15 +576,31 @@ export default function Facturacion() {
                         >
                           <FileDown size={15} />
                         </button>
-                        <a
-                          href={generarWhatsAppUrl(f)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-accion whatsapp"
-                          title={f.telefono ? "Enviar por WhatsApp" : "Enviar por WhatsApp (seleccionar contacto)"}
-                        >
-                          <Send size={15} />
-                        </a>
+                        {f.telefono ? (
+                          <button
+                            type="button"
+                            className="btn-accion whatsapp"
+                            disabled={enviandoWhatsAppId === f.id_factura}
+                            onClick={() => handleEnviarWhatsApp(f)}
+                            title="Enviar factura en PDF por WhatsApp"
+                          >
+                            {enviandoWhatsAppId === f.id_factura ? (
+                              <RotateCw size={14} className="spin" />
+                            ) : (
+                              <Send size={15} />
+                            )}
+                          </button>
+                        ) : (
+                          <a
+                            href={generarWhatsAppUrl(f)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-accion whatsapp"
+                            title="Enviar por WhatsApp (seleccionar contacto)"
+                          >
+                            <Send size={15} />
+                          </a>
+                        )}
                         <button
                           type="button"
                           className={`btn-accion correo ${correoEnviadoIds.includes(f.id_factura) ? 'reenviado' : ''}`}
