@@ -1,4 +1,5 @@
 const pool = require('../../config/database');
+const bitacora = require('../../services/bitacora.service');
 
 const bloquearOrdenEditable = async (client, id) => {
     const orden = await client.query('SELECT 1 FROM orden_trabajo WHERE id_orden=$1 FOR UPDATE', [id]);
@@ -129,6 +130,23 @@ const create = async (req, res, next) => {
             await client.query('INSERT INTO orden_inventario(id_orden,id_repuesto,cantidad) VALUES($1,$2,$3)',[id,rid,cantidad]);
         }
         const detalle = await consultarOrden(client,id);
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            await bitacora.registrarEvento({
+                client,
+                idSesion,
+                idUsuario,
+                modulo: 'orden',
+                accion: 'crear',
+                entidad: 'orden_trabajo',
+                idRegistro: id,
+                descripcion: `Creó orden de trabajo #${id} (Fecha inicio: ${fecha_inicio})`,
+                datosAntes: null,
+                datosDespues: detalle.rows[0],
+                contexto: { id_orden: id, id_cita, id_empleado }
+            });
+        }
         await client.query('COMMIT');
         res.status(201).json(detalle.rows[0]);
     } catch (err) {
@@ -143,17 +161,58 @@ const create = async (req, res, next) => {
 
 const update = conOrdenEditable(async (client, req) => {
     const { fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado } = req.body;
+    const id = req.params.id;
+    const anterior = (await consultarOrden(client, id)).rows[0];
     await client.query(`
         UPDATE orden_trabajo SET fecha_inicio=$1, fecha_fin=$2, observaciones=$3,
             id_cita=$4, id_empleado=$5 WHERE id_orden=$6 RETURNING *`,
-        [fecha_inicio, fecha_fin || null, observaciones || null, id_cita, id_empleado, req.params.id]);
-    return { body: (await consultarOrden(client,req.params.id)).rows[0] };
+        [fecha_inicio, fecha_fin || null, observaciones || null, id_cita, id_empleado, id]);
+    const actualizada = (await consultarOrden(client, id)).rows[0];
+    const idSesion = req.usuario?.id_sesion;
+    const idUsuario = req.usuario?.id;
+    if (idSesion && idUsuario) {
+        await bitacora.registrarEvento({
+            client,
+            idSesion,
+            idUsuario,
+            modulo: 'orden',
+            accion: 'actualizar',
+            entidad: 'orden_trabajo',
+            idRegistro: id,
+            descripcion: `Actualizó orden de trabajo #${id}`,
+            datosAntes: anterior,
+            datosDespues: actualizada,
+            contexto: { id_orden: id, id_cita, id_empleado }
+        });
+    }
+    return { body: actualizada };
 });
 
 const remove = conOrdenEditable(async (client, req) => {
-    await client.query('DELETE FROM orden_trabajo WHERE id_orden=$1', [req.params.id]);
+    const id = req.params.id;
+    const anterior = (await consultarOrden(client, id)).rows[0];
+    await client.query('DELETE FROM orden_trabajo WHERE id_orden=$1', [id]);
+    const idSesion = req.usuario?.id_sesion;
+    const idUsuario = req.usuario?.id;
+    if (idSesion && idUsuario) {
+        await bitacora.registrarEvento({
+            client,
+            idSesion,
+            idUsuario,
+            modulo: 'orden',
+            accion: 'eliminar',
+            entidad: 'orden_trabajo',
+            idRegistro: id,
+            descripcion: `Eliminó orden de trabajo #${id}`,
+            datosAntes: anterior,
+            datosDespues: null,
+            contexto: { id_orden: id }
+        });
+    }
     return { body: { mensaje: 'Orden eliminada correctamente' } };
 });
+
+
 
 const getServicios = async (req, res) => {
     try {

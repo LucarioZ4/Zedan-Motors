@@ -1,4 +1,5 @@
 const pool = require('../../config/database');
+const bitacora = require('../../services/bitacora.service');
 const factusService = require('./factus.service');
 
 const getAll = async (req, res) => {
@@ -110,6 +111,24 @@ const create = async (req, res) => {
         await client.query('COMMIT');
         client.release();
         client = null;
+
+        // Registrar en bitácora
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'facturacion',
+                accion: 'crear',
+                entidad: 'facturacion',
+                idRegistro: factura.id_factura,
+                descripcion: `Generó factura #${factura.id_factura} por $${total} (Método: ${metodo_pago})`,
+                datosAntes: null,
+                datosDespues: factura,
+                contexto: { id_factura: factura.id_factura, id_orden, total, metodo_pago }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
 
         // Integración con Factus (Mock)
         try {

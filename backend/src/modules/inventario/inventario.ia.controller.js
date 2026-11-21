@@ -1,5 +1,6 @@
 const pool = require('../../config/database');
 const iaService = require('./inventario.ia.service');
+const bitacora = require('../../services/bitacora.service');
 
 const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
 // El límite de Vercel para el cuerpo de una petición es 4.5 MB; el navegador ya reduce la foto,
@@ -172,6 +173,33 @@ const aplicar = async (req, res) => {
         const partes = [];
         if (nActualizados) partes.push(`${nActualizados} repuesto(s) actualizado(s)`);
         if (nCreados) partes.push(`${nCreados} repuesto(s) nuevo(s)`);
+
+        // Registrar en bitácora por sesión
+        const idSesion = req.usuario?.id_sesion;
+        if (idSesion && idUsuario) {
+            await bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'ia',
+                accion: 'confirmar_ia',
+                entidad: 'inventario',
+                idRegistro: 'lote_ia',
+                descripcion: `Confirmación IA (${modo}): ${partes.join(' y ') || 'Sin cambios numéricos'}. Nota: ${notaLimpia || 'N/A'}`,
+                datosAntes: {
+                    items: resultados.map(r => ({ id: r.id_repuesto, nombre: r.nombre, stock: r.stock_anterior }))
+                },
+                datosDespues: {
+                    items: resultados.map(r => ({ id: r.id_repuesto, nombre: r.nombre, stock: r.stock_nuevo }))
+                },
+                contexto: {
+                    modo,
+                    total_modificados: resultados.length,
+                    creados: nCreados,
+                    actualizados: nActualizados,
+                    nota: notaLimpia
+                }
+            }).catch(e => console.warn('Bitácora IA aviso:', e.message));
+        }
 
         res.json({ mensaje: `Inventario actualizado: ${partes.join(' y ')}.`, total: resultados.length, resultados });
     } catch (err) {
