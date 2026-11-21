@@ -1,19 +1,13 @@
 import { apiFetch, getErrorMessage } from './api';
 
 export const getFacturas = async () => {
-  let res = await apiFetch('/api/facturacion');
-  if (res.status === 404) {
-    res = await apiFetch('/api/facturas');
-  }
+  const res = await apiFetch('/api/facturacion');
   if (!res.ok) throw new Error(await getErrorMessage(res, 'Error al cargar facturas'));
   return res.json();
 };
 
 export const getFacturaById = async (id) => {
-  let res = await apiFetch(`/api/facturacion/${id}`);
-  if (res.status === 404) {
-    res = await apiFetch(`/api/facturas/${id}`);
-  }
+  const res = await apiFetch(`/api/facturacion/${id}`);
   if (!res.ok) throw new Error(await getErrorMessage(res, 'Error al obtener factura'));
   return res.json();
 };

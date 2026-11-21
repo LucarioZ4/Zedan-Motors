@@ -59,14 +59,10 @@ safeMount('/api/vehiculos', require('./modules/vehiculos/vehiculos.routes'));
 safeMount('/api/citas', require('./modules/citas/citas.routes'));
 safeMount('/api/estados', require('./modules/estados/estados.routes'));
 safeMount('/api/ordenes', require('./modules/ordenes/ordenes.routes'));
-safeMount('/api/ordenestrabajo', require('./modules/ordenes/ordenes.routes'));
 safeMount('/api/empleados', require('./modules/empleados/empleados.routes'));
 safeMount('/api/servicios', require('./modules/servicios/servicios.routes'));
 safeMount('/api/inventario', require('./modules/inventario/inventario.routes'));
-
-const facturacionRoutes = require('./modules/facturacion/facturacion.routes');
-safeMount('/api/facturacion', facturacionRoutes);
-safeMount('/api/facturas', facturacionRoutes);
+safeMount('/api/facturacion', require('./modules/facturacion/facturacion.routes'));
 safeMount('/api/cargos', require('./modules/cargos/cargos.routes'));
 safeMount('/api/historial', require('./modules/historial/historial.routes'));
 safeMount('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
