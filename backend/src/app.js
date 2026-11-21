@@ -66,9 +66,7 @@ safeMount('/api/empleados', require('./modules/empleados/empleados.routes'));
 safeMount('/api/servicios', require('./modules/servicios/servicios.routes'));
 safeMount('/api/inventario', require('./modules/inventario/inventario.routes'));
 safeMount('/api/facturacion', require('./modules/facturacion/facturacion.routes'));
-app.use('/api/facturas', (req, res, next) => {
-    require('./modules/facturacion/facturacion.routes')(req, res, next);
-});
+safeMount('/api/facturas', require('./modules/facturacion/facturacion.routes'));
 safeMount('/api/cargos', require('./modules/cargos/cargos.routes'));
 safeMount('/api/historial', require('./modules/historial/historial.routes'));
 safeMount('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
