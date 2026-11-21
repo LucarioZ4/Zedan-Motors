@@ -69,12 +69,25 @@ app.get('/', (req, res) => {
 // ── Health check ──
 app.get('/health', async (req, res) => {
     const pool = require('./config/database');
+    const env = require('./config/env');
+    let dbStatus = 'desconectado';
     try {
         await pool.query('SELECT 1');
-        res.json({ status: 'ok', database: 'conectado' });
+        dbStatus = 'conectado';
     } catch (err) {
-        res.status(500).json({ status: 'error', database: err.message });
+        dbStatus = err.message;
     }
+    const ok = dbStatus === 'conectado' && !!env.jwtSecret;
+    res.status(ok ? 200 : 500).json({
+        status: ok ? 'ok' : 'error',
+        database: dbStatus,
+        config: {
+            JWT_SECRET: env.jwtSecret ? '✅ configurado' : '❌ FALTA',
+            DATABASE_URL: process.env.DATABASE_URL ? '✅ configurado' : '❌ FALTA',
+            N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL ? '✅ configurado' : '❌ FALTA',
+            EMAIL_USER: process.env.EMAIL_USER ? '✅ configurado' : '❌ FALTA',
+        }
+    });
 });
 
 // ── 404 ──

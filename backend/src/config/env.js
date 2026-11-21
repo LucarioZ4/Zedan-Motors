@@ -3,13 +3,18 @@ require('dotenv').config();
 const JWT_SECRET_MIN_LENGTH = 32;
 const jwtSecret = process.env.JWT_SECRET;
 
-// Falla al arrancar (fail-fast) si el secreto falta o es débil:
-// un secreto corto o vacío permite falsificar tokens.
+// Validación de JWT_SECRET: advertencia en consola en lugar de throw para no matar
+// el proceso en entornos serverless (Vercel) donde el error queda oculto.
 if (!jwtSecret || jwtSecret.trim().length < JWT_SECRET_MIN_LENGTH) {
-    throw new Error(
-        `JWT_SECRET no está definido o es demasiado corto (mínimo ${JWT_SECRET_MIN_LENGTH} caracteres). ` +
-        'Genera uno con: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))"'
-    );
+    const msg = `JWT_SECRET no está definido o es demasiado corto (mínimo ${JWT_SECRET_MIN_LENGTH} caracteres). ` +
+        'Genera uno con: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))"';
+    console.error(`❌ FATAL: ${msg}`);
+    // En entorno serverless el throw impide que Express arranque y el error queda oculto.
+    // En su lugar, se deja que el middleware de auth rechace todas las peticiones.
+    if (typeof process.env.VERCEL === 'undefined') {
+        // Solo throw en local para fail-fast
+        throw new Error(msg);
+    }
 }
 
 // Orígenes permitidos por CORS, separados por coma.
