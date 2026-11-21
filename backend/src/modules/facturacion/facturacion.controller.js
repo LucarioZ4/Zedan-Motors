@@ -12,6 +12,8 @@ const getAll = async (req, res) => {
                 f.metodo_pago,
                 f.id_orden,
                 cl.nombre || ' ' || cl.apellido AS cliente,
+                cl.telefono,
+                cl.correo,
                 v.placa || ' - ' || v.marca || ' ' || v.modelo AS vehiculo
             FROM facturacion f
             INNER JOIN orden_trabajo o ON f.id_orden    = o.id_orden

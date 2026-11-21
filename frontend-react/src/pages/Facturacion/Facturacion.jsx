@@ -13,7 +13,8 @@ import {
   Trash2,
   X,
   Check,
-  Car
+  Car,
+  Send
 } from 'lucide-react';
 import {
   getFacturas,
@@ -334,6 +335,58 @@ export default function Facturacion() {
     });
   };
 
+  /**
+   * Construye el enlace de WhatsApp pre-llenado (wa.me)
+   * 
+   * NOTA: La API estándar de enlaces wa.me no admite adjuntos binarios directamente.
+   * Se abre el chat con el mensaje prellenado detallando la factura para que el usuario adjunte el PDF.
+   */
+  const generarWhatsAppUrl = (factura) => {
+    if (!factura) return '#';
+
+    const telefonoRaw = factura.telefono || factura.cliente_telefono || '';
+    let telefono = telefonoRaw.replace(/[^0-9]/g, '');
+    if (telefono.length === 10 && !telefono.startsWith('57')) {
+      telefono = `57${telefono}`;
+    }
+
+    const clienteNombre = factura.cliente || 'Estimado cliente';
+    const numFactura = `FE-${String(factura.id_factura).padStart(4, '0')}`;
+    const vehiculo = factura.vehiculo || 'Vehículo';
+    const fecha = factura.fecha ? formatearFecha(factura.fecha) : '';
+    const total = `$${parseFloat(factura.total || 0).toLocaleString('es-CO')}`;
+    const metodoPago = factura.metodo_pago || 'No especificado';
+
+    let mensaje = `🧾 *ZEDAN MOTORS — COMPROBANTE DE FACTURACIÓN*\n\n`;
+    mensaje += `Hola *${clienteNombre}*, le compartimos el detalle de su factura de venta por los servicios realizados en Zedan Motors.\n\n`;
+    mensaje += `📌 *Factura:* #${numFactura}\n`;
+    mensaje += `🚗 *Vehículo:* ${vehiculo}\n`;
+    if (fecha) {
+      mensaje += `📅 *Fecha:* ${fecha}\n`;
+    }
+    mensaje += `💳 *Método de Pago:* ${metodoPago}\n`;
+    mensaje += `💰 *Total Facturado:* ${total}\n`;
+
+    if (factura.servicios && factura.servicios.length > 0) {
+      mensaje += `\n🔧 *Servicios:*\n`;
+      factura.servicios.forEach((s) => {
+        mensaje += `• ${s.nombre_servicio}: $${parseFloat(s.costo || 0).toLocaleString('es-CO')}\n`;
+      });
+    }
+
+    if (factura.repuestos && factura.repuestos.length > 0) {
+      mensaje += `\n⚙️ *Repuestos:*\n`;
+      factura.repuestos.forEach((r) => {
+        mensaje += `• ${r.nombre}${r.marca ? ` (${r.marca})` : ''} x${r.cantidad}: $${parseFloat(r.total || 0).toLocaleString('es-CO')}\n`;
+      });
+    }
+
+    mensaje += `\nAdjunto encontrará el comprobante en formato PDF. 📄📎\n`;
+    mensaje += `\nCualquier consulta estamos atentos a este chat. ¡Gracias por confiar en Zedan Motors! 🔧`;
+
+    return `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+  };
+
   const totalRecaudado = facturas.reduce((sum, f) => sum + (parseFloat(f.total) || 0), 0);
 
   return (
@@ -453,6 +506,15 @@ export default function Facturacion() {
                         >
                           <FileDown size={15} />
                         </button>
+                        <a
+                          href={generarWhatsAppUrl(f)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-accion whatsapp"
+                          title={f.telefono ? "Enviar por WhatsApp" : "Enviar por WhatsApp (seleccionar contacto)"}
+                        >
+                          <Send size={15} />
+                        </a>
                         <button
                           className="btn-accion eliminar"
                           title="Eliminar factura"
@@ -661,6 +723,16 @@ export default function Facturacion() {
             </div>
 
             <div className="modal-footer-custom">
+              <a
+                href={generarWhatsAppUrl(facturaDetalle)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-whatsapp-custom"
+                title="Enviar comprobante por WhatsApp al cliente"
+              >
+                <Send size={16} />
+                <span>Enviar por WhatsApp</span>
+              </a>
               <button
                 type="button"
                 className="btn-primary-custom"
