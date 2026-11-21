@@ -13,6 +13,7 @@ import {
   Receipt,
   History,
   MessageSquare,
+  ShieldCheck,
   LogOut,
   X
 } from 'lucide-react';
@@ -41,7 +42,8 @@ const navItems = [
       { label: 'Inventario', path: '/inventario', icon: Package },
       { label: 'Facturación', path: '/facturacion', icon: Receipt },
       { label: 'Historial', path: '/historial', icon: History },
-      { label: 'Mensajes', path: '/mensajes', icon: MessageSquare }
+      { label: 'Mensajes', path: '/mensajes', icon: MessageSquare },
+      { label: 'Bitácora', path: '/bitacora', icon: ShieldCheck }
     ]
   }
 ];
@@ -57,8 +59,23 @@ export default function Sidebar({ isOpen = true, onClose = () => {} }) {
     if (window.matchMedia('(max-width: 900px)').matches) onClose();
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm('¿Deseas cerrar sesión?')) {
+      try {
+        const token = sessionStorage.getItem('token');
+        if (token) {
+          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+          await fetch(`${API_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }).catch(() => {});
+        }
+      } catch (e) {
+        // Ignorar error al desloguear
+      }
       sessionStorage.clear();
       navigate('/login');
     }
