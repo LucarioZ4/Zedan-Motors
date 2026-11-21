@@ -1,16 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   History,
   Activity,
-  Clock,
-  User,
-  Shield,
-  ArrowRight,
-  CheckCircle,
-  AlertCircle,
-  RefreshCw,
-  Terminal,
-  Database
+  RefreshCw
 } from 'lucide-react';
 import { bitacoraService } from '../../services/bitacoraService';
 import './Bitacora.css';
@@ -72,12 +64,45 @@ export default function Bitacora() {
     }
   };
 
+  const cambiarTab = (nuevaTab) => {
+    if (nuevaTab === tab) return;
+    setLoading(true);
+    setError(null);
+    setTab(nuevaTab);
+  };
+
   useEffect(() => {
-    if (tab === 'activa') {
-      cargarSesionActiva();
-    } else {
-      cargarTodasSesiones();
-    }
+    let activa = true;
+
+    const cargar = async () => {
+      try {
+        const data = tab === 'activa'
+          ? await bitacoraService.getSesionActiva()
+          : await bitacoraService.getSesiones({ limit: 40 });
+
+        if (!activa) return;
+        setError(null);
+        if (tab === 'activa') {
+          setSesionActiva(data.sesion);
+          setEventosActiva(data.eventos || []);
+        } else {
+          setSesiones(data || []);
+        }
+      } catch (err) {
+        if (!activa) return;
+        console.error(err);
+        setError(err.message || (tab === 'activa'
+          ? 'Error al cargar bitácora activa'
+          : 'Error al consultar sesiones'));
+      } finally {
+        if (activa) setLoading(false);
+      }
+    };
+
+    cargar();
+    return () => {
+      activa = false;
+    };
   }, [tab]);
 
   const renderTimeline = (eventos) => {
@@ -147,13 +172,13 @@ export default function Bitacora() {
           <div className="bitacora-tabs">
             <button
               className={`bitacora-tab ${tab === 'activa' ? 'active' : ''}`}
-              onClick={() => setTab('activa')}
+              onClick={() => cambiarTab('activa')}
             >
               Mi Sesión Actual
             </button>
             <button
               className={`bitacora-tab ${tab === 'todas' ? 'active' : ''}`}
-              onClick={() => setTab('todas')}
+              onClick={() => cambiarTab('todas')}
             >
               Histórico de Sesiones
             </button>

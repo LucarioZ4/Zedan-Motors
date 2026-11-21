@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -65,16 +64,19 @@ export default function Sidebar({ isOpen = true, onClose = () => {} }) {
         const token = sessionStorage.getItem('token');
         if (token) {
           const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-          await fetch(`${API_URL}/api/auth/logout`, {
+          const response = await fetch(`${API_URL}/api/auth/logout`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             }
-          }).catch(() => {});
+          });
+          if (!response.ok) {
+            console.warn('No se pudo registrar el cierre de sesión:', response.status);
+          }
         }
-      } catch (e) {
-        // Ignorar error al desloguear
+      } catch (err) {
+        console.warn('No se pudo registrar el cierre de sesión:', err);
       }
       sessionStorage.clear();
       navigate('/login');
