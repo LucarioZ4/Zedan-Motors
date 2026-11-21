@@ -58,12 +58,9 @@ app.use('/api/historial', require('./modules/historial/historial.routes'));
 app.use('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
 app.use('/api/diagnosticos', require('./modules/diagnosticos/diagnosticos.routes'));
 
-// Servir frontend
-app.use(express.static(path.join(__dirname, '../../frontend')));
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
-});
+// Servir la compilación de React.
+const frontendPath = path.join(__dirname, '../../frontend-react/dist');
+app.use(express.static(frontendPath));
 
 // ── Health check ──
 app.get('/health', async (req, res) => {
@@ -74,6 +71,14 @@ app.get('/health', async (req, res) => {
     } catch (err) {
         res.status(500).json({ status: 'error', database: err.message });
     }
+});
+
+// React Router resuelve las páginas cuando se abren o recargan directamente.
+app.get('*', (req, res, next) => {
+    if (req.path === '/api' || req.path.startsWith('/api/') || path.extname(req.path)) {
+        return next();
+    }
+    res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // ── 404 ──

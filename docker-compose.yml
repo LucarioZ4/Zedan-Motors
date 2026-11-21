@@ -6,6 +6,8 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+      secrets:
+        - frontend_env
     container_name: zedan-backend
     restart: unless-stopped
     ports:
@@ -73,6 +75,10 @@ services:
 # ========================================================
 # Volúmenes y Redes
 # ========================================================
+secrets:
+  frontend_env:
+    file: ./frontend-react/.env
+
 volumes:
   n8n_data:
 
