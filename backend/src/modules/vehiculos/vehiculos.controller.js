@@ -1,5 +1,6 @@
 const patronContiene = require('../../utils/patronContiene');
 const pool = require('../../config/database');
+const bitacora = require('../../services/bitacora.service');
 
 const getAll = async (req, res) => {
     try {
@@ -82,7 +83,26 @@ const create = async (req, res) => {
             [placa.toUpperCase(), marca, modelo, anio || null, color || null, id_cliente]
         );
 
-        res.status(201).json((await consultarDetalle(result.rows[0].id_vehiculo)).rows[0]);
+        const nuevo = result.rows[0];
+
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'vehiculo',
+                accion: 'crear',
+                entidad: 'vehiculo',
+                idRegistro: nuevo.id_vehiculo,
+                descripcion: `Registró vehículo ${nuevo.placa} (${nuevo.marca} ${nuevo.modelo})`,
+                datosAntes: null,
+                datosDespues: nuevo,
+                contexto: { id_vehiculo: nuevo.id_vehiculo, placa: nuevo.placa, id_cliente }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
+        res.status(201).json((await consultarDetalle(nuevo.id_vehiculo)).rows[0]);
 
     } catch (err) {
         if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
@@ -96,9 +116,15 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { placa, marca, modelo, anio, color, id_cliente } = req.body;
+        const id = req.params.id;
 
         if (!placa || !marca || !modelo || !id_cliente)
             return res.status(400).json({ error: 'Placa, marca, modelo y cliente son obligatorios' });
+
+        const prevRes = await pool.query('SELECT * FROM vehiculo WHERE id_vehiculo = $1', [id]);
+        if (prevRes.rows.length === 0)
+            return res.status(404).json({ error: 'Vehículo no encontrado' });
+        const anterior = prevRes.rows[0];
 
         const result = await pool.query(
             `UPDATE vehiculo SET
@@ -110,13 +136,29 @@ const update = async (req, res) => {
                 id_cliente = $6
              WHERE id_vehiculo = $7
              RETURNING *`,
-            [placa.toUpperCase(), marca, modelo, anio || null, color || null, id_cliente, req.params.id]
+            [placa.toUpperCase(), marca, modelo, anio || null, color || null, id_cliente, id]
         );
 
-        if (result.rows.length === 0)
-            return res.status(404).json({ error: 'Vehículo no encontrado' });
+        const actualizado = result.rows[0];
 
-        res.json((await consultarDetalle(result.rows[0].id_vehiculo)).rows[0]);
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'vehiculo',
+                accion: 'actualizar',
+                entidad: 'vehiculo',
+                idRegistro: id,
+                descripcion: `Actualizó vehículo ${actualizado.placa}`,
+                datosAntes: anterior,
+                datosDespues: actualizado,
+                contexto: { id_vehiculo: id, placa: actualizado.placa, id_cliente }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
+        res.json((await consultarDetalle(actualizado.id_vehiculo)).rows[0]);
 
     } catch (err) {
         if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
@@ -129,21 +171,39 @@ const update = async (req, res) => {
 
 const remove = async (req, res) => {
     try {
-        const result = await pool.query(
-            'DELETE FROM vehiculo WHERE id_vehiculo = $1 RETURNING *',
-            [req.params.id]
-        );
-
-        if (result.rows.length === 0)
+        const id = req.params.id;
+        const prevRes = await pool.query('SELECT * FROM vehiculo WHERE id_vehiculo = $1', [id]);
+        if (prevRes.rows.length === 0)
             return res.status(404).json({ error: 'Vehículo no encontrado' });
+        const anterior = prevRes.rows[0];
+
+        await pool.query('DELETE FROM vehiculo WHERE id_vehiculo = $1', [id]);
+
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'vehiculo',
+                accion: 'eliminar',
+                entidad: 'vehiculo',
+                idRegistro: id,
+                descripcion: `Eliminó vehículo ${anterior.placa} (#${id})`,
+                datosAntes: anterior,
+                datosDespues: null,
+                contexto: { id_vehiculo: id, placa: anterior.placa }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
 
         res.json({ mensaje: 'Vehículo eliminado correctamente' });
-
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
+
+
 
 const importar = async (req, res) => {
     const client = await pool.connect();
