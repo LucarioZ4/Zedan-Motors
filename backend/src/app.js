@@ -42,12 +42,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', apiLimiter);
 
 // ── Helper para montaje seguro de rutas (compatible con CJS/ESM y bundlers de Vercel) ──
+const rutasMontadas = [];
+const esRouter = (x) => typeof x === 'function';
 const safeMount = (ruta, modulo) => {
-    const handler = (modulo && modulo.default) ? modulo.default : modulo;
-    if (typeof handler === 'function') {
+    // Prioridad: el propio módulo si ya es un router/función (module.exports = router).
+    // Solo si no lo es, se buscan envoltorios típicos de bundlers (default / router).
+    // Antes se daba prioridad a `modulo.default`, y si Vercel dejaba ahí un objeto
+    // el router real se descartaba y la ruta quedaba sin montar (404 silencioso).
+    const handler = [modulo, modulo && modulo.default, modulo && modulo.router].find(esRouter);
+    if (handler) {
         app.use(ruta, handler);
+        rutasMontadas.push(ruta);
     } else {
-        console.error(`❌ Error montando ruta ${ruta}: el módulo exporta ${typeof handler}`);
+        const forma = modulo && typeof modulo === 'object'
+            ? `object con claves [${Object.keys(modulo).join(', ')}], default: ${typeof modulo.default}`
+            : typeof modulo;
+        // No se lanza excepción: tumbaría también el login y el resto de la API.
+        // El log muestra la forma exacta del export para diagnosticar en Runtime Logs.
+        console.error(`❌ No se pudo montar ${ruta}: el módulo exporta ${forma}`);
     }
 };
 
@@ -77,6 +89,16 @@ if (!process.env.VERCEL) {
         res.sendFile(path.join(frontendPath, 'index.html'));
     });
 }
+
+// ── Versión desplegada: sin auth, sirve para comprobar QUÉ código corre en Vercel ──
+app.get('/api/version', (req, res) => {
+    res.json({
+        commit: process.env.VERCEL_GIT_COMMIT_SHA || 'local',
+        rama: process.env.VERCEL_GIT_COMMIT_REF || 'local',
+        desplegado_en_vercel: !!process.env.VERCEL,
+        rutas: rutasMontadas,
+    });
+});
 
 // ── Health check ──
 app.get('/health', async (req, res) => {
