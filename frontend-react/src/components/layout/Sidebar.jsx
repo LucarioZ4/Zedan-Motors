@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import { API_URL } from '../../services/api';
 import {
   LayoutDashboard,
   Users,
@@ -63,7 +64,6 @@ export default function Sidebar({ isOpen = true, onClose = () => {} }) {
       try {
         const token = sessionStorage.getItem('token');
         if (token) {
-          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
           const response = await fetch(`${API_URL}/api/auth/logout`, {
             method: 'POST',
             headers: {
