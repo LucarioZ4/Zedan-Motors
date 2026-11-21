@@ -26,14 +26,19 @@ const login = async (req, res) => {
         if (!fila || !fila.activo || !(await bcrypt.compare(password, fila.password_hash)))
             return res.status(401).json({ error: 'Credenciales incorrectas' });
 
-        // Iniciar sesión en la bitácora
-        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
-        const userAgent = req.headers['user-agent'] || 'Desconocido';
-        const idSesion = await bitacoraService.iniciarSesion({
-            idUsuario: fila.id_usuario,
-            ip,
-            userAgent
-        });
+        // Iniciar sesión en la bitácora (no bloqueante para que no impida el login si falla)
+        let idSesion = null;
+        try {
+            const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
+            const userAgent = req.headers['user-agent'] || 'Desconocido';
+            idSesion = await bitacoraService.iniciarSesion({
+                idUsuario: fila.id_usuario,
+                ip,
+                userAgent
+            });
+        } catch (bitacoraErr) {
+            console.warn('⚠️ No se pudo registrar la sesión en la bitácora:', bitacoraErr.message);
+        }
 
         const datos = {
             id: fila.id_usuario,
@@ -53,8 +58,8 @@ const login = async (req, res) => {
         res.json({ token, usuario: datos });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        console.error('Error en login:', err);
+        res.status(500).json({ error: err.message || 'Error interno del servidor al iniciar sesión' });
     }
 };
 
