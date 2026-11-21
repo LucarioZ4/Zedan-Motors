@@ -56,6 +56,7 @@ app.use(['/api/facturacion', '/api/facturas'], require('./modules/facturacion/fa
 app.use('/api/cargos', require('./modules/cargos/cargos.routes'));
 app.use('/api/historial', require('./modules/historial/historial.routes'));
 app.use('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
+app.use('/api/bitacora', require('./modules/bitacora/bitacora.routes'));
 app.use('/api/diagnosticos', require('./modules/diagnosticos/diagnosticos.routes'));
 
 // Servir frontend
