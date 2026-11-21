@@ -2,6 +2,7 @@ const jwt    = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const pool   = require('../../config/database');
 const { jwtSecret, jwtExpires } = require('../../config/env');
+const bitacoraService = require('../../services/bitacora.service');
 
 const login = async (req, res) => {
     try {
@@ -25,12 +26,22 @@ const login = async (req, res) => {
         if (!fila || !fila.activo || !(await bcrypt.compare(password, fila.password_hash)))
             return res.status(401).json({ error: 'Credenciales incorrectas' });
 
+        // Iniciar sesión en la bitácora
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
+        const userAgent = req.headers['user-agent'] || 'Desconocido';
+        const idSesion = await bitacoraService.iniciarSesion({
+            idUsuario: fila.id_usuario,
+            ip,
+            userAgent
+        });
+
         const datos = {
             id: fila.id_usuario,
             id_empleado: fila.id_empleado,
             usuario: fila.nombre_usuario,
             rol: fila.rol,
-            nombre: fila.nombre
+            nombre: fila.nombre,
+            id_sesion: idSesion
         };
 
         const token = jwt.sign(datos, jwtSecret, {
@@ -47,9 +58,23 @@ const login = async (req, res) => {
     }
 };
 
+const logout = async (req, res) => {
+    try {
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion) {
+            await bitacoraService.cerrarSesion({ idSesion, idUsuario });
+        }
+        res.json({ mensaje: 'Sesión cerrada exitosamente' });
+    } catch (err) {
+        console.error('Error al cerrar sesión:', err);
+        res.status(500).json({ error: 'Error interno al cerrar sesión' });
+    }
+};
+
 const verificar = (req, res) => {
     const { id, id_empleado, usuario, rol, nombre } = req.usuario;
     res.json({ usuario: { id, id_empleado, usuario, rol, nombre } });
 };
 
-module.exports = { login, verificar };
+module.exports = { login, logout, verificar };

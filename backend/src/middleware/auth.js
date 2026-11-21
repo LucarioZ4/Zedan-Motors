@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { jwtSecret } = require('../config/env');
+const bitacoraService = require('../services/bitacora.service');
 
 module.exports = (req, res, next) => {
     const header = req.headers['authorization'];
@@ -17,6 +18,12 @@ module.exports = (req, res, next) => {
             (decoded.aud !== undefined && decoded.aud !== (process.env.JWT_AUDIENCE || 'ZedanMotorsFrontend')))
             return res.status(401).json({ error: 'Token inválido o expirado' });
         req.usuario = { ...decoded, id: Number(decoded.id), id_empleado: Number(decoded.id_empleado), rol: decoded.rol ?? null };
+
+        // Actualizar última actividad de forma asíncrona (sin bloquear el request)
+        if (decoded.id_sesion) {
+            bitacoraService.renovarActividad(decoded.id_sesion);
+        }
+
         next();
     } catch (err) {
         return res.status(401).json({ error: 'Token inválido o expirado' });
