@@ -41,30 +41,44 @@ app.use(express.urlencoded({ extended: true }));
 // ── Rate limiting general de la API ──
 app.use('/api', apiLimiter);
 
+// ── Helper para montaje seguro de rutas (compatible con CJS/ESM y bundlers de Vercel) ──
+const safeMount = (ruta, modulo) => {
+    const handler = (modulo && modulo.default) ? modulo.default : modulo;
+    if (typeof handler === 'function') {
+        app.use(ruta, handler);
+    } else {
+        console.error(`❌ Error montando ruta ${ruta}: el módulo exporta ${typeof handler}`);
+    }
+};
+
 // ── Rutas ──
-app.use('/api/auth', require('./modules/auth/auth.routes'));
-app.use('/api/dashboard', require('./modules/dashboard/dashboard.routes'));
-app.use('/api/clientes', require('./modules/clientes/clientes.routes'));
-app.use('/api/vehiculos', require('./modules/vehiculos/vehiculos.routes'));
-app.use('/api/citas', require('./modules/citas/citas.routes'));
-app.use('/api/estados', require('./modules/estados/estados.routes'));
-app.use(['/api/ordenes', '/api/ordenestrabajo'], require('./modules/ordenes/ordenes.routes'));
-app.use('/api/empleados', require('./modules/empleados/empleados.routes'));
-app.use('/api/servicios', require('./modules/servicios/servicios.routes'));
-app.use('/api/inventario', require('./modules/inventario/inventario.routes'));
-app.use(['/api/facturacion', '/api/facturas'], require('./modules/facturacion/facturacion.routes'));
-app.use('/api/cargos', require('./modules/cargos/cargos.routes'));
-app.use('/api/historial', require('./modules/historial/historial.routes'));
-app.use('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
-app.use('/api/bitacora', require('./modules/bitacora/bitacora.routes'));
-app.use('/api/diagnosticos', require('./modules/diagnosticos/diagnosticos.routes'));
+safeMount('/api/auth', require('./modules/auth/auth.routes'));
+safeMount('/api/dashboard', require('./modules/dashboard/dashboard.routes'));
+safeMount('/api/clientes', require('./modules/clientes/clientes.routes'));
+safeMount('/api/vehiculos', require('./modules/vehiculos/vehiculos.routes'));
+safeMount('/api/citas', require('./modules/citas/citas.routes'));
+safeMount('/api/estados', require('./modules/estados/estados.routes'));
+safeMount('/api/ordenes', require('./modules/ordenes/ordenes.routes'));
+safeMount('/api/ordenestrabajo', require('./modules/ordenes/ordenes.routes'));
+safeMount('/api/empleados', require('./modules/empleados/empleados.routes'));
+safeMount('/api/servicios', require('./modules/servicios/servicios.routes'));
+safeMount('/api/inventario', require('./modules/inventario/inventario.routes'));
+safeMount('/api/facturacion', require('./modules/facturacion/facturacion.routes'));
+safeMount('/api/facturas', require('./modules/facturacion/facturacion.routes'));
+safeMount('/api/cargos', require('./modules/cargos/cargos.routes'));
+safeMount('/api/historial', require('./modules/historial/historial.routes'));
+safeMount('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
+safeMount('/api/bitacora', require('./modules/bitacora/bitacora.routes'));
+safeMount('/api/diagnosticos', require('./modules/diagnosticos/diagnosticos.routes'));
 
-// Servir frontend
-app.use(express.static(path.join(__dirname, '../../frontend')));
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
-});
+// Servir frontend solo en entorno local (en Vercel el frontend lo sirve Vercel directamente)
+if (!process.env.VERCEL) {
+    const frontendPath = path.join(__dirname, '../../frontend');
+    app.use(express.static(frontendPath));
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(frontendPath, 'index.html'));
+    });
+}
 
 // ── Health check ──
 app.get('/health', async (req, res) => {
