@@ -63,6 +63,7 @@ services:
       - DATABASE_SYNCHRONIZE=true
       - AUTO_START_SESSIONS=true
       - CSP_UPGRADE_INSECURE_REQUESTS=false
+      - SSRF_ALLOWED_HOSTS=n8n
     volumes:
       # Persistencia de base de datos SQLite, sesiones de WhatsApp y tokens
       - ./openwa-data:/app/data
