@@ -1,6 +1,8 @@
 const pool = require('../../config/database');
 const bitacora = require('../../services/bitacora.service');
 const factusService = require('./factus.service');
+const pdfService = require('../../services/pdf.service');
+const emailService = require('../../services/email.service');
 
 const getAll = async (req, res) => {
     try {
@@ -189,4 +191,134 @@ const update = async (req, res, next) => {
     }
 };
 
-module.exports = { update, getAll, getById, create, remove };
+const enviarCorreo = async (req, res) => {
+    try {
+        const idFactura = req.params.id;
+        const result = await pool.query(`
+            SELECT
+                f.id_factura, f.fecha, f.total, f.metodo_pago, f.id_orden,
+                f.servicios_detalle, f.repuestos_detalle,
+                cl.nombre || ' ' || cl.apellido AS cliente,
+                cl.telefono, cl.correo,
+                v.placa || ' - ' || v.marca || ' ' || v.modelo AS vehiculo,
+                o.observaciones,
+                o.fecha_inicio, o.fecha_fin
+            FROM facturacion f
+            INNER JOIN orden_trabajo o ON f.id_orden    = o.id_orden
+            LEFT JOIN cita c          ON o.id_cita     = c.id_cita
+            LEFT JOIN vehiculo v      ON c.id_vehiculo = v.id_vehiculo
+            LEFT JOIN cliente cl      ON v.id_cliente  = cl.id_cliente
+            WHERE f.id_factura = $1
+        `, [idFactura]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Factura no encontrada' });
+        }
+
+        const { servicios_detalle, repuestos_detalle, ...facturaHeader } = result.rows[0];
+        const factura = {
+            ...facturaHeader,
+            servicios: servicios_detalle || [],
+            repuestos: repuestos_detalle || []
+        };
+
+        const correoDestino = req.body?.correo?.trim() || factura.correo?.trim();
+        if (!correoDestino) {
+            return res.status(400).json({
+                error: 'El cliente no tiene un correo registrado. Proporciona una dirección de correo válida para el envío.'
+            });
+        }
+
+        // Generar comprobante PDF con pdfkit
+        const pdfBuffer = await pdfService.generarFacturaPdf(factura);
+
+        // Enviar por correo con Nodemailer + Gmail
+        const info = await emailService.enviarFacturaPorCorreo({
+            para: correoDestino,
+            factura,
+            pdfBuffer
+        });
+
+        // Intentar registrar fecha/estado de envío si existen las columnas
+        try {
+            await pool.query(`
+                UPDATE facturacion
+                SET correo_enviado = true, fecha_envio_correo = NOW()
+                WHERE id_factura = $1
+            `, [idFactura]);
+        } catch (dbErr) {
+            // No bloqueante si las columnas no están migradas en DB local
+        }
+
+        // Registrar evento en bitácora de auditoría
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'facturacion',
+                accion: 'actualizar',
+                entidad: 'facturacion',
+                idRegistro: factura.id_factura,
+                descripcion: `Envió factura #${factura.id_factura} por correo a ${correoDestino}`,
+                datosAntes: null,
+                datosDespues: { correo: correoDestino },
+                contexto: { id_factura: factura.id_factura, correo: correoDestino, messageId: info.messageId }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
+        res.json({
+            ok: true,
+            mensaje: `Factura enviada exitosamente a ${correoDestino}`,
+            correo: correoDestino,
+            messageId: info.messageId
+        });
+    } catch (err) {
+        console.error('Error al enviar factura por correo:', err);
+        res.status(500).json({ error: err.message || 'Error al enviar la factura por correo' });
+    }
+};
+
+const descargarPdf = async (req, res) => {
+    try {
+        const idFactura = req.params.id;
+        const result = await pool.query(`
+            SELECT
+                f.id_factura, f.fecha, f.total, f.metodo_pago, f.id_orden,
+                f.servicios_detalle, f.repuestos_detalle,
+                cl.nombre || ' ' || cl.apellido AS cliente,
+                cl.telefono, cl.correo,
+                v.placa || ' - ' || v.marca || ' ' || v.modelo AS vehiculo
+            FROM facturacion f
+            INNER JOIN orden_trabajo o ON f.id_orden    = o.id_orden
+            LEFT JOIN cita c          ON o.id_cita     = c.id_cita
+            LEFT JOIN vehiculo v      ON c.id_vehiculo = v.id_vehiculo
+            LEFT JOIN cliente cl      ON v.id_cliente  = cl.id_cliente
+            WHERE f.id_factura = $1
+        `, [idFactura]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Factura no encontrada' });
+        }
+
+        const { servicios_detalle, repuestos_detalle, ...facturaHeader } = result.rows[0];
+        const factura = {
+            ...facturaHeader,
+            servicios: servicios_detalle || [],
+            repuestos: repuestos_detalle || []
+        };
+
+        const pdfBuffer = await pdfService.generarFacturaPdf(factura);
+        const filename = `Factura_FE-${String(factura.id_factura).padStart(6, '0')}.pdf`;
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+        res.send(pdfBuffer);
+    } catch (err) {
+        console.error('Error generando PDF:', err);
+        res.status(500).json({ error: err.message || 'Error al generar el PDF' });
+    }
+};
+
+module.exports = { update, getAll, getById, create, remove, enviarCorreo, descargarPdf };

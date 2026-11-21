@@ -28,6 +28,8 @@ router.param('id', require('../../middleware/idEntero'));
 
 router.get('/',       ctrl.getAll);
 router.get('/:id',    ctrl.getById);
+router.get('/:id/pdf', ctrl.descargarPdf);
+router.post('/:id/enviar-correo', ctrl.enviarCorreo);
 router.post('/',      roles('Administrador'), validarFactura, validar, ctrl.create);
 router.put('/:id', roles('Administrador'), validarPago, validar, ctrl.update);
 router.delete('/:id', roles('Administrador'), ctrl.remove);

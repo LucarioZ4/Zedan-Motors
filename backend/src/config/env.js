@@ -53,4 +53,10 @@ module.exports = {
         bucket:      process.env.VIDEOS_BUCKET || 'videos-ordenes',
         videoMaxMb:  numeroPositivo(process.env.VIDEO_MAX_MB, 50),
     },
+
+    // Envío de correos (Nodemailer con Gmail)
+    email: {
+        user: process.env.EMAIL_USER || process.env.GMAIL_USER || '',
+        pass: process.env.EMAIL_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASSWORD || ''
+    },
 };

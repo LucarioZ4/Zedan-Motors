@@ -14,13 +14,16 @@ import {
   X,
   Check,
   Car,
-  Send
+  Send,
+  Mail,
+  RotateCw
 } from 'lucide-react';
 import {
   getFacturas,
   getFacturaById,
   createFactura,
-  deleteFactura
+  deleteFactura,
+  enviarFacturaCorreo
 } from '../../services/facturacionService';
 import { getOrdenes, getServiciosOrden, getRepuestosOrden } from '../../services/ordenesService';
 import './Facturacion.css';
@@ -59,6 +62,17 @@ export default function Facturacion() {
   // Modal Eliminar
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [facturaToDelete, setFacturaToDelete] = useState(null);
+
+  // Estado para envío de correos (Nodemailer + Gmail)
+  const [enviandoCorreoId, setEnviandoCorreoId] = useState(null);
+  const [correoEnviadoIds, setCorreoEnviadoIds] = useState(() => {
+    try {
+      const guardados = localStorage.getItem('facturas_correo_enviadas');
+      return guardados ? JSON.parse(guardados) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Toast
   const [toast, setToast] = useState(null);
@@ -203,6 +217,45 @@ export default function Facturacion() {
       fetchData();
     } catch (err) {
       showToast(err.message || 'Error al eliminar factura', 'error');
+    }
+  };
+
+  // Envío y reenvío de factura por correo (Nodemailer + Gmail)
+  const handleEnviarCorreo = async (factura, forzarReenviar = false) => {
+    let correo = factura.correo;
+    const yaEnviado = correoEnviadoIds.includes(factura.id_factura);
+
+    if (!correo || forzarReenviar || yaEnviado) {
+      const promptMsg = yaEnviado
+        ? `Reenviar comprobante de factura #${factura.id_factura} al correo:`
+        : 'Ingresa el correo electrónico del cliente para enviar la factura:';
+      const input = window.prompt(promptMsg, correo || '');
+      if (input === null) return;
+      correo = input.trim();
+      if (!correo) {
+        showToast('Debes ingresar una dirección de correo válida', 'error');
+        return;
+      }
+    }
+
+    try {
+      setEnviandoCorreoId(factura.id_factura);
+      showToast(`Enviando factura #${factura.id_factura} por correo a ${correo}...`, 'success');
+      const res = await enviarFacturaCorreo(factura.id_factura, correo);
+      setCorreoEnviadoIds((prev) => {
+        const nuevo = [...new Set([...prev, factura.id_factura])];
+        try {
+          localStorage.setItem('facturas_correo_enviadas', JSON.stringify(nuevo));
+        } catch (e) {
+          console.warn('Error en localStorage:', e);
+        }
+        return nuevo;
+      });
+      showToast(res.mensaje || `Factura enviada con éxito a ${correo}`, 'success');
+    } catch (err) {
+      showToast(err.message || 'Error al enviar la factura por correo', 'error');
+    } finally {
+      setEnviandoCorreoId(null);
     }
   };
 
@@ -516,6 +569,25 @@ export default function Facturacion() {
                           <Send size={15} />
                         </a>
                         <button
+                          type="button"
+                          className={`btn-accion correo ${correoEnviadoIds.includes(f.id_factura) ? 'reenviado' : ''}`}
+                          title={
+                            correoEnviadoIds.includes(f.id_factura)
+                              ? "Reenviar factura por correo"
+                              : "Enviar factura por correo"
+                          }
+                          onClick={() => handleEnviarCorreo(f, correoEnviadoIds.includes(f.id_factura))}
+                          disabled={enviandoCorreoId === f.id_factura}
+                        >
+                          {enviandoCorreoId === f.id_factura ? (
+                            <RotateCw size={14} className="spin" />
+                          ) : correoEnviadoIds.includes(f.id_factura) ? (
+                            <RotateCw size={14} />
+                          ) : (
+                            <Mail size={15} />
+                          )}
+                        </button>
+                        <button
                           className="btn-accion eliminar"
                           title="Eliminar factura"
                           onClick={() => handleOpenDelete(f)}
@@ -666,7 +738,15 @@ export default function Facturacion() {
                     <div className="fac-client-name">
                       {facturaDetalle.cliente || 'Desconocido'}
                     </div>
-                    <div className="fac-client-sub">{facturaDetalle.telefono || ''}</div>
+                    <div className="fac-client-sub">
+                      {facturaDetalle.telefono ? `Tel: ${facturaDetalle.telefono}` : ''}
+                      {facturaDetalle.correo ? ` • ${facturaDetalle.correo}` : ''}
+                    </div>
+                    {correoEnviadoIds.includes(facturaDetalle.id_factura) && (
+                      <span className="badge-correo-enviado">
+                        <CheckCircle2 size={12} /> Factura enviada por correo
+                      </span>
+                    )}
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div className="sub-lbl">FECHA DE EMISIÓN</div>
@@ -723,6 +803,29 @@ export default function Facturacion() {
             </div>
 
             <div className="modal-footer-custom">
+              {correoEnviadoIds.includes(facturaDetalle.id_factura) ? (
+                <button
+                  type="button"
+                  className="btn-email-custom btn-reenviar"
+                  onClick={() => handleEnviarCorreo(facturaDetalle, true)}
+                  disabled={enviandoCorreoId === facturaDetalle.id_factura}
+                  title="Reenviar comprobante PDF por correo al cliente"
+                >
+                  <RotateCw size={15} className={enviandoCorreoId === facturaDetalle.id_factura ? 'spin' : ''} />
+                  <span>{enviandoCorreoId === facturaDetalle.id_factura ? 'Reenviando...' : 'Reenviar'}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-email-custom"
+                  onClick={() => handleEnviarCorreo(facturaDetalle, false)}
+                  disabled={enviandoCorreoId === facturaDetalle.id_factura}
+                  title="Enviar comprobante PDF por correo al cliente"
+                >
+                  <Mail size={16} />
+                  <span>{enviandoCorreoId === facturaDetalle.id_factura ? 'Enviando...' : 'Enviar por Correo'}</span>
+                </button>
+              )}
               <a
                 href={generarWhatsAppUrl(facturaDetalle)}
                 target="_blank"
