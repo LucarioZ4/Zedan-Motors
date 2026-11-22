@@ -1,159 +1,139 @@
 /**
  * Genera un buffer PDF profesional con el comprobante de la factura.
+ * Usa pdf-lib (puro JS, sin dependencias ESM nativas) para compatibilidad con Vercel serverless.
  * @param {Object} factura Datos de la factura con servicios y repuestos.
  * @returns {Promise<Buffer>}
  */
-const generarFacturaPdf = (factura) => {
-    return new Promise((resolve, reject) => {
-        try {
-            // Vercel shim CJS/ESM puede anidar el constructor en .default o .default.default
-            // Resolvemos hasta encontrar una función constructora
-            const _pdfMod = require('pdfkit');
-            // LOG DIAGNÓSTICO TEMPORAL — ver en Vercel logs qué devuelve pdfkit
-            console.log('[pdf.service] pdfkit typeof:', typeof _pdfMod,
-                '| keys:', _pdfMod ? Object.keys(_pdfMod).slice(0,5) : 'null',
-                '| .default typeof:', typeof (_pdfMod && _pdfMod.default),
-                '| .PDFDocument typeof:', typeof (_pdfMod && _pdfMod.PDFDocument));
-            function resolveConstructor(m) {
-                if (typeof m === 'function') return m;
-                // Vercel shim puede exponer .PDFDocument directamente
-                if (m && typeof m.PDFDocument === 'function') return m.PDFDocument;
-                if (m && typeof m.default === 'function') return m.default;
-                if (m && m.default && typeof m.default.default === 'function') return m.default.default;
-                if (m && m.default && typeof m.default.PDFDocument === 'function') return m.default.PDFDocument;
-                // Buscar la primera propiedad que sea función (fallback)
-                if (m && typeof m === 'object') {
-                    for (const k of Object.keys(m)) {
-                        if (typeof m[k] === 'function') return m[k];
-                    }
-                }
-                return m;
-            }
-            const PDFDocument = resolveConstructor(_pdfMod);
-            console.log('[pdf.service] PDFDocument typeof:', typeof PDFDocument);
-            const doc = new PDFDocument({ margin: 40, size: 'A4' });
-            const buffers = [];
+const generarFacturaPdf = async (factura) => {
+    const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 
-            doc.on('data', chunk => buffers.push(chunk));
-            doc.on('end', () => resolve(Buffer.concat(buffers)));
-            doc.on('error', err => reject(err));
+    const totalNum = parseFloat(factura.total || 0);
+    const servicios = Array.isArray(factura.servicios) ? factura.servicios : [];
+    const repuestos = Array.isArray(factura.repuestos) ? factura.repuestos : [];
+    const numFactura = `FE-${String(factura.id_factura || 0).padStart(6, '0')}`;
+    const fechaStr = factura.fecha
+        ? new Date(factura.fecha).toLocaleDateString('es-CO')
+        : '-';
 
-            const totalNum = parseFloat(factura.total || 0);
-            const servicios = factura.servicios || [];
-            const repuestos = factura.repuestos || [];
-            const numFactura = `FE-${String(factura.id_factura || 0).padStart(6, '0')}`;
-            const fechaStr = factura.fecha ? new Date(factura.fecha).toLocaleDateString('es-CO') : '—';
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([595, 842]); // A4
+    const { width, height } = page.getSize();
 
-            // ── Encabezado de la Empresa (Izquierda) ──
-            doc.font('Helvetica-Bold').fontSize(20).fillColor('#1e3a8a').text("ZEDAN MOTOR'S", 40, 40);
-            doc.font('Helvetica').fontSize(9).fillColor('#64748b');
-            doc.text('NIT: 900.123.456-7', 40, 66);
-            doc.text('Calle Falsa 123, Ciudad', 40, 78);
-            doc.text('Tel. (57)-318 6950825 • contacto@zedanmotors.com', 40, 90);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const fontReg  = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-            // ── Badge de Factura (Derecha) ──
-            doc.roundedRect(340, 36, 215, 68, 6).fillAndStroke('#eff6ff', '#bfdbfe');
-            doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#1e3a8a').text('FACTURA ELECTRÓNICA DE VENTA', 345, 45, { width: 205, align: 'center' });
-            doc.fontSize(15).text(`#${numFactura}`, 345, 59, { width: 205, align: 'center' });
-            doc.font('Helvetica').fontSize(9).fillColor('#64748b').text(`Emisión: ${fechaStr}`, 345, 80, { width: 205, align: 'center' });
+    // Colores
+    const azulOscuro = rgb(0.118, 0.227, 0.541); // #1e3a8a
+    const azulClaro  = rgb(0.937, 0.969, 1.0);    // #eff6ff
+    const grisClaro  = rgb(0.973, 0.980, 0.988);  // #f8fafc
+    const grisBorde  = rgb(0.886, 0.910, 0.941);  // #e2e8f0
+    const grisTexto  = rgb(0.392, 0.455, 0.545);  // #64748b
+    const negro      = rgb(0.059, 0.090, 0.122);  // #0f172a
+    const blanco     = rgb(1, 1, 1);
 
-            // ── Línea divisoria principal ──
-            doc.moveTo(40, 116).lineTo(555, 116).lineWidth(2).strokeColor('#1e3a8a').stroke();
+    const drawRect = (x, y, w, h, fillColor, strokeColor) => {
+        const opts = { x, y, width: w, height: h, color: fillColor };
+        if (strokeColor) { opts.borderColor = strokeColor; opts.borderWidth = 1; }
+        page.drawRectangle(opts);
+    };
+    const drawText = (text, x, y, size, color, font) => {
+        page.drawText(String(text ?? ''), { x, y, size, color, font: font || fontReg, maxWidth: width - x - 20 });
+    };
 
-            // ── Tarjeta de Información Cliente y Vehículo ──
-            doc.roundedRect(40, 126, 515, 68, 6).fillAndStroke('#f8fafc', '#e2e8f0');
-            
-            // Columna 1
-            doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#475569').text('Cliente:', 52, 136, { continued: true });
-            doc.font('Helvetica').fillColor('#0f172a').text(` ${factura.cliente || 'Consumidor final'}`);
+    // ── Encabezado empresa (izquierda) ──
+    drawText("ZEDAN MOTOR'S", 40, height - 55, 20, azulOscuro, fontBold);
+    drawText('NIT: 900.123.456-7',          40, height - 72,  9, grisTexto);
+    drawText('Calle Falsa 123, Ciudad',      40, height - 84,  9, grisTexto);
+    drawText('Tel. (57)-318 6950825',        40, height - 96,  9, grisTexto);
 
-            doc.font('Helvetica-Bold').fillColor('#475569').text('Teléfono:', 52, 154, { continued: true });
-            doc.font('Helvetica').fillColor('#0f172a').text(` ${factura.telefono || 'No registrado'}`);
+    // ── Badge Factura (derecha) ──
+    drawRect(340, height - 112, 215, 72, azulClaro, grisBorde);
+    drawText('FACTURA ELECTRONICA DE VENTA', 348, height - 56,  7.5, azulOscuro, fontBold);
+    drawText(`#${numFactura}`,               368, height - 72, 14,   azulOscuro, fontBold);
+    drawText(`Emision: ${fechaStr}`,         370, height - 92,  9,   grisTexto);
 
-            doc.font('Helvetica-Bold').fillColor('#475569').text('Correo:', 52, 172, { continued: true });
-            doc.font('Helvetica').fillColor('#0f172a').text(` ${factura.correo || 'No registrado'}`);
+    // ── Línea divisoria ──
+    page.drawLine({ start: { x: 40, y: height - 118 }, end: { x: 555, y: height - 118 }, thickness: 2, color: azulOscuro });
 
-            // Columna 2
-            doc.font('Helvetica-Bold').fillColor('#475569').text('Vehículo:', 310, 136, { continued: true });
-            doc.font('Helvetica').fillColor('#0f172a').text(` ${factura.vehiculo || 'No registrado'}`);
+    // ── Tarjeta cliente/vehículo ──
+    drawRect(40, height - 194, 515, 68, grisClaro, grisBorde);
+    // Col 1
+    drawText('Cliente:',   52, height - 140, 9, grisTexto, fontBold);
+    drawText(factura.cliente || 'Consumidor final', 100, height - 140, 9, negro);
+    drawText('Telefono:',  52, height - 157, 9, grisTexto, fontBold);
+    drawText(factura.telefono || 'No registrado',   102, height - 157, 9, negro);
+    drawText('Correo:',    52, height - 174, 9, grisTexto, fontBold);
+    drawText(factura.correo || 'No registrado',      96, height - 174, 9, negro);
+    // Col 2
+    drawText('Vehiculo:',         310, height - 140, 9, grisTexto, fontBold);
+    drawText(factura.vehiculo || 'No registrado',    360, height - 140, 9, negro);
+    drawText('Metodo de Pago:',   310, height - 157, 9, grisTexto, fontBold);
+    drawText(factura.metodo_pago || 'Efectivo',      390, height - 157, 9, negro);
+    drawText('Orden de Trabajo:', 310, height - 174, 9, grisTexto, fontBold);
+    drawText(`#${factura.id_orden || '-'}`,          395, height - 174, 9, negro);
 
-            doc.font('Helvetica-Bold').fillColor('#475569').text('Método de Pago:', 310, 154, { continued: true });
-            doc.font('Helvetica').fillColor('#0f172a').text(` ${factura.metodo_pago || 'Efectivo'}`);
+    // ── Tabla de items ──
+    let currentY = height - 215;
 
-            doc.font('Helvetica-Bold').fillColor('#475569').text('Orden de Trabajo:', 310, 172, { continued: true });
-            doc.font('Helvetica').fillColor('#0f172a').text(` #${factura.id_orden || '—'}`);
+    // Encabezado tabla
+    drawRect(40, currentY - 2, 515, 22, azulOscuro, null);
+    drawText('DESCRIPCION', 50,  currentY + 6, 8, blanco, fontBold);
+    drawText('TIPO',       295,  currentY + 6, 8, blanco, fontBold);
+    drawText('CANT.',      380,  currentY + 6, 8, blanco, fontBold);
+    drawText('TOTAL',      460,  currentY + 6, 8, blanco, fontBold);
+    currentY -= 22;
 
-            // ── Tabla de Items ──
-            let currentY = 208;
+    const items = [
+        ...servicios.map(s => ({
+            descripcion: s.nombre_servicio || 'Servicio mecanico',
+            tipo: 'Servicio',
+            cantidad: 1,
+            total: parseFloat(s.costo || 0)
+        })),
+        ...repuestos.map(r => ({
+            descripcion: `${r.nombre || 'Repuesto'}${r.marca ? ` (${r.marca})` : ''}`,
+            tipo: 'Repuesto',
+            cantidad: r.cantidad || 1,
+            total: parseFloat(r.total || 0)
+        }))
+    ];
 
-            // Encabezado de la tabla
-            doc.rect(40, currentY, 515, 22).fill('#1e3a8a');
-            doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#ffffff');
-            doc.text('DESCRIPCIÓN', 50, currentY + 6, { width: 240 });
-            doc.text('TIPO', 300, currentY + 6, { width: 70 });
-            doc.text('CANT.', 380, currentY + 6, { width: 50, align: 'center' });
-            doc.text('TOTAL', 445, currentY + 6, { width: 100, align: 'right' });
-            currentY += 22;
+    if (items.length === 0) {
+        drawRect(40, currentY - 2, 515, 24, blanco, null);
+        drawText('Factura general de servicio', 50, currentY + 7, 9, grisTexto);
+        drawText('Servicio', 295, currentY + 7, 9, grisTexto);
+        drawText('1',        380, currentY + 7, 9, grisTexto);
+        drawText(`$${totalNum.toLocaleString('es-CO')}`, 460, currentY + 7, 9, negro, fontBold);
+        page.drawLine({ start: { x: 40, y: currentY - 2 }, end: { x: 555, y: currentY - 2 }, thickness: 0.5, color: grisBorde });
+        currentY -= 24;
+    } else {
+        items.forEach((item, index) => {
+            const rowBg = index % 2 === 0 ? blanco : grisClaro;
+            drawRect(40, currentY - 2, 515, 24, rowBg, null);
+            const desc = item.descripcion.length > 38 ? item.descripcion.substring(0, 36) + '..' : item.descripcion;
+            drawText(desc,                             50,  currentY + 7, 8.5, negro);
+            drawText(item.tipo,                       295,  currentY + 7, 8.5, negro);
+            drawText(String(item.cantidad),           380,  currentY + 7, 8.5, negro);
+            drawText(`$${item.total.toLocaleString('es-CO')}`, 460, currentY + 7, 8.5, negro, fontBold);
+            page.drawLine({ start: { x: 40, y: currentY - 2 }, end: { x: 555, y: currentY - 2 }, thickness: 0.5, color: grisBorde });
+            currentY -= 24;
+        });
+    }
 
-            // Filas
-            const items = [
-                ...servicios.map(s => ({
-                    descripcion: s.nombre_servicio || 'Servicio mecánico',
-                    tipo: 'Servicio',
-                    cantidad: 1,
-                    total: parseFloat(s.costo || 0)
-                })),
-                ...repuestos.map(r => ({
-                    descripcion: `${r.nombre || 'Repuesto'}${r.marca ? ` (${r.marca})` : ''}`,
-                    tipo: 'Repuesto',
-                    cantidad: r.cantidad || 1,
-                    total: parseFloat(r.total || 0)
-                }))
-            ];
+    // ── Caja Total ──
+    currentY -= 12;
+    drawRect(325, currentY - 2, 230, 42, azulClaro, azulOscuro);
+    drawText('TOTAL FACTURADO:', 338, currentY + 22, 9,  azulOscuro, fontBold);
+    drawText(`$${totalNum.toLocaleString('es-CO')}`, 395, currentY + 8, 13, azulOscuro, fontBold);
 
-            if (items.length === 0) {
-                doc.rect(40, currentY, 515, 24).fill('#ffffff');
-                doc.font('Helvetica').fontSize(9).fillColor('#64748b').text('Factura general de servicio', 50, currentY + 7);
-                doc.text('Servicio', 300, currentY + 7);
-                doc.text('1', 380, currentY + 7, { width: 50, align: 'center' });
-                doc.text(`$${totalNum.toLocaleString('es-CO')}`, 445, currentY + 7, { width: 100, align: 'right' });
-                doc.moveTo(40, currentY + 24).lineTo(555, currentY + 24).lineWidth(0.5).strokeColor('#e2e8f0').stroke();
-                currentY += 24;
-            } else {
-                items.forEach((item, index) => {
-                    const rowBg = index % 2 === 0 ? '#ffffff' : '#f8fafc';
-                    doc.rect(40, currentY, 515, 24).fill(rowBg);
+    // ── Pie de página ──
+    const footerY = 30;
+    page.drawLine({ start: { x: 40, y: footerY + 20 }, end: { x: 555, y: footerY + 20 }, thickness: 0.5, color: grisBorde });
+    drawText("Gracias por confiar en Zedan Motor's - Comprobante oficial de venta", 60, footerY + 8,  8, grisTexto);
+    drawText('Este documento sirve como soporte oficial de cobro y garantia de servicio tecnico.', 55, footerY - 4, 7.5, rgb(0.796, 0.835, 0.882));
 
-                    doc.font('Helvetica').fontSize(8.5).fillColor('#1e293b');
-                    doc.text(item.descripcion, 50, currentY + 7, { width: 240, height: 14, ellipsis: true });
-                    doc.text(item.tipo, 300, currentY + 7);
-                    doc.text(String(item.cantidad), 380, currentY + 7, { width: 50, align: 'center' });
-                    doc.font('Helvetica-Bold').text(`$${item.total.toLocaleString('es-CO')}`, 445, currentY + 7, { width: 100, align: 'right' });
-
-                    doc.moveTo(40, currentY + 24).lineTo(555, currentY + 24).lineWidth(0.5).strokeColor('#e2e8f0').stroke();
-                    currentY += 24;
-                });
-            }
-
-            // ── Caja de Totales ──
-            currentY += 12;
-            doc.roundedRect(325, currentY, 230, 42, 6).fillAndStroke('#eff6ff', '#1e3a8a');
-            doc.font('Helvetica-Bold').fontSize(10).fillColor('#1e3a8a').text('TOTAL FACTURADO:', 338, currentY + 14);
-            doc.fontSize(14).text(`$${totalNum.toLocaleString('es-CO')}`, 430, currentY + 12, { width: 115, align: 'right' });
-
-            // ── Pie de Página ──
-            const footerY = 770;
-            doc.moveTo(40, footerY).lineTo(555, footerY).lineWidth(0.5).strokeColor('#e2e8f0').stroke();
-            doc.font('Helvetica').fontSize(8.5).fillColor('#94a3b8');
-            doc.text("Gracias por confiar en Zedan Motor's — Comprobante oficial de venta", 40, footerY + 10, { width: 515, align: 'center' });
-            doc.fontSize(7.5).fillColor('#cbd5e1');
-            doc.text('Este documento sirve como soporte oficial de cobro y garantía de servicio técnico.', 40, footerY + 24, { width: 515, align: 'center' });
-
-            doc.end();
-        } catch (err) {
-            reject(err);
-        }
-    });
+    const pdfBytes = await pdfDoc.save();
+    return Buffer.from(pdfBytes);
 };
 
 module.exports = {
