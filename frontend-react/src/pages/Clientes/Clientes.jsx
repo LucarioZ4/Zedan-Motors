@@ -227,7 +227,7 @@ export default function Clientes() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4" style={{ color: '#94a3b8', textAlign: 'center' }}>
+                  <td colSpan="6" className="text-center py-4" style={{ color: 'var(--muted, #94a3b8)', textAlign: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                       <RotateCw size={16} className="spinning" />
                       <span>Cargando clientes...</span>
@@ -236,7 +236,7 @@ export default function Clientes() {
                 </tr>
               ) : clientes.length === 0 ? (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '36px 16px', color: '#64748b' }}>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--muted, #64748b)' }}>
                     No se encontraron clientes registrados.
                   </td>
                 </tr>
@@ -259,12 +259,12 @@ export default function Clientes() {
                       <td>{c.nombre}</td>
                       <td>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <Phone size={14} style={{ color: '#3b82f6' }} />
+                          <Phone size={14} style={{ color: 'var(--link, #3b82f6)' }} />
                           {c.telefono}
                         </span>
                       </td>
-                      <td>{c.correo || <span style={{ color: '#94a3b8' }}>—</span>}</td>
-                      <td>{c.direccion || <span style={{ color: '#94a3b8' }}>—</span>}</td>
+                      <td>{c.correo || <span style={{ color: 'var(--muted, #94a3b8)' }}>—</span>}</td>
+                      <td>{c.direccion || <span style={{ color: 'var(--muted, #94a3b8)' }}>—</span>}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
@@ -414,10 +414,10 @@ export default function Clientes() {
                 color="#ef4444"
                 style={{ marginBottom: '12px', display: 'inline-block' }}
               />
-              <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
-                ¿Eliminar a <strong style={{ color: '#1e293b' }}>{clienteToDelete.nombre} {clienteToDelete.apellido}</strong>?
+              <p style={{ color: 'var(--muted, #475569)', fontSize: '14px', margin: 0 }}>
+                ¿Eliminar a <strong style={{ color: 'var(--text, #1e293b)' }}>{clienteToDelete.nombre} {clienteToDelete.apellido}</strong>?
                 <br />
-                <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>Esta acción no se puede deshacer.</span>
+                <span style={{ fontSize: '12.5px', color: 'var(--muted, #94a3b8)' }}>Esta acción no se puede deshacer.</span>
               </p>
             </div>
             <div className="modal-footer-custom">

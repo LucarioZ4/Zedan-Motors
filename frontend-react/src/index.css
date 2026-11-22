@@ -1,3 +1,51 @@
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --canvas: #101823;
+  --surface: #192536;
+  --raised: #243449;
+  --border: #3c4d63;
+  --text: #e4ecf6;
+  --muted: #b0bfd2;
+  --heading: #c2d9ff;
+  --link: #89b9ff;
+  --blue-bg: #203754;
+  --error: #fda4a4;
+  --error-bg: #462831;
+  --success: #86e4b1;
+  --success-bg: #193a32;
+  --warning: #ffd28a;
+  --warning-bg: #423322;
+  --fc-page-bg-color: var(--surface);
+  --fc-border-color: var(--border);
+}
+
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--surface, white);
+  color: var(--heading, #1e3a8a);
+  border: 1px solid var(--border, #dbe4f0);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: var(--blue-bg, #eff6ff);
+}
+
+.panel-login > .theme-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -10,7 +58,7 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #ffffff;
+  background-color: var(--surface, #ffffff);
 }
 
 #root {

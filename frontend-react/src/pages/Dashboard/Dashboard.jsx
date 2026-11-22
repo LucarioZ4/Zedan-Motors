@@ -68,8 +68,10 @@ const COLORES_ESTADO = {
 };
 
 const tooltipStyle = {
+  backgroundColor: 'var(--surface, #ffffff)',
+  color: 'var(--text, #334155)',
   borderRadius: 10,
-  border: '1px solid #e2e8f0',
+  border: '1px solid var(--border, #e2e8f0)',
   boxShadow: '0 4px 14px rgba(0,0,0,0.08)',
   fontSize: 12.5
 };
@@ -300,18 +302,18 @@ export default function Dashboard() {
                       <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border, #e2e8f0)" />
                   <XAxis
                     dataKey="mes"
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tick={{ fill: 'var(--muted, #64748b)', fontSize: 12 }}
                   />
                   <YAxis
                     width={48}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tick={{ fill: 'var(--muted, #64748b)', fontSize: 12 }}
                     tickFormatter={fmtCompacto}
                   />
                   <Tooltip
@@ -321,7 +323,7 @@ export default function Dashboard() {
                   <Area
                     type="monotone"
                     dataKey="total"
-                    stroke="#1e3a8a"
+                    stroke="var(--link, #1e3a8a)"
                     strokeWidth={2.5}
                     fill="url(#gradIngresos)"
                     dot={{ r: 3.5, fill: '#1e3a8a', strokeWidth: 0 }}
@@ -413,13 +415,13 @@ export default function Dashboard() {
                   layout="vertical"
                   margin={{ top: 4, right: 16, left: 0, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border, #e2e8f0)" />
                   <XAxis
                     type="number"
                     allowDecimals={false}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tick={{ fill: 'var(--muted, #64748b)', fontSize: 12 }}
                   />
                   <YAxis
                     type="category"
@@ -427,10 +429,10 @@ export default function Dashboard() {
                     width={140}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: '#334155', fontSize: 12 }}
+                    tick={{ fill: 'var(--text, #334155)', fontSize: 12 }}
                   />
                   <Tooltip
-                    cursor={{ fill: '#f1f5f9' }}
+                    cursor={{ fill: 'var(--raised, #f1f5f9)' }}
                     contentStyle={tooltipStyle}
                     formatter={(v) => [v, 'Veces solicitado']}
                   />

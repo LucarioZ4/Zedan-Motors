@@ -5,7 +5,7 @@ import { apiFetch, getErrorMessage } from '../../services/api';
 import ZedanLogo from '../../components/common/ZedanLogo';
 import './Login.css';
 
-export default function Login() {
+export default function Login({ themeToggle }) {
   const navigate = useNavigate();
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
@@ -70,6 +70,7 @@ export default function Login() {
       {/* ═══   PANEL IZQUIERDO — FORMULARIO  ═══ */}
       {/* ═══════════════════════════════════════ */}
       <div className="panel-login">
+        {themeToggle}
 
         {/* Logo oficial ensamblado */}
         <div style={{ marginBottom: '36px', display: 'flex', justifyContent: 'center' }}>

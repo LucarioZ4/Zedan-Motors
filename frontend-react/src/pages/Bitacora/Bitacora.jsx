@@ -108,7 +108,7 @@ export default function Bitacora() {
   const renderTimeline = (eventos) => {
     if (!eventos || eventos.length === 0) {
       return (
-        <div style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
+        <div style={{ textAlign: 'center', padding: '30px', color: 'var(--muted, #64748b)' }}>
           <Activity size={32} style={{ marginBottom: '8px', opacity: 0.6 }} />
           <p>No se han registrado eventos o cambios en esta sesión todavía.</p>
         </div>
@@ -123,7 +123,7 @@ export default function Bitacora() {
             <div className="timeline-header">
               <span className="badge-tag badge-modulo">{ev.modulo}</span>
               <span className="badge-tag badge-accion">{ev.accion}</span>
-              <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem' }}>
+              <span style={{ fontWeight: 600, color: 'var(--text, #334155)', fontSize: '0.85rem' }}>
                 {ev.entidad} {ev.id_registro ? `#${ev.id_registro}` : ''}
               </span>
               <span className="timeline-timestamp">
@@ -186,8 +186,8 @@ export default function Bitacora() {
           <button
             onClick={() => tab === 'activa' ? cargarSesionActiva() : cargarTodasSesiones()}
             style={{
-              background: '#f8fafc',
-              border: '1px solid #cbd5e1',
+              background: 'var(--canvas, #f8fafc)',
+              border: '1px solid var(--border, #cbd5e1)',
               borderRadius: '8px',
               padding: '8px 12px',
               cursor: 'pointer',
@@ -203,13 +203,13 @@ export default function Bitacora() {
       </div>
 
       {error && (
-        <div style={{ background: '#fee2e2', color: '#991b1b', padding: '14px', borderRadius: '8px' }}>
+        <div style={{ background: 'var(--error-bg, #fee2e2)', color: 'var(--error, #991b1b)', padding: '14px', borderRadius: '8px' }}>
           {error}
         </div>
       )}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted, #64748b)' }}>
           Cargando eventos de bitácora...
         </div>
       ) : tab === 'activa' ? (
@@ -237,7 +237,7 @@ export default function Bitacora() {
             </div>
           )}
 
-          <h3 style={{ marginBottom: '18px', color: '#1e293b', fontSize: '1.1rem' }}>
+          <h3 style={{ marginBottom: '18px', color: 'var(--text, #1e293b)', fontSize: '1.1rem' }}>
             Línea de Tiempo de Cambios Realizados
           </h3>
           {renderTimeline(eventosActiva)}
@@ -245,7 +245,7 @@ export default function Bitacora() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: sesionSeleccionada ? '1fr 1fr' : '1fr', gap: '20px' }}>
           <div className="bitacora-card">
-            <h3 style={{ marginBottom: '14px', color: '#1e293b' }}>Sesiones de Usuarios Registradas</h3>
+            <h3 style={{ marginBottom: '14px', color: 'var(--text, #1e293b)' }}>Sesiones de Usuarios Registradas</h3>
             <div style={{ overflowX: 'auto' }}>
               <table className="table-sesiones">
                 <thead>
@@ -262,14 +262,14 @@ export default function Bitacora() {
                     <tr key={s.id_sesion}>
                       <td>
                         <strong>{s.nombre_usuario}</strong>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{s.empleado_nombre || s.nombre_completo}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--muted, #64748b)' }}>{s.empleado_nombre || s.nombre_completo}</div>
                       </td>
                       <td>
                         <span className={`badge-estado ${s.estado}`}>{s.estado}</span>
                       </td>
                       <td>{new Date(s.inicio_en).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</td>
                       <td>
-                        <span style={{ fontWeight: 700, color: '#2563eb' }}>{s.total_acciones}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--link, #2563eb)' }}>{s.total_acciones}</span>
                       </td>
                       <td>
                         <button
@@ -289,11 +289,11 @@ export default function Bitacora() {
           {sesionSeleccionada && (
             <div className="bitacora-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                <h3 style={{ margin: 0, color: '#1e293b' }}>
+                <h3 style={{ margin: 0, color: 'var(--text, #1e293b)' }}>
                   Detalle: {sesionSeleccionada.nombre_usuario}
                 </h3>
                 <button
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--muted, #64748b)' }}
                   onClick={() => setSesionSeleccionada(null)}
                 >
                   ✕ Cerrar

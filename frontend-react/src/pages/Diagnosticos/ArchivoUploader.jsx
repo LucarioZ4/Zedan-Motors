@@ -265,13 +265,13 @@ export default function ArchivoUploader({
         <Camera size={18} className="text-primary" />
         <span>Fotos y Videos de Evidencia (Recepción)</span>
       </h3>
-      <p style={{ fontSize: '12.5px', color: '#64748b', margin: '-8px 0 16px 0' }}>
+      <p style={{ fontSize: '12.5px', color: 'var(--muted, #64748b)', margin: '-8px 0 16px 0' }}>
         Capture o seleccione fotografías del estado de la carrocería, rayones, tablero y videos de funcionamiento.
         Máximo {MAX_MB} MB por archivo.
       </p>
 
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '10px', padding: '10px 14px', color: '#b91c1c', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+        <div style={{ background: 'var(--error-bg, #fef2f2)', border: '1px solid #fee2e2', borderRadius: '10px', padding: '10px 14px', color: 'var(--error, #b91c1c)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
           <AlertCircle size={16} />
           <span>{error}</span>
         </div>
@@ -369,13 +369,13 @@ export default function ArchivoUploader({
         <div className="camera-panel">
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
             <span style={{ fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Radio size={16} style={{ color: '#ef4444' }} className="spin" />
+              <Radio size={16} style={{ color: 'var(--error, #ef4444)' }} className="spin" />
               Cámara en Directo
             </span>
             <button
               type="button"
               onClick={detenerCamaraWeb}
-              style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+              style={{ background: 'none', border: 'none', color: 'var(--muted, #94a3b8)', cursor: 'pointer' }}
             >
               <X size={20} />
             </button>
@@ -384,7 +384,7 @@ export default function ArchivoUploader({
           <video ref={videoStreamRef} autoPlay playsInline muted className="camera-preview-video" />
 
           {grabandoVideo && (
-            <div style={{ color: '#ef4444', fontWeight: 700, fontSize: '13px' }}>
+            <div style={{ color: 'var(--error, #ef4444)', fontWeight: 700, fontSize: '13px' }}>
               ● Grabando: {tiempoGrabacion}s
             </div>
           )}
@@ -432,7 +432,7 @@ export default function ArchivoUploader({
 
       {/* Indicador de subida */}
       {subiendo && (
-        <div style={{ padding: '12px', background: '#eff6ff', borderRadius: '10px', color: '#1e3a8a', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+        <div style={{ padding: '12px', background: 'var(--blue-bg, #eff6ff)', borderRadius: '10px', color: 'var(--heading, #1e3a8a)', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
           <Radio size={16} className="spin" />
           <span>{progresoSubida || 'Subiendo archivos a Supabase Storage...'}</span>
         </div>
@@ -441,7 +441,7 @@ export default function ArchivoUploader({
       {/* Grid de Previsualización: Archivos Remotos ya subidos */}
       {archivos.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
-          <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#334155', margin: '0 0 8px 0' }}>
+          <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text, #334155)', margin: '0 0 8px 0' }}>
             Archivos Guardados ({archivos.length})
           </h4>
           <div className="archivos-grid">
@@ -524,7 +524,7 @@ export default function ArchivoUploader({
       {/* Grid de Previsualización: Archivos en cola local (listos para subirse al guardar) */}
       {colaLocal.length > 0 && (
         <div>
-          <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#1e3a8a', margin: '0 0 8px 0' }}>
+          <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--heading, #1e3a8a)', margin: '0 0 8px 0' }}>
             Archivos Nuevos por Subir ({colaLocal.length})
           </h4>
           <div className="archivos-grid">
@@ -566,7 +566,7 @@ export default function ArchivoUploader({
                   />
                 </div>
                 <div className="archivo-actions">
-                  <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 600 }}>
+                  <span style={{ fontSize: '11px', color: 'var(--link, #3b82f6)', fontWeight: 600 }}>
                     Pendiente
                   </span>
                   <div style={{ display: 'flex', gap: '6px' }}>
@@ -604,14 +604,14 @@ export default function ArchivoUploader({
             style={{
               maxWidth: '92vw',
               maxHeight: '92vh',
-              background: '#ffffff',
+              background: 'var(--surface, #ffffff)',
               borderRadius: '16px',
               overflow: 'hidden',
               position: 'relative',
               display: 'flex',
               flexDirection: 'column',
               boxShadow: '0 25px 60px rgba(15, 23, 42, 0.35)',
-              border: '1px solid #e2e8f0'
+              border: '1px solid var(--border, #e2e8f0)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -621,7 +621,7 @@ export default function ArchivoUploader({
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 padding: '12px 20px',
-                background: '#f8fafc',
+                background: 'var(--canvas, #f8fafc)',
                 borderBottom: '1px solid #e2e8f0'
               }}
             >
@@ -631,8 +631,8 @@ export default function ArchivoUploader({
                     width: '32px',
                     height: '32px',
                     borderRadius: '8px',
-                    background: '#eff6ff',
-                    color: '#1e3a8a',
+                    background: 'var(--blue-bg, #eff6ff)',
+                    color: 'var(--heading, #1e3a8a)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
@@ -641,10 +641,10 @@ export default function ArchivoUploader({
                   <FileImage size={18} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1e293b' }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text, #1e293b)' }}>
                     {previewMedia.nombre_original}
                   </div>
-                  <div style={{ fontSize: '11.5px', color: '#64748b' }}>
+                  <div style={{ fontSize: '11.5px', color: 'var(--muted, #64748b)' }}>
                     {formatoMb(previewMedia.tamano)} {previewMedia.descripcion ? `• ${previewMedia.descripcion}` : ''}
                   </div>
                 </div>
@@ -654,12 +654,12 @@ export default function ArchivoUploader({
                 type="button"
                 onClick={() => setPreviewMedia(null)}
                 style={{
-                  background: '#f1f5f9',
+                  background: 'var(--raised, #f1f5f9)',
                   border: 'none',
                   borderRadius: '8px',
                   width: '32px',
                   height: '32px',
-                  color: '#64748b',
+                  color: 'var(--muted, #64748b)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -677,7 +677,7 @@ export default function ArchivoUploader({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: '#f8fafc',
+                background: 'var(--canvas, #f8fafc)',
                 minHeight: '260px',
                 maxHeight: '75vh',
                 overflow: 'auto'

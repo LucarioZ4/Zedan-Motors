@@ -221,7 +221,7 @@ export default function Servicios() {
               </div>
               <div className="servicio-nombre">{s.nombre_servicio}</div>
               <div className="servicio-desc">
-                {s.descripcion || <span style={{ color: '#94a3b8' }}>Sin descripción detallada</span>}
+                {s.descripcion || <span style={{ color: 'var(--muted, #94a3b8)' }}>Sin descripción detallada</span>}
               </div>
               <div className="servicio-costo">
                 <span className="currency">$</span>
@@ -353,10 +353,10 @@ export default function Servicios() {
                 color="#ef4444"
                 style={{ marginBottom: '12px', display: 'inline-block' }}
               />
-              <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
-                ¿Eliminar el servicio <strong style={{ color: '#1e293b' }}>{servicioToDelete.nombre_servicio}</strong>?
+              <p style={{ color: 'var(--muted, #475569)', fontSize: '14px', margin: 0 }}>
+                ¿Eliminar el servicio <strong style={{ color: 'var(--text, #1e293b)' }}>{servicioToDelete.nombre_servicio}</strong>?
                 <br />
-                <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>Esta acción no se puede deshacer.</span>
+                <span style={{ fontSize: '12.5px', color: 'var(--muted, #94a3b8)' }}>Esta acción no se puede deshacer.</span>
               </p>
             </div>
             <div className="modal-footer-custom">

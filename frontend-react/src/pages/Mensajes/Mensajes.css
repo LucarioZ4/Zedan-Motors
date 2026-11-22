@@ -26,7 +26,7 @@
 }
 
 .mensajes-hero p {
-  color: #94a3b8;
+  color: var(--muted, #94a3b8);
   margin: 0;
   font-size: 0.95rem;
 }
@@ -39,10 +39,10 @@
 }
 
 .stat-card {
-  background: #ffffff;
+  background: var(--surface, #ffffff);
   border-radius: 12px;
   padding: 18px 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border, #e2e8f0);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -65,37 +65,37 @@
 }
 
 .stat-icon.whatsapp {
-  background: #dcfce7;
-  color: #16a34a;
+  background: var(--success-bg, #dcfce7);
+  color: var(--success, #16a34a);
 }
 
 .stat-icon.telegram {
-  background: #e0f2fe;
-  color: #0284c7;
+  background: var(--blue-bg, #e0f2fe);
+  color: var(--link, #0284c7);
 }
 
 .stat-icon.total {
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--raised, #f1f5f9);
+  color: var(--text, #334155);
 }
 
 .stat-info .stat-value {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text, #0f172a);
 }
 
 .stat-info .stat-label {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--muted, #64748b);
 }
 
 /* Filtros y buscador */
 .mensajes-toolbar {
-  background: #ffffff;
+  background: var(--surface, #ffffff);
   border-radius: 12px;
   padding: 16px 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border, #e2e8f0);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -108,8 +108,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
+  background: var(--canvas, #f8fafc);
+  border: 1px solid var(--border, #cbd5e1);
   padding: 8px 14px;
   border-radius: 8px;
   flex: 1;
@@ -132,18 +132,18 @@
 .filter-select {
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
+  border: 1px solid var(--border, #cbd5e1);
+  background: var(--surface, #ffffff);
   font-size: 0.88rem;
   outline: none;
-  color: #334155;
+  color: var(--text, #334155);
 }
 
 /* Lista de Mensajes */
 .mensajes-list-card {
-  background: #ffffff;
+  background: var(--surface, #ffffff);
   border-radius: 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border, #e2e8f0);
   overflow: hidden;
 }
 
@@ -153,26 +153,26 @@
 }
 
 .table-mensajes th {
-  background: #f8fafc;
-  color: #475569;
+  background: var(--canvas, #f8fafc);
+  color: var(--muted, #475569);
   font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 14px 18px;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border, #e2e8f0);
 }
 
 .table-mensajes td {
   padding: 16px 18px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #1e293b;
+  border-bottom: 1px solid var(--border, #f1f5f9);
+  color: var(--text, #1e293b);
   font-size: 0.9rem;
   vertical-align: middle;
 }
 
 .table-mensajes tr:hover td {
-  background: #f8fafc;
+  background: var(--canvas, #f8fafc);
 }
 
 .platform-badge {
@@ -186,20 +186,20 @@
 }
 
 .platform-badge.whatsapp {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--success-bg, #dcfce7);
+  color: var(--success, #15803d);
 }
 
 .platform-badge.telegram {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--blue-bg, #e0f2fe);
+  color: var(--link, #0369a1);
 }
 
 .tipo-badge {
   display: inline-block;
   padding: 3px 8px;
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--raised, #f1f5f9);
+  color: var(--muted, #475569);
   border-radius: 6px;
   font-size: 0.78rem;
   font-weight: 600;
@@ -208,13 +208,13 @@
 .text-msg {
   max-width: 380px;
   line-height: 1.4;
-  color: #334155;
+  color: var(--text, #334155);
 }
 
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: #64748b;
+  color: var(--muted, #64748b);
 }
 
 .empty-state i {

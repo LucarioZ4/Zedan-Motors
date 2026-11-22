@@ -182,14 +182,14 @@ export default function Diagnosticos() {
       {/* ── Tabla Principal ── */}
       <div className="card-custom">
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted, #64748b)' }}>
             <RotateCw size={28} className="spin" style={{ marginBottom: '8px' }} />
             <p>Cargando registros de diagnóstico...</p>
           </div>
         ) : diagnosticos.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted, #64748b)' }}>
             <ClipboardCheck size={40} style={{ color: '#cbd5e1', marginBottom: '10px' }} />
-            <p style={{ fontWeight: 600, fontSize: '15px', color: '#334155' }}>
+            <p style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text, #334155)' }}>
               No se encontraron diagnósticos
             </p>
             <p style={{ fontSize: '13px' }}>
@@ -225,7 +225,7 @@ export default function Diagnosticos() {
                   const wsLink = getWhatsAppLink(d);
                   return (
                     <tr key={d.id_diagnostico}>
-                      <td style={{ fontWeight: 700, color: '#94a3b8' }}>
+                      <td style={{ fontWeight: 700, color: 'var(--muted, #94a3b8)' }}>
                         #{d.id_diagnostico}
                       </td>
                       <td>
@@ -240,25 +240,25 @@ export default function Diagnosticos() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <span style={{ fontWeight: 600, color: '#1e293b' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text, #1e293b)' }}>
                             {d.cliente || 'No especificado'}
                           </span>
                           {d.cliente_telefono && (
-                            <span style={{ fontSize: '11.5px', color: '#64748b' }}>
+                            <span style={{ fontSize: '11.5px', color: 'var(--muted, #64748b)' }}>
                               Tel: {d.cliente_telefono}
                             </span>
                           )}
                         </div>
                       </td>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#475569' }}>
-                          <Clock size={14} style={{ color: '#94a3b8' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--muted, #475569)' }}>
+                          <Clock size={14} style={{ color: 'var(--muted, #94a3b8)' }} />
                           <span>{formatearFecha(d.fecha_ingreso)}</span>
                         </div>
                       </td>
                       <td>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontWeight: 600, color: '#0f172a' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text, #0f172a)' }}>
                             {Number(d.kilometraje || 0).toLocaleString()} km
                           </span>
                           <span className={`badge-gasolina ${d.nivel_gasolina === 'Reserva' ? 'reserva' : d.nivel_gasolina === 'Lleno' ? 'lleno' : ''}`}>
@@ -269,10 +269,10 @@ export default function Diagnosticos() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '12px' }}>
-                          <span style={{ color: '#1e3a8a', fontWeight: 500 }}>
+                          <span style={{ color: 'var(--heading, #1e3a8a)', fontWeight: 500 }}>
                             ✓ {d.total_accesorios || 0} accesorios
                           </span>
-                          <span style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ color: 'var(--muted, #64748b)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <FileImage size={12} />
                             {d.total_archivos || 0} fotos/videos
                           </span>
@@ -338,7 +338,7 @@ export default function Diagnosticos() {
         <div className="modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
           <div className="modal-dialog-custom modal-sm" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-custom">
-              <h3 className="modal-title-custom" style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 className="modal-title-custom" style={{ color: 'var(--error, #ef4444)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <AlertTriangle size={20} />
                 Eliminar Diagnóstico
               </h3>
@@ -351,12 +351,12 @@ export default function Diagnosticos() {
               </button>
             </div>
             <div className="modal-body-custom">
-              <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#334155' }}>
+              <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text, #334155)' }}>
                 ¿Estás seguro de que deseas eliminar el diagnóstico{' '}
                 <strong>#{diagnosticoToDelete.id_diagnostico}</strong> del vehículo{' '}
                 <strong>{diagnosticoToDelete.placa}</strong>?
               </p>
-              <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '8px', padding: '12px', fontSize: '12.5px', color: '#991b1b' }}>
+              <div style={{ background: 'var(--error-bg, #fef2f2)', border: '1px solid #fee2e2', borderRadius: '8px', padding: '12px', fontSize: '12.5px', color: 'var(--error, #991b1b)' }}>
                 <AlertCircle size={15} style={{ display: 'inline', marginRight: '6px', verticalAlign: '-2px' }} />
                 Esta acción eliminará permanentemente la revisión de accesorios y todos los archivos de fotos y videos almacenados.
               </div>
