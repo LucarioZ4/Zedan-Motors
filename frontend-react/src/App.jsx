@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useLayoutEffect, useState } from 'react';
+import ThemeToggle from './components/common/ThemeToggle';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -33,17 +34,41 @@ function ModulePlaceholder({ title }) {
 }
 
 export default function App() {
+  const [dark, setDark] = useState(() => {
+    try {
+      const saved = localStorage.getItem('zedan-theme');
+      if (saved === 'dark' || saved === 'light') return saved === 'dark';
+    } catch {
+      // El navegador puede bloquear el almacenamiento local.
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useLayoutEffect(() => {
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  }, [dark]);
+
+  function toggleTheme() {
+    setDark(!dark);
+    try {
+      localStorage.setItem('zedan-theme', dark ? 'light' : 'dark');
+    } catch {
+      // El tema sigue disponible durante esta sesión.
+    }
+  }
+
+  const themeToggle = <ThemeToggle dark={dark} onToggle={toggleTheme} />;
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login themeToggle={themeToggle} />} />
 
         {/* Rutas Protegidas dentro de MainLayout */}
         <Route
           path="/"
           element={
             <ProtectedRoute>
-              <MainLayout />
+              <MainLayout themeToggle={themeToggle} />
             </ProtectedRoute>
           }
         >

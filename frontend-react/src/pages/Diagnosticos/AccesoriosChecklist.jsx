@@ -84,7 +84,7 @@ export default function AccesoriosChecklist({ accesorios = [], setAccesorios }) 
         <CheckSquare size={18} className="text-primary" />
         <span>Revisión de Inventario y Accesorios</span>
       </h3>
-      <p style={{ fontSize: '12.5px', color: '#64748b', margin: '-8px 0 16px 0' }}>
+      <p style={{ fontSize: '12.5px', color: 'var(--muted, #64748b)', margin: '-8px 0 16px 0' }}>
         Verifique el estado con el que ingresa cada elemento al taller. Seleccione el estado y añada notas opcionales.
       </p>
 

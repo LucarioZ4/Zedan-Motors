@@ -633,11 +633,11 @@ export default function Inventario() {
                   display: 'inline-block'
                 }}
               />
-              <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
+              <p style={{ color: 'var(--muted, #475569)', fontSize: '14px', margin: 0 }}>
                 ¿Eliminar el repuesto{' '}
-                <strong style={{ color: '#1e293b' }}>{repuestoToDelete.nombre}</strong>?
+                <strong style={{ color: 'var(--text, #1e293b)' }}>{repuestoToDelete.nombre}</strong>?
                 <br />
-                <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>
+                <span style={{ fontSize: '12.5px', color: 'var(--muted, #94a3b8)' }}>
                   Esta acción no se puede deshacer.
                 </span>
               </p>
@@ -665,7 +665,7 @@ export default function Inventario() {
           <div className="modal-dialog-custom modal-lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-custom">
               <h5 className="modal-title-custom">
-                <FileSpreadsheet size={18} className="me-2" style={{ color: '#3b82f6', display: 'inline-block', verticalAlign: 'middle' }} />
+                <FileSpreadsheet size={18} className="me-2" style={{ color: 'var(--link, #3b82f6)', display: 'inline-block', verticalAlign: 'middle' }} />
                 Importación masiva de repuestos
               </h5>
               <button

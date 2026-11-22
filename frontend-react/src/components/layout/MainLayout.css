@@ -1,8 +1,8 @@
 .layout-root {
   display: flex;
   min-height: 100vh;
-  background: #f8fafc;
-  color: #334155;
+  background: var(--canvas, #f8fafc);
+  color: var(--text, #334155);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -16,8 +16,8 @@
 }
 
 .topbar {
-  background: #ffffff;
-  border-bottom: 1px solid #dbe4f0;
+  background: var(--surface, #ffffff);
+  border-bottom: 1px solid var(--border, #dbe4f0);
   padding: 18px 32px;
   display: flex;
   align-items: center;
@@ -41,16 +41,16 @@
   width: 40px;
   height: 40px;
   flex-shrink: 0;
-  border: 1px solid #dbe4f0;
-  background: #ffffff;
-  color: #1e3a8a;
+  border: 1px solid var(--border, #dbe4f0);
+  background: var(--surface, #ffffff);
+  color: var(--heading, #1e3a8a);
   border-radius: 10px;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
 }
 
 .btn-menu-toggle:hover {
-  background: #eff6ff;
+  background: var(--blue-bg, #eff6ff);
   border-color: #93c5fd;
 }
 
@@ -71,13 +71,13 @@
 .topbar-title {
   font-size: 20px;
   font-weight: 800;
-  color: #1e3a8a;
+  color: var(--heading, #1e3a8a);
   letter-spacing: -0.02em;
 }
 
 .topbar-sub {
   font-size: 12.5px;
-  color: #64748b;
+  color: var(--muted, #64748b);
   text-transform: capitalize;
   margin-top: 2px;
 }
@@ -86,8 +86,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #ecfdf5;
-  color: #059669;
+  background: var(--success-bg, #ecfdf5);
+  color: var(--success, #059669);
   border: 1px solid #a7f3d0;
   padding: 6px 14px;
   border-radius: 999px;
@@ -144,8 +144,14 @@
   }
 }
 
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 @media (max-width: 520px) {
-  .topbar-status {
+  .topbar-status .badge-status-active {
     display: none;
   }
 }

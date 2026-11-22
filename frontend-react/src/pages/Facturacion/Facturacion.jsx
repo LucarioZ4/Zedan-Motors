@@ -912,14 +912,14 @@ export default function Facturacion() {
                   display: 'inline-block'
                 }}
               />
-              <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
+              <p style={{ color: 'var(--muted, #475569)', fontSize: '14px', margin: 0 }}>
                 ¿Eliminar la factura{' '}
-                <strong style={{ color: '#1e293b' }}>
+                <strong style={{ color: 'var(--text, #1e293b)' }}>
                   #FE-{String(facturaToDelete.id_factura).padStart(4, '0')}
                 </strong>
                 ?
                 <br />
-                <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>
+                <span style={{ fontSize: '12.5px', color: 'var(--muted, #94a3b8)' }}>
                   Esta acción revertirá el cobro de la orden asociada.
                 </span>
               </p>

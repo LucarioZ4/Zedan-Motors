@@ -785,7 +785,7 @@ export default function Citas() {
                           <span className="td-hora">{c.hora}</span>
                         </td>
                         <td>
-                          <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.cliente}</div>
+                          <div style={{ fontWeight: 600, color: 'var(--text, #0f172a)' }}>{c.cliente}</div>
                         </td>
                         <td className="td-muted">{c.vehiculo}</td>
                         <td className="td-muted">
@@ -994,11 +994,11 @@ export default function Citas() {
                   display: 'inline-block'
                 }}
               />
-              <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
+              <p style={{ color: 'var(--muted, #475569)', fontSize: '14px', margin: 0 }}>
                 ¿Eliminar la cita de{' '}
-                <strong style={{ color: '#1e293b' }}>{citaToDelete.cliente}</strong>?
+                <strong style={{ color: 'var(--text, #1e293b)' }}>{citaToDelete.cliente}</strong>?
                 <br />
-                <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>
+                <span style={{ fontSize: '12.5px', color: 'var(--muted, #94a3b8)' }}>
                   Vehículo: {citaToDelete.vehiculo}
                 </span>
               </p>

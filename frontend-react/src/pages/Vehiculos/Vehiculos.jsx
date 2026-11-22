@@ -405,7 +405,7 @@ export default function Vehiculos() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '32px', color: 'var(--muted, #94a3b8)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                       <RotateCw size={16} className="spinning" />
                       <span>Cargando flota vehicular...</span>
@@ -414,7 +414,7 @@ export default function Vehiculos() {
                 </tr>
               ) : vehiculos.length === 0 ? (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '36px', color: 'var(--muted, #64748b)' }}>
                     No se encontraron vehículos registrados.
                   </td>
                 </tr>
@@ -435,7 +435,7 @@ export default function Vehiculos() {
                     <td>
                       <span className="placa-badge">{v.placa}</span>
                     </td>
-                    <td style={{ color: '#64748b' }}>{v.anio || '—'}</td>
+                    <td style={{ color: 'var(--muted, #64748b)' }}>{v.anio || '—'}</td>
                     <td>
                       {v.color ? (
                         <span>
@@ -443,10 +443,10 @@ export default function Vehiculos() {
                           {v.color}
                         </span>
                       ) : (
-                        <span style={{ color: '#94a3b8' }}>—</span>
+                        <span style={{ color: 'var(--muted, #94a3b8)' }}>—</span>
                       )}
                     </td>
-                    <td style={{ fontWeight: 500, color: '#1e3a8a' }}>{v.cliente}</td>
+                    <td style={{ fontWeight: 500, color: 'var(--heading, #1e3a8a)' }}>{v.cliente}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <button
@@ -614,10 +614,10 @@ export default function Vehiculos() {
                 color="#ef4444"
                 style={{ marginBottom: '12px', display: 'inline-block' }}
               />
-              <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
-                ¿Eliminar el vehículo <strong style={{ color: '#1e293b' }}>{vehiculoToDelete.marca} {vehiculoToDelete.modelo} ({vehiculoToDelete.placa})</strong>?
+              <p style={{ color: 'var(--muted, #475569)', fontSize: '14px', margin: 0 }}>
+                ¿Eliminar el vehículo <strong style={{ color: 'var(--text, #1e293b)' }}>{vehiculoToDelete.marca} {vehiculoToDelete.modelo} ({vehiculoToDelete.placa})</strong>?
                 <br />
-                <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>Esta acción no se puede deshacer.</span>
+                <span style={{ fontSize: '12.5px', color: 'var(--muted, #94a3b8)' }}>Esta acción no se puede deshacer.</span>
               </p>
             </div>
             <div className="modal-footer-custom">
@@ -666,10 +666,10 @@ export default function Vehiculos() {
               {/* Instrucciones y Descarga */}
               <div className="import-instructions">
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--heading, #1e3a8a)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Info size={15} className="text-primary" /> Columnas requeridas:
                   </div>
-                  <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--muted, #64748b)', marginTop: '2px' }}>
                     1. <strong>Placa</strong> &bull; 2. <strong>Marca</strong> &bull; 3. <strong>Modelo</strong> &bull; 4. <strong>Año</strong> &bull; 5. <strong>Color</strong> &bull; 6. <strong>ID_Cliente</strong>
                   </div>
                 </div>
@@ -680,7 +680,7 @@ export default function Vehiculos() {
 
               {/* Cliente por defecto */}
               <div className="import-client-default-box">
-                <label className="field-label" style={{ color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label className="field-label" style={{ color: 'var(--heading, #1e3a8a)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <UserCheck size={15} /> Cliente por defecto (opcional):
                 </label>
                 <select
@@ -699,7 +699,7 @@ export default function Vehiculos() {
                     </option>
                   ))}
                 </select>
-                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--muted, #64748b)', marginTop: '4px' }}>
                   Si tu archivo no tiene la columna ID_Cliente o todos pertenecen al mismo cliente, selecciónalo aquí.
                 </div>
               </div>
@@ -759,12 +759,12 @@ export default function Vehiculos() {
               {vehiculosParaImportar.length > 0 && (
                 <div style={{ marginTop: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e3a8a' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--heading, #1e3a8a)' }}>
                       Vista previa ({vehiculosParaImportar.length} vehículos detectados)
                     </span>
                     <button
                       type="button"
-                      style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      style={{ background: 'none', border: 'none', color: 'var(--error, #ef4444)', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                       onClick={() => {
                         setVehiculosParaImportar([]);
                         setImportText('');
@@ -801,11 +801,11 @@ export default function Vehiculos() {
                             </td>
                             <td>
                               {it.valido ? (
-                                <span style={{ color: '#16a34a', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ color: 'var(--success, #16a34a)', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                   <CheckCircle2 size={13} /> Válido
                                 </span>
                               ) : (
-                                <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ color: 'var(--error, #ef4444)', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                   <AlertCircle size={13} /> Incompleto
                                 </span>
                               )}

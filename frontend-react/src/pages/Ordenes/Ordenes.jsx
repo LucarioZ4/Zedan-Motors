@@ -756,11 +756,11 @@ export default function Ordenes() {
                   display: 'inline-block'
                 }}
               />
-              <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
+              <p style={{ color: 'var(--muted, #475569)', fontSize: '14px', margin: 0 }}>
                 ¿Eliminar la orden de trabajo{' '}
-                <strong style={{ color: '#1e293b' }}>#{ordenToDelete.id_orden}</strong>?
+                <strong style={{ color: 'var(--text, #1e293b)' }}>#{ordenToDelete.id_orden}</strong>?
                 <br />
-                <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>
+                <span style={{ fontSize: '12.5px', color: 'var(--muted, #94a3b8)' }}>
                   Esta acción no se puede deshacer.
                 </span>
               </p>

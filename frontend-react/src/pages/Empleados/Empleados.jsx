@@ -240,7 +240,7 @@ export default function Empleados() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '32px', color: 'var(--muted, #94a3b8)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                       <RotateCw size={16} className="spinning" />
                       <span>Cargando equipo de empleados...</span>
@@ -249,7 +249,7 @@ export default function Empleados() {
                 </tr>
               ) : empleados.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '36px', color: 'var(--muted, #64748b)' }}>
                     No se encontraron empleados registrados.
                   </td>
                 </tr>
@@ -269,12 +269,12 @@ export default function Empleados() {
                       </td>
                       <td>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <Phone size={14} style={{ color: '#3b82f6' }} />
+                          <Phone size={14} style={{ color: 'var(--link, #3b82f6)' }} />
                           {e.telefono}
                         </span>
                       </td>
-                      <td style={{ color: '#64748b' }}>
-                        {e.correo || <span style={{ color: '#94a3b8' }}>—</span>}
+                      <td style={{ color: 'var(--muted, #64748b)' }}>
+                        {e.correo || <span style={{ color: 'var(--muted, #94a3b8)' }}>—</span>}
                       </td>
                       <td>
                         <span className="cargo-badge">{e.cargo || 'Sin cargo'}</span>
@@ -434,10 +434,10 @@ export default function Empleados() {
                 color="#ef4444"
                 style={{ marginBottom: '12px', display: 'inline-block' }}
               />
-              <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
-                ¿Eliminar al empleado <strong style={{ color: '#1e293b' }}>{empleadoToDelete.nombre} {empleadoToDelete.apellido}</strong>?
+              <p style={{ color: 'var(--muted, #475569)', fontSize: '14px', margin: 0 }}>
+                ¿Eliminar al empleado <strong style={{ color: 'var(--text, #1e293b)' }}>{empleadoToDelete.nombre} {empleadoToDelete.apellido}</strong>?
                 <br />
-                <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>Esta acción no se puede deshacer.</span>
+                <span style={{ fontSize: '12.5px', color: 'var(--muted, #94a3b8)' }}>Esta acción no se puede deshacer.</span>
               </p>
             </div>
             <div className="modal-footer-custom">

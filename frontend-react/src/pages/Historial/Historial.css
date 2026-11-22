@@ -20,14 +20,14 @@
 .historial-header-info h2 {
     font-size: 20px;
     font-weight: 800;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
     letter-spacing: -0.02em;
     margin: 0;
 }
 
 .historial-header-info p {
     font-size: 13px;
-    color: #64748b;
+    color: var(--muted, #64748b);
     margin: 4px 0 0;
 }
 
@@ -47,8 +47,8 @@
 
 /* ── Tarjetas ── */
 .card-custom {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
     border-radius: 14px;
     padding: 20px;
     box-shadow: 0 4px 16px rgba(30, 58, 138, 0.02);
@@ -63,12 +63,12 @@
 .selector-titulo {
     font-size: 14px;
     font-weight: 700;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
     display: flex;
     align-items: center;
     gap: 8px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border, #f1f5f9);
 }
 
 .form-group-custom {
@@ -80,26 +80,26 @@
 .field-label {
     font-size: 12px;
     font-weight: 700;
-    color: #64748b;
+    color: var(--muted, #64748b);
     text-transform: uppercase;
     letter-spacing: 0.02em;
 }
 
 .field-input {
     width: 100%;
-    background: #f8fafc;
-    border: 1px solid #dbe4f0;
+    background: var(--canvas, #f8fafc);
+    border: 1px solid var(--border, #dbe4f0);
     border-radius: 10px;
     padding: 10px 14px;
     font-size: 13.5px;
-    color: #1e293b;
+    color: var(--text, #1e293b);
     outline: none;
     transition: all 0.2s;
     box-sizing: border-box;
 }
 
 .field-input:focus {
-    background: #ffffff;
+    background: var(--surface, #ffffff);
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
@@ -107,13 +107,13 @@
 .field-input:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background: #f1f5f9;
+    background: var(--raised, #f1f5f9);
 }
 
 /* ── Tarjeta Info Vehículo ── */
 .vehiculo-card {
-    background: #f8fafc;
-    border: 1px solid #dbe4f0;
+    background: var(--canvas, #f8fafc);
+    border: 1px solid var(--border, #dbe4f0);
     border-radius: 12px;
     padding: 14px;
     display: flex;
@@ -139,12 +139,12 @@
 .vehiculo-card-nombre {
     font-size: 13.5px;
     font-weight: 700;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
 }
 
 .vehiculo-card-placa {
     font-size: 12px;
-    color: #3b82f6;
+    color: var(--link, #3b82f6);
     font-weight: 600;
     letter-spacing: 0.04em;
 }
@@ -158,8 +158,8 @@
 }
 
 .mini-stat {
-    background: #f8fafc;
-    border: 1px solid #dbe4f0;
+    background: var(--canvas, #f8fafc);
+    border: 1px solid var(--border, #dbe4f0);
     border-radius: 10px;
     padding: 12px 10px;
     text-align: center;
@@ -174,13 +174,13 @@
 .mini-stat-val {
     font-size: 22px;
     font-weight: 800;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
     line-height: 1;
 }
 
 .mini-stat-label {
     font-size: 11px;
-    color: #64748b;
+    color: var(--muted, #64748b);
     margin-top: 4px;
     font-weight: 600;
 }
@@ -198,7 +198,7 @@
     justify-content: space-between;
     align-items: center;
     padding-bottom: 14px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border, #e2e8f0);
     flex-wrap: wrap;
     gap: 12px;
 }
@@ -206,23 +206,23 @@
 .timeline-main-title {
     font-size: 16px;
     font-weight: 700;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
     margin: 0;
 }
 
 .timeline-sub-title {
     font-size: 12.5px;
-    color: #64748b;
+    color: var(--muted, #64748b);
     margin: 2px 0 0;
 }
 
 .filtro-select-sm {
-    background: #ffffff;
-    border: 1px solid #dbe4f0;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #dbe4f0);
     border-radius: 10px;
     padding: 7px 12px;
     font-size: 12.5px;
-    color: #1e293b;
+    color: var(--text, #1e293b);
     outline: none;
     cursor: pointer;
 }
@@ -234,7 +234,7 @@
 /* ── Timeline Vació / Loading ── */
 .timeline-vacio {
     text-align: center;
-    color: #64748b;
+    color: var(--muted, #64748b);
     font-size: 13.5px;
     padding: 80px 20px;
 }
@@ -248,7 +248,7 @@
 
 .loading-icon {
     font-size: 32px;
-    color: #3b82f6;
+    color: var(--link, #3b82f6);
     display: block;
     margin-bottom: 12px;
 }
@@ -274,7 +274,7 @@
 .timeline-mes-label {
     font-size: 10.5px;
     font-weight: 700;
-    color: #64748b;
+    color: var(--muted, #64748b);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     white-space: nowrap;
@@ -283,7 +283,7 @@
 .timeline-mes-line {
     flex: 1;
     height: 1px;
-    background: #e2e8f0;
+    background: var(--raised, #e2e8f0);
 }
 
 /* ── Timeline Evento ── */
@@ -321,15 +321,15 @@
 .timeline-linea {
     width: 2px;
     flex: 1;
-    background: #e2e8f0;
+    background: var(--raised, #e2e8f0);
     margin-top: 4px;
     min-height: 24px;
 }
 
 .timeline-card {
     flex: 1;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
     border-radius: 12px;
     padding: 14px 18px;
     margin-bottom: 12px;
@@ -337,7 +337,7 @@
 }
 
 .timeline-card:hover {
-    border-color: #cbd5e1;
+    border-color: var(--border, #cbd5e1);
     box-shadow: 0 4px 12px rgba(30, 58, 138, 0.04);
 }
 
@@ -361,29 +361,29 @@
 
 .timeline-fecha {
     font-size: 11.5px;
-    color: #64748b;
+    color: var(--muted, #64748b);
     font-weight: 500;
 }
 
 .timeline-desc {
     font-size: 13.5px;
-    color: #1e293b;
+    color: var(--text, #1e293b);
     line-height: 1.5;
 }
 
 .timeline-empleado {
     font-size: 11.5px;
-    color: #64748b;
+    color: var(--muted, #64748b);
     margin-top: 8px;
     display: flex;
     align-items: center;
     gap: 6px;
     padding-top: 6px;
-    border-top: 1px dashed #f1f5f9;
+    border-top: 1px dashed var(--border, #f1f5f9);
 }
 
 .timeline-empleado i {
-    color: #3b82f6;
+    color: var(--link, #3b82f6);
 }
 
 /* ── Toast ── */

@@ -159,7 +159,7 @@ export default function DiagnosticoDetalle() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
+      <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted, #64748b)' }}>
         <RotateCw size={30} className="spin" style={{ marginBottom: '10px' }} />
         <p>Cargando información del diagnóstico...</p>
       </div>
@@ -169,7 +169,7 @@ export default function DiagnosticoDetalle() {
   if (error || !diagnostico) {
     return (
       <div className="diagnosticos-container">
-        <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '12px', padding: '24px', textAlign: 'center', color: '#b91c1c' }}>
+        <div style={{ background: 'var(--error-bg, #fef2f2)', border: '1px solid #fee2e2', borderRadius: '12px', padding: '24px', textAlign: 'center', color: 'var(--error, #b91c1c)' }}>
           <AlertTriangle size={32} style={{ marginBottom: '8px' }} />
           <h3>Error al cargar el diagnóstico</h3>
           <p>{error || 'El diagnóstico solicitado no existe.'}</p>
@@ -286,21 +286,21 @@ export default function DiagnosticoDetalle() {
 
       {/* ── Observaciones Generales ── */}
       <div className="card-custom">
-        <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#1e3a8a', fontWeight: 700 }}>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: 'var(--heading, #1e3a8a)', fontWeight: 700 }}>
           Observaciones de Ingreso
         </h4>
-        <p style={{ margin: 0, fontSize: '13.5px', color: '#334155', lineHeight: 1.6 }}>
+        <p style={{ margin: 0, fontSize: '13.5px', color: 'var(--text, #334155)', lineHeight: 1.6 }}>
           {diagnostico.observaciones || 'No se registraron observaciones adicionales para este ingreso.'}
         </p>
       </div>
 
       {/* ── Tabla de Accesorios Verificados ── */}
       <div className="card-custom">
-        <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', color: '#1e3a8a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', color: 'var(--heading, #1e3a8a)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
           <CheckSquare size={18} className="text-primary" />
           <span>Inventario y Accesorios Verificados</span>
         </h4>
-        <p style={{ fontSize: '12.5px', color: '#64748b', margin: '0 0 16px 0' }}>
+        <p style={{ fontSize: '12.5px', color: 'var(--muted, #64748b)', margin: '0 0 16px 0' }}>
           Estado en el que se entregaron los accesorios del vehículo al momento de la recepción.
         </p>
 
@@ -319,13 +319,13 @@ export default function DiagnosticoDetalle() {
                   const estLower = (acc.estado || '').toLowerCase().replace(/\s+/g, '-');
                   return (
                     <tr key={idx}>
-                      <td style={{ fontWeight: 600, color: '#1e293b' }}>{acc.nombre}</td>
+                      <td style={{ fontWeight: 600, color: 'var(--text, #1e293b)' }}>{acc.nombre}</td>
                       <td>
                         <span className={`badge-accesorio ${estLower}`}>
                           {acc.estado}
                         </span>
                       </td>
-                      <td style={{ color: '#64748b', fontSize: '13px' }}>
+                      <td style={{ color: 'var(--muted, #64748b)', fontSize: '13px' }}>
                         {acc.observacion || '—'}
                       </td>
                     </tr>
@@ -333,7 +333,7 @@ export default function DiagnosticoDetalle() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={3} style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>
+                  <td colSpan={3} style={{ textAlign: 'center', color: 'var(--muted, #94a3b8)', padding: '20px' }}>
                     No se registraron accesorios para este diagnóstico.
                   </td>
                 </tr>
@@ -347,11 +347,11 @@ export default function DiagnosticoDetalle() {
       <div className="card-custom">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h4 style={{ margin: 0, fontSize: '15px', color: '#1e3a8a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h4 style={{ margin: 0, fontSize: '15px', color: 'var(--heading, #1e3a8a)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Camera size={18} className="text-primary" />
               <span>Evidencias Multimedia ({diagnostico.archivos?.length || 0})</span>
             </h4>
-            <p style={{ fontSize: '12.5px', color: '#64748b', margin: '4px 0 0 0' }}>
+            <p style={{ fontSize: '12.5px', color: 'var(--muted, #64748b)', margin: '4px 0 0 0' }}>
               Fotos y videos adjuntos como prueba del estado físico de recepción.
             </p>
           </div>
@@ -405,7 +405,7 @@ export default function DiagnosticoDetalle() {
                     {formatoMb(arc.tamano)} • {new Date(arc.creado_en || Date.now()).toLocaleDateString('es-CO')}
                   </span>
                   {arc.descripcion && (
-                    <p style={{ fontSize: '12px', color: '#1e3a8a', margin: '4px 0 0 0', fontWeight: 500 }}>
+                    <p style={{ fontSize: '12px', color: 'var(--heading, #1e3a8a)', margin: '4px 0 0 0', fontWeight: 500 }}>
                       📝 {arc.descripcion}
                     </p>
                   )}
@@ -455,7 +455,7 @@ export default function DiagnosticoDetalle() {
             ))}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>
+          <div style={{ textAlign: 'center', padding: '30px', color: 'var(--muted, #94a3b8)' }}>
             <FileImage size={36} style={{ color: '#cbd5e1', marginBottom: '8px' }} />
             <p style={{ margin: 0, fontSize: '13.5px' }}>
               No se adjuntaron fotos ni videos en este diagnóstico.
@@ -471,14 +471,14 @@ export default function DiagnosticoDetalle() {
             style={{
               maxWidth: '92vw',
               maxHeight: '92vh',
-              background: '#ffffff',
+              background: 'var(--surface, #ffffff)',
               borderRadius: '16px',
               overflow: 'hidden',
               position: 'relative',
               display: 'flex',
               flexDirection: 'column',
               boxShadow: '0 25px 60px rgba(15, 23, 42, 0.35)',
-              border: '1px solid #e2e8f0'
+              border: '1px solid var(--border, #e2e8f0)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -489,7 +489,7 @@ export default function DiagnosticoDetalle() {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 padding: '12px 20px',
-                background: '#f8fafc',
+                background: 'var(--canvas, #f8fafc)',
                 borderBottom: '1px solid #e2e8f0'
               }}
             >
@@ -499,8 +499,8 @@ export default function DiagnosticoDetalle() {
                     width: '32px',
                     height: '32px',
                     borderRadius: '8px',
-                    background: '#eff6ff',
-                    color: '#1e3a8a',
+                    background: 'var(--blue-bg, #eff6ff)',
+                    color: 'var(--heading, #1e3a8a)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
@@ -509,10 +509,10 @@ export default function DiagnosticoDetalle() {
                   <FileImage size={18} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1e293b' }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text, #1e293b)' }}>
                     {previewMedia.nombre_original}
                   </div>
-                  <div style={{ fontSize: '11.5px', color: '#64748b' }}>
+                  <div style={{ fontSize: '11.5px', color: 'var(--muted, #64748b)' }}>
                     {formatoMb(previewMedia.tamano)} {previewMedia.descripcion ? `• ${previewMedia.descripcion}` : ''}
                   </div>
                 </div>
@@ -535,12 +535,12 @@ export default function DiagnosticoDetalle() {
                   type="button"
                   onClick={() => setPreviewMedia(null)}
                   style={{
-                    background: '#f1f5f9',
+                    background: 'var(--raised, #f1f5f9)',
                     border: 'none',
                     borderRadius: '8px',
                     width: '32px',
                     height: '32px',
-                    color: '#64748b',
+                    color: 'var(--muted, #64748b)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -560,7 +560,7 @@ export default function DiagnosticoDetalle() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: '#f8fafc',
+                background: 'var(--canvas, #f8fafc)',
                 minHeight: '260px',
                 maxHeight: '75vh',
                 overflow: 'auto'
@@ -579,7 +579,7 @@ export default function DiagnosticoDetalle() {
                   }}
                 />
               ) : (
-                <div style={{ textAlign: 'center', color: '#64748b', padding: '40px 20px' }}>
+                <div style={{ textAlign: 'center', color: 'var(--muted, #64748b)', padding: '40px 20px' }}>
                   <FileImage size={48} style={{ color: '#cbd5e1', marginBottom: '12px' }} />
                   <p style={{ margin: 0, fontWeight: 600 }}>La imagen aún no tiene un enlace activo.</p>
                   <p style={{ margin: '4px 0 0', fontSize: '12.5px' }}>
@@ -597,7 +597,7 @@ export default function DiagnosticoDetalle() {
         <div className="modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
           <div className="modal-dialog-custom modal-sm" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-custom">
-              <h3 className="modal-title-custom" style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 className="modal-title-custom" style={{ color: 'var(--error, #ef4444)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <AlertTriangle size={20} />
                 Eliminar Diagnóstico
               </h3>
@@ -610,11 +610,11 @@ export default function DiagnosticoDetalle() {
               </button>
             </div>
             <div className="modal-body-custom">
-              <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#334155' }}>
+              <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text, #334155)' }}>
                 ¿Deseas eliminar definitivamente este diagnóstico del vehículo{' '}
                 <strong>{diagnostico.placa}</strong>?
               </p>
-              <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '8px', padding: '12px', fontSize: '12.5px', color: '#991b1b' }}>
+              <div style={{ background: 'var(--error-bg, #fef2f2)', border: '1px solid #fee2e2', borderRadius: '8px', padding: '12px', fontSize: '12.5px', color: 'var(--error, #991b1b)' }}>
                 Se eliminarán los registros de accesorios y todos los archivos físicos subidos a Supabase.
               </div>
             </div>

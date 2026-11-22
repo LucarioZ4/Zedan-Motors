@@ -18,32 +18,32 @@
 
 .ia-modo {
     text-align: left;
-    background: #f8fafc;
-    border: 1.5px solid #dbe4f0;
+    background: var(--canvas, #f8fafc);
+    border: 1.5px solid var(--border, #dbe4f0);
     border-radius: 12px;
     padding: 14px 16px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    color: #475569;
+    color: var(--muted, #475569);
     font-size: 12.5px;
     transition: all 0.15s;
 }
 
 .ia-modo strong {
-    color: #1e293b;
+    color: var(--text, #1e293b);
     font-size: 14px;
 }
 
 .ia-modo.activo {
     border-color: #3b82f6;
-    background: #eff6ff;
+    background: var(--blue-bg, #eff6ff);
 }
 
 .ia-subir {
     width: 100%;
-    background: #f8fafc;
+    background: var(--canvas, #f8fafc);
     border: 2px dashed #bfd0ea;
     border-radius: 14px;
     padding: 36px 20px;
@@ -52,23 +52,23 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    color: #3b82f6;
+    color: var(--link, #3b82f6);
     text-align: center;
 }
 
 .ia-subir strong {
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
     font-size: 15px;
 }
 
 .ia-subir span {
-    color: #64748b;
+    color: var(--muted, #64748b);
     font-size: 12.5px;
     max-width: 420px;
 }
 
 .ia-subir:hover {
-    background: #eff6ff;
+    background: var(--blue-bg, #eff6ff);
 }
 
 .ia-preview {
@@ -82,7 +82,7 @@
     max-width: 100%;
     max-height: 340px;
     border-radius: 12px;
-    border: 1px solid #dbe4f0;
+    border: 1px solid var(--border, #dbe4f0);
     object-fit: contain;
 }
 
@@ -91,19 +91,19 @@
     align-items: center;
     gap: 14px;
     font-size: 13px;
-    color: #64748b;
+    color: var(--muted, #64748b);
 }
 
 .ia-aviso {
     display: flex;
     gap: 10px;
     align-items: flex-start;
-    background: #fffbeb;
+    background: var(--warning-bg, #fffbeb);
     border: 1px solid #fef3c7;
     border-left: 4px solid #f59e0b;
     border-radius: 10px;
     padding: 12px 16px;
-    color: #92400e;
+    color: var(--warning, #92400e);
     font-size: 13px;
     margin-bottom: 14px;
 }
@@ -115,13 +115,13 @@
 
 .ia-observaciones {
     font-size: 13px;
-    color: #475569;
+    color: var(--muted, #475569);
     margin: 0 0 14px;
 }
 
 .ia-vacio {
     text-align: center;
-    color: #64748b;
+    color: var(--muted, #64748b);
     padding: 24px 0;
     font-size: 14px;
 }
@@ -140,12 +140,12 @@
 
 .ia-resultado {
     font-size: 14px;
-    color: #475569;
+    color: var(--muted, #475569);
     white-space: nowrap;
 }
 
 .ia-resultado strong {
-    color: #16a34a;
+    color: var(--success, #16a34a);
     font-size: 16px;
 }
 
@@ -156,7 +156,7 @@
 }
 
 .ia-error-fila {
-    color: #dc2626;
+    color: var(--error, #dc2626);
     font-size: 12px;
     margin-top: 4px;
 }
@@ -172,17 +172,17 @@
 
 .ia-confianza.alta {
     background: rgba(22, 163, 74, 0.12);
-    color: #15803d;
+    color: var(--success, #15803d);
 }
 
 .ia-confianza.media {
     background: rgba(245, 158, 11, 0.15);
-    color: #b45309;
+    color: var(--warning, #b45309);
 }
 
 .ia-confianza.baja {
     background: rgba(239, 68, 68, 0.12);
-    color: #b91c1c;
+    color: var(--error, #b91c1c);
 }
 
 .ia-nota-label {

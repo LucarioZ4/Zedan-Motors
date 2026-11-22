@@ -21,7 +21,7 @@ const routeTitles = {
 
 const MOBILE_QUERY = '(max-width: 900px)';
 
-export default function MainLayout() {
+export default function MainLayout({ themeToggle }) {
   const location = useLocation();
 
   // En escritorio inicia abierto; en celular inicia oculto
@@ -73,6 +73,7 @@ export default function MainLayout() {
             </div>
           </div>
           <div className="topbar-status">
+            {themeToggle}
             <span className="badge-status-active">
               <span className="pulse-dot"></span>
               Sistema activo

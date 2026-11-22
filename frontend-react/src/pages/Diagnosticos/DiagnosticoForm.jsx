@@ -226,7 +226,7 @@ export default function DiagnosticoForm() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
+      <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted, #64748b)' }}>
         <RotateCw size={30} className="spin" style={{ marginBottom: '10px' }} />
         <p>Cargando datos del diagnóstico...</p>
       </div>
@@ -255,7 +255,7 @@ export default function DiagnosticoForm() {
       </div>
 
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '12px', padding: '12px 16px', color: '#b91c1c', fontSize: '13.5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ background: 'var(--error-bg, #fef2f2)', border: '1px solid #fee2e2', borderRadius: '12px', padding: '12px 16px', color: 'var(--error, #b91c1c)', fontSize: '13.5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <AlertCircle size={18} />
           <span>{error}</span>
         </div>
@@ -282,23 +282,23 @@ export default function DiagnosticoForm() {
                   <div className="vehiculo-selected-details">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <span className="placa-badge">{vehiculoSeleccionado.placa}</span>
-                      <strong style={{ fontSize: '14px', color: '#1e3a8a' }}>
+                      <strong style={{ fontSize: '14px', color: 'var(--heading, #1e3a8a)' }}>
                         {vehiculoSeleccionado.marca} {vehiculoSeleccionado.modelo}
                       </strong>
                       {vehiculoSeleccionado.anio && (
-                        <span style={{ color: '#64748b', fontSize: '12.5px' }}>({vehiculoSeleccionado.anio})</span>
+                        <span style={{ color: 'var(--muted, #64748b)', fontSize: '12.5px' }}>({vehiculoSeleccionado.anio})</span>
                       )}
                       {vehiculoSeleccionado.color && (
-                        <span style={{ color: '#64748b', fontSize: '12.5px' }}>• Color: {vehiculoSeleccionado.color}</span>
+                        <span style={{ color: 'var(--muted, #64748b)', fontSize: '12.5px' }}>• Color: {vehiculoSeleccionado.color}</span>
                       )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#334155', fontSize: '12.5px', marginTop: '2px', flexWrap: 'wrap' }}>
-                      <User size={14} style={{ color: '#2563eb' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text, #334155)', fontSize: '12.5px', marginTop: '2px', flexWrap: 'wrap' }}>
+                      <User size={14} style={{ color: 'var(--link, #2563eb)' }} />
                       <span>
                         <strong>Cliente:</strong> {vehiculoSeleccionado.cliente || vehiculoSeleccionado.nombre_cliente || 'Sin cliente asignado'}
                       </span>
                       {vehiculoSeleccionado.telefono_cliente && (
-                        <span style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <span style={{ color: 'var(--muted, #64748b)', display: 'flex', alignItems: 'center', gap: '3px' }}>
                           • <Phone size={12} /> {vehiculoSeleccionado.telefono_cliente}
                         </span>
                       )}
@@ -369,11 +369,11 @@ export default function DiagnosticoForm() {
                             >
                               <div className="vehiculo-dropdown-item-header">
                                 <span className="placa-badge">{v.placa}</span>
-                                <strong style={{ color: '#1e293b', fontSize: '13.5px' }}>
+                                <strong style={{ color: 'var(--text, #1e293b)', fontSize: '13.5px' }}>
                                   {v.marca} {v.modelo}
                                 </strong>
                                 {v.color && (
-                                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                  <span style={{ fontSize: '12px', color: 'var(--muted, #94a3b8)' }}>
                                     ({v.color})
                                   </span>
                                 )}
@@ -452,7 +452,7 @@ export default function DiagnosticoForm() {
                   className="form-control-custom"
                   style={{ paddingRight: '40px' }}
                 />
-                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>
+                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: 'var(--muted, #94a3b8)', fontWeight: 600 }}>
                   KM
                 </span>
               </div>
@@ -475,8 +475,8 @@ export default function DiagnosticoForm() {
 
           {/* Selector de Nivel de Gasolina */}
           <div style={{ marginTop: '16px' }}>
-            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-              <Fuel size={15} style={{ color: '#3b82f6' }} />
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text, #334155)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+              <Fuel size={15} style={{ color: 'var(--link, #3b82f6)' }} />
               Nivel de Combustible / Gasolina <span className="req">*</span>
             </label>
             <div className="gasolina-selector">

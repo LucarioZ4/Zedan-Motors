@@ -16,10 +16,10 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 16px;
-    background: #ffffff;
+    background: var(--surface, #ffffff);
     padding: 20px 24px;
     border-radius: 14px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border, #e2e8f0);
     box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
 }
 
@@ -30,8 +30,8 @@
 }
 
 .citas-badge-tag {
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--blue-bg, #eff6ff);
+    color: var(--link, #2563eb);
     border: 1px solid #bfdbfe;
     font-size: 11px;
     font-weight: 700;
@@ -44,14 +44,14 @@
 .citas-header-info h2 {
     font-size: 22px;
     font-weight: 800;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
     letter-spacing: -0.02em;
     margin: 0;
 }
 
 .citas-header-info p {
     font-size: 13.5px;
-    color: #64748b;
+    color: var(--muted, #64748b);
     margin: 4px 0 0;
 }
 
@@ -65,10 +65,10 @@
 /* ── Selector de Vista (Calendario vs Tabla) ── */
 .vista-toggle-group {
     display: flex;
-    background: #f1f5f9;
+    background: var(--raised, #f1f5f9);
     padding: 3px;
     border-radius: 10px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border, #e2e8f0);
 }
 
 .btn-toggle-vista {
@@ -77,7 +77,7 @@
     padding: 8px 14px;
     font-size: 13px;
     font-weight: 600;
-    color: #64748b;
+    color: var(--muted, #64748b);
     border-radius: 8px;
     cursor: pointer;
     display: inline-flex;
@@ -87,12 +87,12 @@
 }
 
 .btn-toggle-vista:hover {
-    color: #1e293b;
+    color: var(--text, #1e293b);
 }
 
 .btn-toggle-vista.active {
-    background: #ffffff;
-    color: #1e3a8a;
+    background: var(--surface, #ffffff);
+    color: var(--heading, #1e3a8a);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
@@ -153,8 +153,8 @@
 }
 
 .calendar-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
     border-radius: 14px;
     padding: 16px;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
@@ -166,7 +166,7 @@
     align-items: center;
     margin-bottom: 12px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border, #f1f5f9);
 }
 
 .calendar-card-title {
@@ -175,20 +175,20 @@
     gap: 8px;
     font-size: 14.5px;
     font-weight: 700;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
 }
 
 .calendar-card-title i,
 .calendar-card-title svg {
-    color: #2563eb;
+    color: var(--link, #2563eb);
     font-size: 16px;
     flex-shrink: 0;
 }
 
 .btn-hoy-pill {
-    background: #eff6ff;
-    border: 1px solid #dbeafe;
-    color: #2563eb;
+    background: var(--blue-bg, #eff6ff);
+    border: 1px solid var(--border, #dbeafe);
+    color: var(--link, #2563eb);
     font-size: 12px;
     font-weight: 600;
     padding: 4px 10px;
@@ -234,8 +234,8 @@
 /* Métricas del calendario */
 .calendar-stats-box {
     margin-top: 14px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--canvas, #f8fafc);
+    border: 1px solid var(--border, #e2e8f0);
     border-radius: 10px;
     padding: 10px 14px;
     display: flex;
@@ -253,13 +253,13 @@
 .cal-stat-num {
     font-size: 16px;
     font-weight: 800;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
     line-height: 1;
 }
 
 .cal-stat-label {
     font-size: 10.5px;
-    color: #64748b;
+    color: var(--muted, #64748b);
     margin-top: 3px;
     font-weight: 600;
 }
@@ -267,7 +267,7 @@
 .cal-stat-divider {
     width: 1px;
     height: 24px;
-    background: #e2e8f0;
+    background: var(--raised, #e2e8f0);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -313,13 +313,13 @@
 
 /* Cabecera de días de la semana */
 .fullcalendar-wrapper .fc th {
-    border-color: #e2e8f0 !important;
+    border-color: var(--border, #e2e8f0) !important;
     padding: 6px 0 !important;
-    background: #f8fafc;
+    background: var(--canvas, #f8fafc);
 }
 
 .fullcalendar-wrapper .fc .fc-col-header-cell-cushion {
-    color: #475569;
+    color: var(--muted, #475569);
     font-size: 10.5px;
     font-weight: 800;
     text-transform: uppercase;
@@ -329,7 +329,7 @@
 
 /* Celdas de días */
 .fullcalendar-wrapper .fc td {
-    border-color: #f1f5f9 !important;
+    border-color: var(--border, #f1f5f9) !important;
 }
 
 .fullcalendar-wrapper .fc .fc-daygrid-day {
@@ -343,7 +343,7 @@
 }
 
 .fullcalendar-wrapper .fc .fc-daygrid-day:hover {
-    background: #f0f7ff !important;
+    background: var(--blue-bg, #f0f7ff) !important;
 }
 
 /* Columna de domingos tintada suavemente en rojo (Estilo Foto) */
@@ -357,7 +357,7 @@
 
 /* Día seleccionado activo (Azul Zedan destacado) */
 .fullcalendar-wrapper .fc .fc-daygrid-day.fc-day-active-selected {
-    background: #dbeafe !important;
+    background: var(--blue-bg, #dbeafe) !important;
     box-shadow: inset 0 0 0 2px #2563eb;
     border-radius: 4px;
 }
@@ -377,7 +377,7 @@
 
 /* Días con citas (borde o fondo sutil) */
 .fullcalendar-wrapper .fc .fc-daygrid-day.fc-day-has-citas:not(.fc-day-active-selected) {
-    background: #fffbeb;
+    background: var(--warning-bg, #fffbeb);
 }
 
 /* Contenido personalizado de la celda de día */
@@ -394,7 +394,7 @@
 .fc-custom-day-num {
     font-size: 13px;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--text, #1e293b);
     line-height: 1;
 }
 
@@ -425,8 +425,8 @@
 
 /* Card Header de Agenda Diaria (Estilo de la foto) */
 .day-agenda-header-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
     border-radius: 14px;
     padding: 18px 20px 14px;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
@@ -446,13 +446,13 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #64748b;
+    color: var(--muted, #64748b);
 }
 
 .day-agenda-title {
     font-size: 20px;
     font-weight: 800;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
     margin: 2px 0 0;
     text-transform: capitalize;
 }
@@ -465,13 +465,13 @@
 }
 
 .filtro-select-compact {
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #cbd5e1);
     border-radius: 8px;
     padding: 8px 12px;
     font-size: 12.5px;
     font-weight: 600;
-    color: #334155;
+    color: var(--text, #334155);
     outline: none;
     cursor: pointer;
     transition: all 0.2s;
@@ -493,34 +493,34 @@
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #94a3b8;
+    color: var(--muted, #94a3b8);
     font-size: 13px;
     pointer-events: none;
 }
 
 .search-bar-compact input {
     width: 100%;
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
+    background: var(--canvas, #f8fafc);
+    border: 1px solid var(--border, #cbd5e1);
     border-radius: 8px;
     padding: 8px 12px 8px 34px;
     font-size: 13px;
-    color: #1e293b;
+    color: var(--text, #1e293b);
     outline: none;
     transition: all 0.2s;
 }
 
 .search-bar-compact input:focus {
-    background: #ffffff;
+    background: var(--surface, #ffffff);
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 /* Banner Verde de Conteo (Exacto de la Foto: "Cantidad de pacientes encontrados: 15") */
 .day-count-banner {
-    background: #d1fae5;
+    background: var(--success-bg, #d1fae5);
     border: 1px solid #a7f3d0;
-    color: #065f46;
+    color: var(--success, #065f46);
     border-radius: 8px;
     padding: 8px 16px;
     font-size: 13px;
@@ -531,15 +531,15 @@
 }
 
 .day-count-banner strong {
-    color: #047857;
+    color: var(--success, #047857);
     font-size: 14.5px;
     font-weight: 800;
 }
 
 /* Card Contenedor de la Tabla de Agenda */
 .day-agenda-content-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
     border-radius: 14px;
     padding: 16px;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
@@ -557,24 +557,24 @@
 }
 
 .table-agenda-custom thead th {
-    background: #f8fafc;
-    color: #475569;
+    background: var(--canvas, #f8fafc);
+    color: var(--muted, #475569);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     padding: 10px 14px;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--border, #e2e8f0);
     text-align: left;
 }
 
 .table-agenda-custom tbody tr {
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border, #f1f5f9);
     transition: all 0.15s ease;
 }
 
 .table-agenda-custom tbody tr:hover {
-    background: #f8fafc;
+    background: var(--canvas, #f8fafc);
 }
 
 .table-agenda-custom tbody td {
@@ -592,7 +592,7 @@
 .turno-num {
     font-size: 18px;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--text, #0f172a);
     line-height: 1;
 }
 
@@ -602,8 +602,8 @@
     gap: 4px;
     font-size: 12.5px;
     font-weight: 700;
-    color: #2563eb;
-    background: #eff6ff;
+    color: var(--link, #2563eb);
+    background: var(--blue-bg, #eff6ff);
     padding: 2px 7px;
     border-radius: 6px;
 }
@@ -627,12 +627,12 @@
     gap: 6px;
     font-size: 13.5px;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--text, #0f172a);
 }
 
 .agenda-cliente-name i,
 .agenda-cliente-name svg {
-    color: #3b82f6;
+    color: var(--link, #3b82f6);
     font-size: 13px;
     flex-shrink: 0;
 }
@@ -642,8 +642,8 @@
     align-items: center;
     gap: 5px;
     font-size: 12px;
-    color: #475569;
-    background: #f1f5f9;
+    color: var(--muted, #475569);
+    background: var(--raised, #f1f5f9);
     padding: 2px 8px;
     border-radius: 6px;
     width: fit-content;
@@ -651,7 +651,7 @@
 
 .agenda-vehiculo-badge i,
 .agenda-vehiculo-badge svg {
-    color: #64748b;
+    color: var(--muted, #64748b);
     font-size: 11px;
     flex-shrink: 0;
 }
@@ -661,13 +661,13 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #334155;
+    color: var(--text, #334155);
     font-size: 13px;
 }
 
 .agenda-motivo-text i,
 .agenda-motivo-text svg {
-    color: #94a3b8;
+    color: var(--muted, #94a3b8);
     font-size: 12px;
     flex-shrink: 0;
 }
@@ -686,12 +686,12 @@
 .empty-icon-wrap {
     width: 64px;
     height: 64px;
-    background: #eff6ff;
+    background: var(--blue-bg, #eff6ff);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #2563eb;
+    color: var(--link, #2563eb);
     font-size: 28px;
     margin-bottom: 16px;
 }
@@ -699,13 +699,13 @@
 .day-agenda-empty h4 {
     font-size: 17px;
     font-weight: 700;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
     margin-bottom: 6px;
 }
 
 .day-agenda-empty p {
     font-size: 13.5px;
-    color: #64748b;
+    color: var(--muted, #64748b);
     max-width: 400px;
     margin-bottom: 20px;
 }
@@ -724,7 +724,7 @@
     gap: 12px;
     padding-top: 14px;
     margin-top: 14px;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--border, #f1f5f9);
 }
 
 .agenda-footer-tip {
@@ -732,11 +732,11 @@
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    color: #64748b;
+    color: var(--muted, #64748b);
 }
 
 .agenda-footer-tip i {
-    color: #2563eb;
+    color: var(--link, #2563eb);
     font-size: 13px;
 }
 
@@ -790,19 +790,19 @@
     left: 16px;
     top: 50%;
     transform: translateY(-50%);
-    color: #94a3b8;
+    color: var(--muted, #94a3b8);
     font-size: 15px;
     pointer-events: none;
 }
 
 .search-bar input {
     width: 100%;
-    background: #ffffff;
-    border: 1px solid #dbe4f0;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #dbe4f0);
     border-radius: 12px;
     padding: 12px 16px 12px 44px;
     font-size: 14px;
-    color: #1e293b;
+    color: var(--text, #1e293b);
     outline: none;
     transition: all 0.2s ease;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
@@ -814,12 +814,12 @@
 }
 
 .filtro-select {
-    background: #ffffff;
-    border: 1px solid #dbe4f0;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #dbe4f0);
     border-radius: 12px;
     padding: 11px 16px;
     font-size: 13.5px;
-    color: #1e293b;
+    color: var(--text, #1e293b);
     outline: none;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -831,24 +831,24 @@
 }
 
 .stat-pill {
-    background: #ffffff;
-    border: 1px solid #dbe4f0;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #dbe4f0);
     border-radius: 20px;
     padding: 8px 18px;
     font-size: 12.5px;
-    color: #475569;
+    color: var(--muted, #475569);
     white-space: nowrap;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .stat-pill span {
-    color: #2563eb;
+    color: var(--link, #2563eb);
     font-weight: 700;
 }
 
 .card-custom {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
     border-radius: 14px;
     padding: 20px;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
@@ -867,54 +867,54 @@
 
 .table-custom thead th {
     background: transparent;
-    color: #64748b;
+    color: var(--muted, #64748b);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     padding: 12px 16px;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--border, #e2e8f0);
     text-align: left;
 }
 
 .table-custom tbody tr {
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border, #f1f5f9);
     transition: background 0.15s ease;
 }
 
 .table-custom tbody tr:hover {
-    background: #f8fafc;
+    background: var(--canvas, #f8fafc);
 }
 
 .table-custom tbody td {
     padding: 14px 16px;
-    color: #334155;
+    color: var(--text, #334155);
     vertical-align: middle;
 }
 
 .table-empty {
     text-align: center;
     padding: 36px 16px;
-    color: #64748b;
+    color: var(--muted, #64748b);
     font-size: 13.5px;
 }
 
 .td-primary {
     font-weight: 600;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
 }
 
 .td-hora {
-    color: #2563eb;
+    color: var(--link, #2563eb);
     font-weight: 700;
 }
 
 .td-muted {
-    color: #64748b;
+    color: var(--muted, #64748b);
 }
 
 .td-dash {
-    color: #94a3b8;
+    color: var(--muted, #94a3b8);
 }
 
 /* Badges de estado */
@@ -929,13 +929,13 @@
 
 .badge-pendiente {
     background: rgba(234, 179, 8, 0.14);
-    color: #b45309;
+    color: var(--warning, #b45309);
     border: 1px solid rgba(234, 179, 8, 0.28);
 }
 
 .badge-confirmada {
     background: rgba(37, 99, 235, 0.14);
-    color: #1d4ed8;
+    color: var(--link, #1d4ed8);
     border: 1px solid rgba(37, 99, 235, 0.28);
 }
 
@@ -947,45 +947,45 @@
 
 .badge-completada {
     background: rgba(16, 185, 129, 0.14);
-    color: #047857;
+    color: var(--success, #047857);
     border: 1px solid rgba(16, 185, 129, 0.28);
 }
 
 .badge-cancelada {
     background: rgba(239, 68, 68, 0.14);
-    color: #b91c1c;
+    color: var(--error, #b91c1c);
     border: 1px solid rgba(239, 68, 68, 0.28);
 }
 
 /* Botones de acción */
 .btn-accion {
     background: transparent;
-    border: 1px solid #dbe4f0;
+    border: 1px solid var(--border, #dbe4f0);
     border-radius: 8px;
     padding: 6px 10px;
     font-size: 13px;
     cursor: pointer;
     transition: all 0.15s ease;
-    color: #64748b;
+    color: var(--muted, #64748b);
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
 .btn-accion:hover {
-    background: #f1f5f9;
+    background: var(--raised, #f1f5f9);
 }
 
 .btn-accion.editar:hover {
     border-color: #2563eb;
-    color: #2563eb;
-    background: #eff6ff;
+    color: var(--link, #2563eb);
+    background: var(--blue-bg, #eff6ff);
 }
 
 .btn-accion.eliminar:hover {
     border-color: #ef4444;
-    color: #ef4444;
-    background: #fef2f2;
+    color: var(--error, #ef4444);
+    background: var(--error-bg, #fef2f2);
 }
 
 /* Modales */
@@ -1003,7 +1003,7 @@
 }
 
 .modal-dialog-custom {
-    background: #ffffff;
+    background: var(--surface, #ffffff);
     border-radius: 16px;
     width: 100%;
     max-width: 560px;
@@ -1021,8 +1021,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 18px 24px;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    background: var(--canvas, #f8fafc);
 }
 
 .modal-header-title-box {
@@ -1033,7 +1033,7 @@
 
 .modal-header-title-box i,
 .modal-header-title-box svg {
-    color: #2563eb;
+    color: var(--link, #2563eb);
     font-size: 18px;
     flex-shrink: 0;
 }
@@ -1041,14 +1041,14 @@
 .modal-title-custom {
     font-size: 17px;
     font-weight: 700;
-    color: #1e3a8a;
+    color: var(--heading, #1e3a8a);
     margin: 0;
 }
 
 .btn-modal-close {
     background: none;
     border: none;
-    color: #94a3b8;
+    color: var(--muted, #94a3b8);
     font-size: 18px;
     cursor: pointer;
     padding: 4px;
@@ -1059,7 +1059,7 @@
 }
 
 .btn-modal-close:hover {
-    color: #334155;
+    color: var(--text, #334155);
 }
 
 .modal-body-custom {
@@ -1071,25 +1071,25 @@
     justify-content: flex-end;
     gap: 12px;
     padding: 16px 24px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
+    background: var(--canvas, #f8fafc);
+    border-top: 1px solid var(--border, #e2e8f0);
 }
 
 .btn-secondary-custom {
-    background: #ffffff;
-    border: 1px solid #dbe4f0;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #dbe4f0);
     border-radius: 10px;
     padding: 10px 18px;
     font-size: 13.5px;
     font-weight: 600;
-    color: #475569;
+    color: var(--muted, #475569);
     cursor: pointer;
     transition: all 0.15s;
 }
 
 .btn-secondary-custom:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: var(--raised, #f1f5f9);
+    color: var(--text, #1e293b);
 }
 
 .btn-danger-custom {
@@ -1123,7 +1123,7 @@
 .field-label {
     font-size: 12px;
     font-weight: 700;
-    color: #64748b;
+    color: var(--muted, #64748b);
     text-transform: uppercase;
     letter-spacing: 0.02em;
     display: block;
@@ -1132,19 +1132,19 @@
 
 .field-input {
     width: 100%;
-    background: #f8fafc;
-    border: 1px solid #dbe4f0;
+    background: var(--canvas, #f8fafc);
+    border: 1px solid var(--border, #dbe4f0);
     border-radius: 10px;
     padding: 10px 14px;
     font-size: 13.5px;
-    color: #1e293b;
+    color: var(--text, #1e293b);
     outline: none;
     transition: all 0.2s;
     box-sizing: border-box;
 }
 
 .field-input:focus {
-    background: #ffffff;
+    background: var(--surface, #ffffff);
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
@@ -1155,9 +1155,9 @@ textarea.field-input {
 }
 
 .alert-modal-error {
-    background: #fef2f2;
+    background: var(--error-bg, #fef2f2);
     border: 1px solid #fecaca;
-    color: #dc2626;
+    color: var(--error, #dc2626);
     border-radius: 8px;
     padding: 10px 14px;
     font-size: 13px;

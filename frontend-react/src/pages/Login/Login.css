@@ -9,7 +9,7 @@
     max-height: 100vh;
     width: 100%;
     max-width: 100%;
-    background: #ffffff;
+    background: var(--surface, #ffffff);
     font-family: 'Inter', 'Segoe UI', sans-serif;
     display: flex;
     overflow: hidden;
@@ -28,7 +28,7 @@
     min-width: 400px;
     height: 100%;
     max-height: 100vh;
-    background: #ffffff;
+    background: var(--surface, #ffffff);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -66,13 +66,13 @@
 .brand-name {
     font-size: 17px;
     font-weight: 700;
-    color: #1E3A8A;
+    color: var(--heading, #1E3A8A);
     line-height: 1.2;
 }
 
 .brand-sub {
     font-size: 12px;
-    color: #94A3B8;
+    color: var(--muted, #94A3B8);
     margin-top: 2px;
 }
 
@@ -80,14 +80,14 @@
 .login-title {
     font-size: 40px;
     font-weight: 800;
-    color: #1E3A8A;
+    color: var(--heading, #1E3A8A);
     line-height: 1.1;
     margin-bottom: 10px;
 }
 
 .login-sub {
     font-size: 14px;
-    color: #64748B;
+    color: var(--muted, #64748B);
     margin-bottom: 44px;
 }
 
@@ -100,7 +100,7 @@
     display: block;
     font-size: 12px;
     font-weight: 600;
-    color: #64748B;
+    color: var(--muted, #64748B);
     margin-bottom: 8px;
     letter-spacing: 0.02em;
 }
@@ -114,7 +114,7 @@
 .input-icon {
     position: absolute;
     left: 16px;
-    color: #3B82F6;
+    color: var(--link, #3B82F6);
     display: flex;
     align-items: center;
     pointer-events: none;
@@ -124,12 +124,12 @@
 .panel-login .field-input {
     width: 100%;
     height: 54px;
-    background: #EFF6FF;
-    border: 1.5px solid #DBE4F0;
+    background: var(--blue-bg, #EFF6FF);
+    border: 1.5px solid var(--border, #DBE4F0);
     border-radius: 12px;
     padding: 0 44px 0 46px;
     font-size: 14px;
-    color: #1E3A8A;
+    color: var(--heading, #1E3A8A);
     font-family: 'Inter', sans-serif;
     transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
     outline: none;
@@ -137,14 +137,14 @@
 }
 
 .panel-login .field-input::placeholder {
-    color: #94A3B8;
+    color: var(--muted, #94A3B8);
     font-size: 14px;
 }
 
 .panel-login .field-input:focus {
     border-color: #3B82F6;
     border-width: 2px;
-    background: #ffffff;
+    background: var(--surface, #ffffff);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
 }
 
@@ -154,7 +154,7 @@
     right: 14px;
     background: none;
     border: none;
-    color: #94A3B8;
+    color: var(--muted, #94A3B8);
     cursor: pointer;
     padding: 4px;
     display: flex;
@@ -164,7 +164,7 @@
 }
 
 .eye-btn:hover {
-    color: #3B82F6;
+    color: var(--link, #3B82F6);
 }
 
 /* ── Error ── */
@@ -177,7 +177,7 @@
     border-radius: 10px;
     padding: 10px 14px;
     font-size: 13px;
-    color: #DC2626;
+    color: var(--error, #DC2626);
     margin-bottom: 16px;
 }
 
