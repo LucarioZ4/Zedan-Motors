@@ -5,7 +5,13 @@ const env = require('../config/env');
  */
 const crearTransportador = () => {
     const _nmMod = require('nodemailer');
-    const nodemailer = (_nmMod && _nmMod.default) ? _nmMod.default : _nmMod;
+    function resolveNm(m) {
+        if (m && typeof m.createTransport === 'function') return m;
+        if (m && m.default && typeof m.default.createTransport === 'function') return m.default;
+        if (m && m.default && m.default.default && typeof m.default.default.createTransport === 'function') return m.default.default;
+        return m;
+    }
+    const nodemailer = resolveNm(_nmMod);
     const user = (env.email?.user || process.env.EMAIL_USER || process.env.GMAIL_USER || '').trim();
     const pass = (env.email?.pass || process.env.EMAIL_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASSWORD || '').trim();
 

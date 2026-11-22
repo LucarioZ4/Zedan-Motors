@@ -6,9 +6,31 @@
 const generarFacturaPdf = (factura) => {
     return new Promise((resolve, reject) => {
         try {
-            // Vercel empaqueta pdfkit (ESM) como { default: PDFDocument } via CJS shim
+            // Vercel shim CJS/ESM puede anidar el constructor en .default o .default.default
+            // Resolvemos hasta encontrar una función constructora
             const _pdfMod = require('pdfkit');
-            const PDFDocument = (_pdfMod && _pdfMod.default) ? _pdfMod.default : _pdfMod;
+            // LOG DIAGNÓSTICO TEMPORAL — ver en Vercel logs qué devuelve pdfkit
+            console.log('[pdf.service] pdfkit typeof:', typeof _pdfMod,
+                '| keys:', _pdfMod ? Object.keys(_pdfMod).slice(0,5) : 'null',
+                '| .default typeof:', typeof (_pdfMod && _pdfMod.default),
+                '| .PDFDocument typeof:', typeof (_pdfMod && _pdfMod.PDFDocument));
+            function resolveConstructor(m) {
+                if (typeof m === 'function') return m;
+                // Vercel shim puede exponer .PDFDocument directamente
+                if (m && typeof m.PDFDocument === 'function') return m.PDFDocument;
+                if (m && typeof m.default === 'function') return m.default;
+                if (m && m.default && typeof m.default.default === 'function') return m.default.default;
+                if (m && m.default && typeof m.default.PDFDocument === 'function') return m.default.PDFDocument;
+                // Buscar la primera propiedad que sea función (fallback)
+                if (m && typeof m === 'object') {
+                    for (const k of Object.keys(m)) {
+                        if (typeof m[k] === 'function') return m[k];
+                    }
+                }
+                return m;
+            }
+            const PDFDocument = resolveConstructor(_pdfMod);
+            console.log('[pdf.service] PDFDocument typeof:', typeof PDFDocument);
             const doc = new PDFDocument({ margin: 40, size: 'A4' });
             const buffers = [];
 
