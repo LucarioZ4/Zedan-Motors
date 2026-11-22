@@ -11,7 +11,9 @@ import {
   Square,
   Sparkles,
   FileImage,
-  X
+  X,
+  Eye,
+  ExternalLink
 } from 'lucide-react';
 import { prepararSubidaArchivo, eliminarArchivo } from '../../services/diagnosticoService';
 import { subirVideoFirmado } from '../../services/storageService';
@@ -34,6 +36,7 @@ export default function ArchivoUploader({
   const [error, setError] = useState('');
   const [subiendo, setSubiendo] = useState(false);
   const [progresoSubida, setProgresoSubida] = useState(null);
+  const [previewMedia, setPreviewMedia] = useState(null);
 
   // Cámara web en vivo (escritorio / navegador)
   const [camaraActiva, setCamaraActiva] = useState(false);
@@ -444,15 +447,32 @@ export default function ArchivoUploader({
           <div className="archivos-grid">
             {archivos.map((arc) => (
               <div key={arc.id_archivo} className="archivo-card">
-                <div className="archivo-media-container">
+                <div
+                  className="archivo-media-container"
+                  style={{ cursor: arc.tipo === 'imagen' ? 'pointer' : 'default' }}
+                  onClick={() => arc.tipo === 'imagen' && setPreviewMedia(arc)}
+                >
                   <span className="archivo-badge-tipo">
                     {arc.tipo === 'video' ? <Video size={12} /> : <FileImage size={12} />}
                     {arc.tipo.toUpperCase()}
                   </span>
                   {arc.tipo === 'imagen' ? (
-                    <img src={arc.url || arc.ruta} alt={arc.nombre_original} />
+                    <img
+                      src={arc.url || arc.ruta}
+                      alt={arc.nombre_original}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentElement.classList.add('img-fallback-active');
+                      }}
+                    />
                   ) : (
                     <video src={arc.url || arc.ruta} controls />
+                  )}
+                  {arc.tipo === 'imagen' && (
+                    <div className="archivo-media-overlay" title="Click para ampliar">
+                      <Eye size={16} />
+                      <span>Ver foto</span>
+                    </div>
                   )}
                 </div>
                 <div className="archivo-info">
@@ -473,14 +493,27 @@ export default function ArchivoUploader({
                   <span style={{ fontSize: '11px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <CheckCircle2 size={13} /> Guardado
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleEliminarRemoto(arc)}
-                    className="btn-accion eliminar"
-                    title="Eliminar archivo"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {arc.tipo === 'imagen' && (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMedia(arc)}
+                        className="btn-accion ver"
+                        title="Ver foto ampliada"
+                        style={{ padding: '4px 8px' }}
+                      >
+                        <Eye size={13} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleEliminarRemoto(arc)}
+                      className="btn-accion eliminar"
+                      title="Eliminar archivo"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -497,7 +530,11 @@ export default function ArchivoUploader({
           <div className="archivos-grid">
             {colaLocal.map((arc) => (
               <div key={arc.tempId} className="archivo-card">
-                <div className="archivo-media-container">
+                <div
+                  className="archivo-media-container"
+                  style={{ cursor: arc.tipo === 'imagen' ? 'pointer' : 'default' }}
+                  onClick={() => arc.tipo === 'imagen' && setPreviewMedia(arc)}
+                >
                   <span className="archivo-badge-tipo">
                     {arc.tipo === 'video' ? <Video size={12} /> : <FileImage size={12} />}
                     {arc.tipo.toUpperCase()}
@@ -506,6 +543,12 @@ export default function ArchivoUploader({
                     <img src={arc.previewUrl} alt={arc.nombre_original} />
                   ) : (
                     <video src={arc.previewUrl} controls />
+                  )}
+                  {arc.tipo === 'imagen' && (
+                    <div className="archivo-media-overlay" title="Click para ampliar">
+                      <Eye size={16} />
+                      <span>Ver foto</span>
+                    </div>
                   )}
                 </div>
                 <div className="archivo-info">
@@ -526,17 +569,132 @@ export default function ArchivoUploader({
                   <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 600 }}>
                     Pendiente
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleEliminarLocal(arc.tempId)}
-                    className="btn-accion eliminar"
-                    title="Quitar archivo"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {arc.tipo === 'imagen' && (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMedia(arc)}
+                        className="btn-accion ver"
+                        title="Ver foto ampliada"
+                        style={{ padding: '4px 8px' }}
+                      >
+                        <Eye size={13} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleEliminarLocal(arc.tempId)}
+                      className="btn-accion eliminar"
+                      title="Quitar archivo"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal Visualizador Ampliado de Imágenes ── */}
+      {previewMedia && (
+        <div className="modal-overlay" onClick={() => setPreviewMedia(null)}>
+          <div
+            style={{
+              maxWidth: '92vw',
+              maxHeight: '92vh',
+              background: '#ffffff',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 25px 60px rgba(15, 23, 42, 0.35)',
+              border: '1px solid #e2e8f0'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px 20px',
+                background: '#f8fafc',
+                borderBottom: '1px solid #e2e8f0'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    background: '#eff6ff',
+                    color: '#1e3a8a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <FileImage size={18} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1e293b' }}>
+                    {previewMedia.nombre_original}
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: '#64748b' }}>
+                    {formatoMb(previewMedia.tamano)} {previewMedia.descripcion ? `• ${previewMedia.descripcion}` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPreviewMedia(null)}
+                style={{
+                  background: '#f1f5f9',
+                  border: 'none',
+                  borderRadius: '8px',
+                  width: '32px',
+                  height: '32px',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Cerrar vista previa"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                padding: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#f8fafc',
+                minHeight: '260px',
+                maxHeight: '75vh',
+                overflow: 'auto'
+              }}
+            >
+              <img
+                src={previewMedia.previewUrl || previewMedia.url || previewMedia.ruta}
+                alt={previewMedia.nombre_original}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '70vh',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
+                }}
+              />
+            </div>
           </div>
         </div>
       )}

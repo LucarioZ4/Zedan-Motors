@@ -167,7 +167,7 @@ const detalle = async (req, res) => {
     }
     const archivosConUrl = archivos.rows.map(a => ({
       ...a,
-      url: urls[a.ruta] || a.ruta
+      url: urls[a.ruta] || ''
     }));
 
     res.json({ ...d.rows[0], accesorios: accesorios.rows, archivos: archivosConUrl });
