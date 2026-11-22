@@ -142,6 +142,18 @@ Con el flujo abierto, enciende el interruptor **Active** (arriba a la derecha). 
 
 ## 🔧 Solución de problemas
 
+### Recuperar la contraseña de la cuenta local
+
+Configura `N8N_SMTP_HOST`, `N8N_SMTP_PORT`, `N8N_SMTP_USER`, `N8N_SMTP_PASS` y `N8N_SMTP_SENDER` en el `.env` de la raíz. Con Gmail usa `smtp.gmail.com`, puerto `465`, `N8N_SMTP_SSL=true`, `N8N_SMTP_STARTTLS=false` y una contraseña de aplicación. El remitente debe ser la cuenta de Gmail configurada.
+
+Define `N8N_EDITOR_BASE_URL=http://localhost:5678` para que los enlaces abran el editor en tu equipo. Si cambias de puerto o publicas el editor con dominio, actualiza esa URL.
+
+Aplica los cambios con `docker compose up -d n8n`. Después abre `http://localhost:5678/forgot-password`, escribe el correo de tu **cuenta local de n8n** y revisa su bandeja de entrada o spam. El correo remitente SMTP puede ser distinto del correo del usuario que recupera la contraseña.
+
+El enlace permite elegir una contraseña nueva conservando la cuenta y sus flujos. Si aparece un error de autenticación SMTP, revisa la contraseña de aplicación del proveedor.
+
+### Otros problemas
+
 | Síntoma | Qué revisar |
 |---|---|
 | El webhook responde 404 | El flujo no está activo (paso 6), o estás usando la URL `/webhook-test/` fuera del modo de prueba. |
