@@ -6,6 +6,8 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+      secrets:
+        - frontend_env
     container_name: zedan-backend
     restart: unless-stopped
     ports:
@@ -40,6 +42,15 @@ services:
       - TZ=${TZ:-America/Bogota}
       - N8N_COMMUNITY_PACKAGES_ENABLED=true
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL:-http://localhost:5678}
+      - N8N_EMAIL_MODE=${N8N_EMAIL_MODE:-smtp}
+      - N8N_SMTP_HOST=${N8N_SMTP_HOST:-}
+      - N8N_SMTP_PORT=${N8N_SMTP_PORT:-465}
+      - N8N_SMTP_USER=${N8N_SMTP_USER:-}
+      - N8N_SMTP_PASS=${N8N_SMTP_PASS:-}
+      - N8N_SMTP_SENDER=${N8N_SMTP_SENDER:-}
+      - N8N_SMTP_SSL=${N8N_SMTP_SSL:-true}
+      - N8N_SMTP_STARTTLS=${N8N_SMTP_STARTTLS:-false}
     volumes:
       - n8n_data:/home/node/.n8n
       - ./n8n:/n8n-workflows:ro
@@ -63,6 +74,7 @@ services:
       - DATABASE_SYNCHRONIZE=true
       - AUTO_START_SESSIONS=true
       - CSP_UPGRADE_INSECURE_REQUESTS=false
+      - SSRF_ALLOWED_HOSTS=n8n
     volumes:
       # Persistencia de base de datos SQLite, sesiones de WhatsApp y tokens
       - ./openwa-data:/app/data
@@ -72,6 +84,10 @@ services:
 # ========================================================
 # Volúmenes y Redes
 # ========================================================
+secrets:
+  frontend_env:
+    file: ./frontend-react/.env
+
 volumes:
   n8n_data:
 

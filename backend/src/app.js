@@ -89,13 +89,10 @@ safeMount('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
 safeMount('/api/bitacora', require('./modules/bitacora/bitacora.routes'));
 safeMount('/api/diagnosticos', require('./modules/diagnosticos/diagnosticos.routes'));
 
-// Servir frontend solo en entorno local (en Vercel el frontend lo sirve Vercel directamente)
+// Servir la compilación de React en Docker y desarrollo local.
+const frontendPath = path.join(__dirname, '../../frontend-react/dist');
 if (!process.env.VERCEL) {
-    const frontendPath = path.join(__dirname, '../../frontend');
     app.use(express.static(frontendPath));
-    app.get('/', (req, res) => {
-        res.sendFile(path.join(frontendPath, 'index.html'));
-    });
 }
 
 // ── Versión desplegada: sin auth, sirve para comprobar QUÉ código corre en Vercel ──
@@ -108,6 +105,7 @@ app.get('/api/version', (req, res) => {
         errores: erroresMontaje,
     });
 });
+
 
 // ── Health check ──
 app.get('/health', async (req, res) => {
@@ -131,6 +129,14 @@ app.get('/health', async (req, res) => {
             EMAIL_USER: process.env.EMAIL_USER ? '✅ configurado' : '❌ FALTA',
         }
     });
+});
+
+// React Router resuelve las páginas cuando se abren o recargan directamente.
+app.get('*', (req, res, next) => {
+    if (process.env.VERCEL || req.path === '/api' || req.path.startsWith('/api/') || path.extname(req.path)) {
+        return next();
+    }
+    res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // ── 404 ──
