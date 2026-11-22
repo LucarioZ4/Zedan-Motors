@@ -1,0 +1,145 @@
+{
+  "name": "Zedan Motors - Envío Automático PDF WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zedan-motors-pdf-whatsapp",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1f0c2d4-1111-4a11-9a01-000000000001",
+      "name": "Webhook PDF",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "b7d3e5f1-2222-4b22-8b02-000000000002"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body = $input.first().json.body ?? {};\nconst errors = [];\n\nlet { chatId, fileName, caption, pdfBase64 } = body;\n\n// chatId: individual (@c.us) o grupo (@g.us)\nchatId = typeof chatId === 'string' ? chatId.trim() : '';\nif (!/^[\\d-]+@(c|g)\\.us$/.test(chatId)) {\n  errors.push('chatId inválido. Ejemplo: 573101234567@c.us');\n}\n\n// pdfBase64: quitar prefijo data URI y espacios/saltos de línea\npdfBase64 = typeof pdfBase64 === 'string' ? pdfBase64 : '';\npdfBase64 = pdfBase64.replace(/^data:application\\/pdf;base64,/i, '').replace(/\\s/g, '');\nif (!pdfBase64) {\n  errors.push('pdfBase64 es obligatorio');\n} else if (!pdfBase64.startsWith('JVBERi')) {\n  errors.push('pdfBase64 no parece un PDF válido (debe empezar por JVBERi)');\n}\n\n// fileName: limpiar y garantizar extensión .pdf\nfileName = typeof fileName === 'string' && fileName.trim() ? fileName.trim() : 'documento.pdf';\nfileName = fileName.replace(/[\\\\/:*?\"<>|]/g, '_');\nif (!/\\.pdf$/i.test(fileName)) fileName += '.pdf';\n\ncaption = typeof caption === 'string' ? caption : '';\n\nreturn [{\n  json: {\n    valid: errors.length === 0,\n    errors,\n    chatId,\n    fileName,\n    caption,\n    pdfBase64,\n    mimeType: 'application/pdf'\n  }\n}];"
+      },
+      "id": "a1f0c2d4-3333-4a33-9a03-000000000003",
+      "name": "Validar y Preparar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c4a9d6e2-4444-4c44-8c04-000000000004",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1f0c2d4-5555-4a55-9a05-000000000005",
+      "name": "¿Datos válidos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendDocument",
+        "sessionId": "REEMPLAZAR_CON_TU_SESSION_ID",
+        "chatId": "={{ $json.chatId }}",
+        "documentSource": "base64",
+        "base64": "={{ $json.pdfBase64 }}",
+        "mimeType": "={{ $json.mimeType }}",
+        "fileName": "={{ $json.fileName }}",
+        "caption": "={{ $json.caption }}"
+      },
+      "id": "a1f0c2d4-6666-4a66-9a06-000000000006",
+      "name": "OpenWA - Enviar PDF",
+      "type": "@rmyndharis/n8n-nodes-openwa.openWa",
+      "typeVersion": 2,
+      "position": [740, -100],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, message: 'PDF enviado por WhatsApp', chatId: $('Validar y Preparar').item.json.chatId, fileName: $('Validar y Preparar').item.json.fileName, messageId: $json.messageId ?? null } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "a1f0c2d4-7777-4a77-9a07-000000000007",
+      "name": "Responder OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1000, -200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: false, error: 'No se pudo enviar el PDF por WhatsApp', details: $json.error?.message ?? $json.error ?? 'Error desconocido' } }}",
+        "options": {
+          "responseCode": 502
+        }
+      },
+      "id": "a1f0c2d4-8888-4a88-9a08-000000000008",
+      "name": "Responder Error Envío",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1000, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: false, error: 'Datos inválidos', details: $json.errors } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "a1f0c2d4-9999-4a99-9a09-000000000009",
+      "name": "Responder Error 400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [740, 140]
+    }
+  ],
+  "connections": {
+    "Webhook PDF": {
+      "main": [[{ "node": "Validar y Preparar", "type": "main", "index": 0 }]]
+    },
+    "Validar y Preparar": {
+      "main": [[{ "node": "¿Datos válidos?", "type": "main", "index": 0 }]]
+    },
+    "¿Datos válidos?": {
+      "main": [
+        [{ "node": "OpenWA - Enviar PDF", "type": "main", "index": 0 }],
+        [{ "node": "Responder Error 400", "type": "main", "index": 0 }]
+      ]
+    },
+    "OpenWA - Enviar PDF": {
+      "main": [
+        [{ "node": "Responder OK", "type": "main", "index": 0 }],
+        [{ "node": "Responder Error Envío", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
