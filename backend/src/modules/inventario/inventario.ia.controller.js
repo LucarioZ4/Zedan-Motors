@@ -1,3 +1,4 @@
+const { createHash } = require('node:crypto');
 const pool = require('../../config/database');
 const iaService = require('./inventario.ia.service');
 const bitacora = require('../../services/bitacora.service');
@@ -63,6 +64,11 @@ const analizar = async (req, res) => {
 const aplicar = async (req, res) => {
     const { modo, items, nota } = req.body || {};
 
+    const operacion = req.body?.id_operacion;
+    if (typeof operacion !== 'string' || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(operacion))
+        return res.status(400).json({ error: 'Se requiere un id_operacion UUID' });
+    const clave = operacion.toLowerCase();
+
     if (!['sumar', 'establecer'].includes(modo))
         return res.status(400).json({ error: "El modo debe ser 'sumar' o 'establecer'" });
     if (!Array.isArray(items) || items.length === 0 || items.length > MAX_FILAS)
@@ -118,10 +124,23 @@ const aplicar = async (req, res) => {
     try {
         client = await pool.connect();
         await client.query('BEGIN');
+        const ids = [...existentes.keys()].sort((a, b) => a - b);
+        const solicitud = { modo, nota: notaLimpia, existentes: ids.map(id => [id, existentes.get(id)]), nuevos };
+        await client.query('SELECT pg_advisory_xact_lock($1::int, hashtext($2))', [idUsuario, clave]);
+        const previa = await client.query(
+            `SELECT contexto->'respuesta' AS respuesta, contexto->'solicitud' = $3::jsonb AS coincide
+             FROM bitacora_evento WHERE id_usuario=$1 AND id_registro=$2 AND accion='confirmar_ia' AND entidad='inventario'`,
+            [idUsuario, clave, JSON.stringify(solicitud)]
+        );
+        if (previa.rowCount) {
+            await client.query('ROLLBACK');
+            if (!previa.rows[0].coincide)
+                return res.status(409).json({ error: 'Este conteo ya se aplicó con otros datos. Inicia otro análisis.' });
+            return res.json(previa.rows[0].respuesta);
+        }
         const resultados = [];
 
         // Se bloquean en orden de id para que dos usuarios aplicando a la vez no se traben entre sí.
-        const ids = [...existentes.keys()].sort((a, b) => a - b);
         for (const id of ids) {
             const fila = await client.query(
                 'SELECT nombre, stock FROM inventario WHERE id_repuesto = $1 FOR UPDATE', [id]
@@ -166,7 +185,6 @@ const aplicar = async (req, res) => {
             });
         }
 
-        await client.query('COMMIT');
 
         const nCreados = resultados.filter((r) => r.creado).length;
         const nActualizados = resultados.length - nCreados;
@@ -174,34 +192,35 @@ const aplicar = async (req, res) => {
         if (nActualizados) partes.push(`${nActualizados} repuesto(s) actualizado(s)`);
         if (nCreados) partes.push(`${nCreados} repuesto(s) nuevo(s)`);
 
-        // Registrar en bitácora por sesión
-        const idSesion = req.usuario?.id_sesion;
-        if (idSesion && idUsuario) {
-            await bitacora.registrarEvento({
-                idSesion,
-                idUsuario,
-                modulo: 'ia',
-                accion: 'confirmar_ia',
-                entidad: 'inventario',
-                idRegistro: 'lote_ia',
-                descripcion: `Confirmación IA (${modo}): ${partes.join(' y ') || 'Sin cambios numéricos'}. Nota: ${notaLimpia || 'N/A'}`,
-                datosAntes: {
-                    items: resultados.map(r => ({ id: r.id_repuesto, nombre: r.nombre, stock: r.stock_anterior }))
-                },
-                datosDespues: {
-                    items: resultados.map(r => ({ id: r.id_repuesto, nombre: r.nombre, stock: r.stock_nuevo }))
-                },
-                contexto: {
-                    modo,
-                    total_modificados: resultados.length,
-                    creados: nCreados,
-                    actualizados: nActualizados,
-                    nota: notaLimpia
-                }
-            }).catch(e => console.warn('Bitácora IA aviso:', e.message));
-        }
-
-        res.json({ mensaje: `Inventario actualizado: ${partes.join(' y ')}.`, total: resultados.length, resultados });
+        const respuesta = { mensaje: `Inventario actualizado: ${partes.join(' y ')}.`, total: resultados.length, resultados };
+        const idSesion = req.usuario.id_sesion || createHash('sha256')
+            .update(req.headers.authorization.slice(7)).digest('hex').slice(0, 32);
+        await client.query('INSERT INTO sesion_bitacora(id_sesion,id_usuario) VALUES($1,$2) ON CONFLICT (id_sesion) DO NOTHING', [idSesion, idUsuario]);
+        await bitacora.registrarEvento({
+            client,
+            idSesion,
+            idUsuario,
+            modulo: 'ia',
+            accion: 'confirmar_ia',
+            entidad: 'inventario',
+            idRegistro: clave,
+            descripcion: `Confirmación IA (${modo}): ${partes.join(' y ') || 'Sin cambios numéricos'}. Nota: ${notaLimpia || 'N/A'}`,
+            datosAntes: {
+                items: resultados.map(r => ({ id: r.id_repuesto, nombre: r.nombre, stock: r.stock_anterior }))
+            },
+            datosDespues: {
+                items: resultados.map(r => ({ id: r.id_repuesto, nombre: r.nombre, stock: r.stock_nuevo }))
+            },
+            contexto: {
+                solicitud, respuesta, modo,
+                total_modificados: resultados.length,
+                creados: nCreados,
+                actualizados: nActualizados,
+                nota: notaLimpia
+            }
+        });
+        await client.query('COMMIT');
+        res.json(respuesta);
     } catch (err) {
         if (client) await client.query('ROLLBACK').catch(() => {});
         responderError(res, err, 'Error al actualizar el inventario');

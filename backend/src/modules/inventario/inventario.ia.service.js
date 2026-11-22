@@ -26,14 +26,14 @@ const normalizarResultado = (entrada, catalogo) => {
 
     const items = crudo.slice(0, 100).map((it) => {
         const id = Number.isInteger(it?.id_repuesto) && idsValidos.has(it.id_repuesto) ? it.id_repuesto : null;
-        const cantidad = Number.isInteger(it?.cantidad) ? Math.min(Math.max(it.cantidad, 1), 100000) : 1;
+        const cantidad = Number.isInteger(it?.cantidad) && it.cantidad >= 1 && it.cantidad <= 100000 ? it.cantidad : null;
         return {
             id_repuesto:      id,
             nombre_detectado: texto(it?.nombre_detectado, 100) || 'Repuesto automotriz',
             marca_detectada:  texto(it?.marca_detectada, 50),
             cantidad,
-            confianza:        confianzas.includes(it?.confianza) ? it.confianza : 'media',
-            nota:             texto(it?.nota, 200),
+            confianza:        cantidad === null ? 'baja' : confianzas.includes(it?.confianza) ? it.confianza : 'media',
+            nota:             cantidad === null ? 'Indica la cantidad: la IA no devolvió un conteo válido.' : texto(it?.nota, 200),
         };
     });
 

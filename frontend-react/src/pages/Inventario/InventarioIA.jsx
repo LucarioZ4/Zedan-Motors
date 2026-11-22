@@ -26,7 +26,7 @@ const filasDesdeIA = (items) =>
     key: `${i}-${it.nombre_detectado}`,
     nombre: it.nombre_detectado,
     marca: it.marca_detectada || '',
-    cantidad: it.cantidad,
+    cantidad: it.cantidad ?? '',
     confianza: it.confianza,
     nota: it.nota || '',
     // 'id:<n>' = repuesto existente · 'nuevo' = crear uno · 'ignorar' = no tocar
@@ -39,7 +39,7 @@ const filasDesdeIA = (items) =>
 const errorDeFila = (f) => {
   if (f.seleccion === 'ignorar') return '';
   const cantidad = Number(f.cantidad);
-  if (f.cantidad === '' || !Number.isInteger(cantidad) || cantidad < 0) return 'Cantidad inválida';
+  if (f.cantidad === '' || !Number.isInteger(cantidad) || cantidad < 0 || cantidad > 100000) return 'Cantidad inválida';
   if (f.seleccion === 'nuevo') {
     if (!f.nuevoNombre.trim()) return 'Falta el nombre';
     if (!(Number(f.nuevoPrecio) > 0)) return 'Falta el precio';
@@ -58,6 +58,7 @@ export default function InventarioIA({ onClose, onApplied }) {
   const [analizando, setAnalizando] = useState(false);
   const [aplicando, setAplicando] = useState(false);
   const [error, setError] = useState('');
+  const operacion = useRef(null);
   const inputRef = useRef(null);
 
   const ocupado = analizando || aplicando;
@@ -76,6 +77,12 @@ export default function InventarioIA({ onClose, onApplied }) {
   const catalogoPorId = useMemo(() => new Map(catalogo.map((r) => [r.id_repuesto, r])), [catalogo]);
 
   const activas = filas.filter((f) => f.seleccion !== 'ignorar');
+  const totales = new Map();
+  for (const fila of activas) {
+    if (fila.seleccion.startsWith('id:')) {
+      totales.set(fila.seleccion, (totales.get(fila.seleccion) || 0) + Number(fila.cantidad));
+    }
+  }
   const hayErrores = activas.some((f) => errorDeFila(f));
 
   const actualizarFila = (key, cambios) =>
@@ -100,6 +107,7 @@ export default function InventarioIA({ onClose, onApplied }) {
     setAnalizando(true);
     try {
       const data = await analizarFotoInventario(imagen);
+      operacion.current = crypto.randomUUID();
       setFilas(filasDesdeIA(data.items));
       setObservaciones(data.observaciones || '');
       setPaso('revision');
@@ -127,7 +135,7 @@ export default function InventarioIA({ onClose, onApplied }) {
 
     setAplicando(true);
     try {
-      const data = await aplicarConteoIA({ modo, items, nota: nota.trim() });
+      const data = await aplicarConteoIA({ id_operacion: operacion.current, modo, items, nota: nota.trim() });
       onApplied(data.mensaje);
       onClose();
     } catch (err) {
@@ -250,7 +258,7 @@ export default function InventarioIA({ onClose, onApplied }) {
                         const rep = f.seleccion.startsWith('id:')
                           ? catalogoPorId.get(Number(f.seleccion.slice(3)))
                           : null;
-                        const cantidad = Number(f.cantidad) || 0;
+                        const cantidad = totales.get(f.seleccion);
                         const errorFila = errorDeFila(f);
 
                         return (
@@ -293,7 +301,9 @@ export default function InventarioIA({ onClose, onApplied }) {
                               {f.seleccion === 'ignorar' && <span className="td-muted">No se modifica</span>}
                               {rep && (
                                 <span className="ia-resultado">
-                                  {rep.stock} → <strong>{modo === 'sumar' ? rep.stock + cantidad : cantidad}</strong>
+                                  {Number.isInteger(cantidad) && !activas.some(a => a.seleccion === f.seleccion && errorDeFila(a))
+                                    ? <>Total del repuesto: {rep.stock} → <strong>{modo === 'sumar' ? rep.stock + cantidad : cantidad}</strong></>
+                                    : 'Revisa la cantidad'}
                                 </span>
                               )}
                               {f.seleccion === 'nuevo' && (
