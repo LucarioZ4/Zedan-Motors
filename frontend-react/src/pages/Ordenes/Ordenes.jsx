@@ -38,7 +38,8 @@ const emptyForm = {
   fecha_fin: '',
   observaciones: '',
   id_cita: '',
-  id_empleado: ''
+  id_empleado: '',
+  id_estado: '3'
 };
 
 export default function Ordenes() {
@@ -178,7 +179,8 @@ export default function Ordenes() {
         fecha_fin: data.fecha_fin ? data.fecha_fin.split('T')[0] : '',
         observaciones: data.observaciones || '',
         id_cita: data.id_cita || '',
-        id_empleado: data.id_empleado || ''
+        id_empleado: data.id_empleado || '',
+        id_estado: String(data.id_estado || '3')
       });
       setSelectedServicioId('');
       setSelectedRepuestoId('');
@@ -209,7 +211,8 @@ export default function Ordenes() {
         fecha_fin: ordenActual.fecha_fin || null,
         observaciones: ordenActual.observaciones.trim(),
         id_cita: ordenActual.id_cita,
-        id_empleado: ordenActual.id_empleado
+        id_empleado: ordenActual.id_empleado,
+        id_estado: ordenActual.id_estado ? Number(ordenActual.id_estado) : null
       };
 
       if (modalMode === 'edit') {
@@ -541,6 +544,22 @@ export default function Ordenes() {
                         setOrdenActual((prev) => ({ ...prev, fecha_fin: e.target.value }))
                       }
                     />
+                  </div>
+
+                  <div>
+                    <label className="field-label">Estado de la Orden</label>
+                    <select
+                      className="field-input"
+                      value={ordenActual.id_estado}
+                      onChange={(e) =>
+                        setOrdenActual((prev) => ({ ...prev, id_estado: e.target.value }))
+                      }
+                    >
+                      <option value="1">Pendiente (En espera)</option>
+                      <option value="3">En proceso (Trabajando)</option>
+                      <option value="4">Completada (Finalizado / Listo)</option>
+                      <option value="5">Cancelada</option>
+                    </select>
                   </div>
 
                   <div className="form-group-full">

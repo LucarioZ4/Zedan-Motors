@@ -1,6 +1,7 @@
 const patronContiene = require('../../utils/patronContiene');
 const pool = require('../../config/database');
 const bitacora = require('../../services/bitacora.service');
+const whatsapp = require('../../services/whatsapp.service');
 
 const getAll = async (req, res) => {
     try {
@@ -48,6 +49,7 @@ const consultarDetalle = id => pool.query(
                     TO_CHAR(c.hora, 'HH24:MI') AS hora,
                     c.motivo, c.id_vehiculo, c.id_estado,
                     cl.id_cliente,
+                    cl.telefono, cl.correo,
                     cl.nombre || ' ' || cl.apellido AS cliente,
                     v.placa || ' - ' || v.marca || ' ' || v.modelo AS vehiculo,
                     e.nombre_estado AS estado
@@ -104,7 +106,12 @@ const create = async (req, res) => {
             }).catch(e => console.warn('Bitácora error:', e.message));
         }
 
-        res.status(201).json((await consultarDetalle(nueva.id_cita)).rows[0]);
+        const detalle = (await consultarDetalle(nueva.id_cita)).rows[0];
+
+        // Notificación automática por WhatsApp al cliente
+        whatsapp.notificarCitaAgendada(detalle).catch(e => console.warn('[WhatsApp] Error cita agendada:', e.message));
+
+        res.status(201).json(detalle);
 
     } catch (err) {
         if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
@@ -155,7 +162,28 @@ const update = async (req, res) => {
             }).catch(e => console.warn('Bitácora error:', e.message));
         }
 
-        res.json((await consultarDetalle(actualizada.id_cita)).rows[0]);
+        const detalle = (await consultarDetalle(actualizada.id_cita)).rows[0];
+
+        // Notificación automática por WhatsApp si cambió el estado
+        if (anterior.id_estado !== actualizada.id_estado) {
+            whatsapp.notificarCitaCambioEstado(detalle, detalle.estado).catch(e => console.warn('[WhatsApp] Error estado cita:', e.message));
+
+            // Si tiene orden de trabajo asociada, notificar también estado de orden
+            pool.query('SELECT id_orden FROM orden_trabajo WHERE id_cita = $1', [id])
+                .then(r => {
+                    if (r.rows.length > 0) {
+                        whatsapp.notificarOrdenCambioEstado({
+                            cliente: detalle.cliente,
+                            telefono: detalle.telefono,
+                            vehiculo: detalle.vehiculo,
+                            idOrden: r.rows[0].id_orden,
+                            estadoNuevo: detalle.estado
+                        }).catch(e => console.warn('[WhatsApp] Error estado orden:', e.message));
+                    }
+                }).catch(() => {});
+        }
+
+        res.json(detalle);
 
     } catch (err) {
         if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });

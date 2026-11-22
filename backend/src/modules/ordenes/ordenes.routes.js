@@ -22,6 +22,8 @@ const validarOrden = [
         .isInt().withMessage('Cita inválida'),
     body('id_empleado').optional({ nullable: true })
         .isInt().withMessage('Empleado inválido'),
+    body('id_estado').optional({ nullable: true })
+        .isInt().withMessage('Estado inválido'),
 ];
 
 // ── Agregar servicio a una orden ──
