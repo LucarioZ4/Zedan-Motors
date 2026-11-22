@@ -1,55 +1,54 @@
 const pool = require('../../config/database');
 const env = require('../../config/env');
 const bitacora = require('../../services/bitacora.service');
-const factusService = require('./factus.service');
-const pdfService = require('../../services/pdf.service');
-const emailService = require('../../services/email.service');
 
 const getAll = async (req, res) => {
     try {
-        let result;
-        try {
-            result = await pool.query(`
-                SELECT
-                    f.id_factura,
-                    f.fecha,
-                    f.total,
-                    f.metodo_pago,
-                    f.id_orden,
-                    COALESCE(cl.nombre || ' ' || cl.apellido, 'Sin cliente') AS cliente,
-                    COALESCE(cl.telefono, '') AS telefono,
-                    COALESCE(cl.correo, '') AS correo,
-                    COALESCE(v.placa || ' - ' || v.marca || ' ' || v.modelo, 'Sin vehículo') AS vehiculo
-                FROM facturacion f
-                LEFT JOIN orden_trabajo o ON f.id_orden = o.id_orden
-                LEFT JOIN cita c          ON o.id_cita  = c.id_cita
-                LEFT JOIN vehiculo v      ON c.id_vehiculo = v.id_vehiculo
-                LEFT JOIN cliente cl      ON v.id_cliente  = cl.id_cliente
-                ORDER BY f.id_factura DESC
-            `);
-        } catch (tableErr) {
-            console.warn('Fallo en tabla facturacion, intentando tabla Facturas:', tableErr.message);
-            result = await pool.query(`
-                SELECT
-                    f."idFactura" AS id_factura,
-                    f.fecha,
-                    f.total,
-                    f."metodoPago" AS metodo_pago,
-                    f."idOrden" AS id_orden,
-                    COALESCE(cl.nombre || ' ' || cl.apellido, 'Sin cliente') AS cliente,
-                    COALESCE(cl.telefono, '') AS telefono,
-                    COALESCE(cl.correo, '') AS correo,
-                    COALESCE(v.placa || ' - ' || v.marca || ' ' || v.modelo, 'Sin vehículo') AS vehiculo
-                FROM "Facturas" f
-                LEFT JOIN "OrdenesTrabajo" o ON f."idOrden" = o."idOrden"
-                LEFT JOIN "Citas" c          ON o."idCita"  = c."idCita"
-                LEFT JOIN "Vehiculos" v      ON c."idVehiculo" = v."idVehiculo"
-                LEFT JOIN "Clientes" cl      ON v."idCliente"  = cl."idCliente"
-                ORDER BY f."idFactura" DESC
-            `);
-        }
+        const result = await pool.query(`
+            SELECT
+                f.id_factura,
+                f.fecha,
+                f.total,
+                f.metodo_pago,
+                f.id_orden,
+                COALESCE(cl.nombre || ' ' || cl.apellido, 'Sin cliente') AS cliente,
+                COALESCE(cl.telefono, '') AS telefono,
+                COALESCE(cl.correo, '') AS correo,
+                COALESCE(v.placa || ' - ' || v.marca || ' ' || v.modelo, 'Sin vehículo') AS vehiculo
+            FROM facturacion f
+            LEFT JOIN orden_trabajo o ON f.id_orden = o.id_orden
+            LEFT JOIN cita c          ON o.id_cita  = c.id_cita
+            LEFT JOIN vehiculo v      ON c.id_vehiculo = v.id_vehiculo
+            LEFT JOIN cliente cl      ON v.id_cliente  = cl.id_cliente
+            ORDER BY f.id_factura DESC
+        `);
         res.json(result.rows);
     } catch (err) {
+        if (err.code === '42P01') {
+            try {
+                const alt = await pool.query(`
+                    SELECT
+                        f."idFactura" AS id_factura,
+                        f.fecha,
+                        f.total,
+                        f."metodoPago" AS metodo_pago,
+                        f."idOrden" AS id_orden,
+                        COALESCE(cl.nombre || ' ' || cl.apellido, 'Sin cliente') AS cliente,
+                        COALESCE(cl.telefono, '') AS telefono,
+                        COALESCE(cl.correo, '') AS correo,
+                        COALESCE(v.placa || ' - ' || v.marca || ' ' || v.modelo, 'Sin vehículo') AS vehiculo
+                    FROM "Facturas" f
+                    LEFT JOIN "OrdenesTrabajo" o ON f."idOrden" = o."idOrden"
+                    LEFT JOIN "Citas" c          ON o."idCita"  = c."idCita"
+                    LEFT JOIN "Vehiculos" v      ON c."idVehiculo" = v."idVehiculo"
+                    LEFT JOIN "Clientes" cl      ON v."idCliente"  = cl."idCliente"
+                    ORDER BY f."idFactura" DESC
+                `);
+                return res.json(alt.rows);
+            } catch (altErr) {
+                console.error('Error en fallback Facturas:', altErr);
+            }
+        }
         console.error('Error en getAll facturacion:', err);
         res.status(500).json({ error: `Error en BD: ${err.message}` });
     }
@@ -75,23 +74,27 @@ const getById = async (req, res) => {
                 LEFT JOIN cliente cl      ON v.id_cliente  = cl.id_cliente
                 WHERE f.id_factura = $1
             `, [req.params.id]);
-        } catch {
-            result = await pool.query(`
-                SELECT
-                    f."idFactura" AS id_factura, f.fecha, f.total, f."metodoPago" AS metodo_pago, f."idOrden" AS id_orden,
-                    '[]'::jsonb AS servicios_detalle, '[]'::jsonb AS repuestos_detalle,
-                    COALESCE(cl.nombre || ' ' || cl.apellido, 'Sin cliente') AS cliente,
-                    COALESCE(cl.telefono, '') AS telefono, COALESCE(cl.correo, '') AS correo,
-                    COALESCE(v.placa || ' - ' || v.marca || ' ' || v.modelo, 'Sin vehículo') AS vehiculo,
-                    o.observaciones,
-                    o."fechaInicio" AS fecha_inicio, o."fechaFin" AS fecha_fin
-                FROM "Facturas" f
-                LEFT JOIN "OrdenesTrabajo" o ON f."idOrden" = o."idOrden"
-                LEFT JOIN "Citas" c          ON o."idCita"  = c."idCita"
-                LEFT JOIN "Vehiculos" v      ON c."idVehiculo" = v."idVehiculo"
-                LEFT JOIN "Clientes" cl      ON v."idCliente"  = cl."idCliente"
-                WHERE f."idFactura" = $1
-            `, [req.params.id]);
+        } catch (err) {
+            if (err.code === '42P01') {
+                result = await pool.query(`
+                    SELECT
+                        f."idFactura" AS id_factura, f.fecha, f.total, f."metodoPago" AS metodo_pago, f."idOrden" AS id_orden,
+                        '[]'::jsonb AS servicios_detalle, '[]'::jsonb AS repuestos_detalle,
+                        COALESCE(cl.nombre || ' ' || cl.apellido, 'Sin cliente') AS cliente,
+                        COALESCE(cl.telefono, '') AS telefono, COALESCE(cl.correo, '') AS correo,
+                        COALESCE(v.placa || ' - ' || v.marca || ' ' || v.modelo, 'Sin vehículo') AS vehiculo,
+                        o.observaciones,
+                        o."fechaInicio" AS fecha_inicio, o."fechaFin" AS fecha_fin
+                    FROM "Facturas" f
+                    LEFT JOIN "OrdenesTrabajo" o ON f."idOrden" = o."idOrden"
+                    LEFT JOIN "Citas" c          ON o."idCita"  = c."idCita"
+                    LEFT JOIN "Vehiculos" v      ON c."idVehiculo" = v."idVehiculo"
+                    LEFT JOIN "Clientes" cl      ON v."idCliente"  = cl."idCliente"
+                    WHERE f."idFactura" = $1
+                `, [req.params.id]);
+            } else {
+                throw err;
+            }
         }
 
         if (result.rows.length === 0)
@@ -180,6 +183,7 @@ const create = async (req, res) => {
 
         // Integración con Factus (Mock)
         try {
+            const factusService = require('./factus.service');
             // Preparamos los datos básicos para Factus (Estructura de ejemplo)
             const datosFactus = {
                 referencia: factura.id_factura.toString(),
@@ -274,6 +278,8 @@ const enviarCorreo = async (req, res) => {
         }
 
         // Generar comprobante PDF con pdfkit
+        const pdfService = require('../../services/pdf.service');
+        const emailService = require('../../services/email.service');
         const pdfBuffer = await pdfService.generarFacturaPdf(factura);
 
         // Enviar por correo con Nodemailer + Gmail
@@ -353,6 +359,7 @@ const descargarPdf = async (req, res) => {
             repuestos: repuestos_detalle || []
         };
 
+        const pdfService = require('../../services/pdf.service');
         const pdfBuffer = await pdfService.generarFacturaPdf(factura);
         const filename = `Factura_FE-${String(factura.id_factura).padStart(6, '0')}.pdf`;
 
@@ -440,6 +447,7 @@ const enviarWhatsApp = async (req, res) => {
         const caption = `Hola ${nombreCliente}, adjunto tu factura ${numFactura} de Zedan Motors.`;
 
         // Generar Buffer del PDF con pdfkit tal como está
+        const pdfService = require('../../services/pdf.service');
         const pdfBuffer = await pdfService.generarFacturaPdf(factura);
         const pdfBase64 = pdfBuffer.toString('base64');
 

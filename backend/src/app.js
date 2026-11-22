@@ -43,23 +43,30 @@ app.use('/api', apiLimiter);
 
 // ── Helper para montaje seguro de rutas (compatible con CJS/ESM y bundlers de Vercel) ──
 const rutasMontadas = [];
-const esRouter = (x) => typeof x === 'function';
+const erroresMontaje = [];
+
+const resolverRouter = (modulo) => {
+    if (typeof modulo === 'function') return modulo;
+    if (modulo && typeof modulo.default === 'function') return modulo.default;
+    if (modulo && typeof modulo.router === 'function') return modulo.router;
+    if (modulo && modulo.default && typeof modulo.default.router === 'function') return modulo.default.router;
+    if (modulo && modulo.default && typeof modulo.default.default === 'function') return modulo.default.default;
+    return null;
+};
+
 const safeMount = (ruta, modulo) => {
-    // Prioridad: el propio módulo si ya es un router/función (module.exports = router).
-    // Solo si no lo es, se buscan envoltorios típicos de bundlers (default / router).
-    // Antes se daba prioridad a `modulo.default`, y si Vercel dejaba ahí un objeto
-    // el router real se descartaba y la ruta quedaba sin montar (404 silencioso).
-    const handler = [modulo, modulo && modulo.default, modulo && modulo.router].find(esRouter);
+    const handler = resolverRouter(modulo);
     if (handler) {
         app.use(ruta, handler);
-        rutasMontadas.push(ruta);
+        if (!rutasMontadas.includes(ruta)) {
+            rutasMontadas.push(ruta);
+        }
     } else {
         const forma = modulo && typeof modulo === 'object'
-            ? `object con claves [${Object.keys(modulo).join(', ')}], default: ${typeof modulo.default}`
+            ? `object con claves [${Object.keys(modulo).join(', ')}], default: ${typeof modulo?.default}`
             : typeof modulo;
-        // No se lanza excepción: tumbaría también el login y el resto de la API.
-        // El log muestra la forma exacta del export para diagnosticar en Runtime Logs.
         console.error(`❌ No se pudo montar ${ruta}: el módulo exporta ${forma}`);
+        erroresMontaje.push({ ruta, forma });
     }
 };
 
@@ -75,6 +82,7 @@ safeMount('/api/empleados', require('./modules/empleados/empleados.routes'));
 safeMount('/api/servicios', require('./modules/servicios/servicios.routes'));
 safeMount('/api/inventario', require('./modules/inventario/inventario.routes'));
 safeMount('/api/facturacion', require('./modules/facturacion/facturacion.routes'));
+safeMount('/api/facturas', require('./modules/facturacion/facturacion.routes'));
 safeMount('/api/cargos', require('./modules/cargos/cargos.routes'));
 safeMount('/api/historial', require('./modules/historial/historial.routes'));
 safeMount('/api/mensajes', require('./modules/mensajes/mensajes.routes'));
@@ -97,6 +105,7 @@ app.get('/api/version', (req, res) => {
         rama: process.env.VERCEL_GIT_COMMIT_REF || 'local',
         desplegado_en_vercel: !!process.env.VERCEL,
         rutas: rutasMontadas,
+        errores: erroresMontaje,
     });
 });
 

@@ -1,5 +1,3 @@
-const PDFDocument = require('pdfkit');
-
 /**
  * Genera un buffer PDF profesional con el comprobante de la factura.
  * @param {Object} factura Datos de la factura con servicios y repuestos.
@@ -8,6 +6,7 @@ const PDFDocument = require('pdfkit');
 const generarFacturaPdf = (factura) => {
     return new Promise((resolve, reject) => {
         try {
+            const PDFDocument = require('pdfkit');
             const doc = new PDFDocument({ margin: 40, size: 'A4' });
             const buffers = [];
 

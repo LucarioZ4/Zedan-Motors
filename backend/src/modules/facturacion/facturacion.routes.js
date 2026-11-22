@@ -37,3 +37,5 @@ router.put('/:id', roles('Administrador'), validarPago, validar, ctrl.update);
 router.delete('/:id', roles('Administrador'), ctrl.remove);
 
 module.exports = router;
+module.exports.default = router;
+module.exports.router = router;
