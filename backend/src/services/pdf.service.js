@@ -6,7 +6,9 @@
 const generarFacturaPdf = (factura) => {
     return new Promise((resolve, reject) => {
         try {
-            const PDFDocument = require('pdfkit');
+            // Vercel empaqueta pdfkit (ESM) como { default: PDFDocument } via CJS shim
+            const _pdfMod = require('pdfkit');
+            const PDFDocument = (_pdfMod && _pdfMod.default) ? _pdfMod.default : _pdfMod;
             const doc = new PDFDocument({ margin: 40, size: 'A4' });
             const buffers = [];
 

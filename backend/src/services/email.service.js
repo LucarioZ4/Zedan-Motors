@@ -4,7 +4,8 @@ const env = require('../config/env');
  * Crea y valida el transportador de correo con Gmail.
  */
 const crearTransportador = () => {
-    const nodemailer = require('nodemailer');
+    const _nmMod = require('nodemailer');
+    const nodemailer = (_nmMod && _nmMod.default) ? _nmMod.default : _nmMod;
     const user = (env.email?.user || process.env.EMAIL_USER || process.env.GMAIL_USER || '').trim();
     const pass = (env.email?.pass || process.env.EMAIL_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASSWORD || '').trim();
 
