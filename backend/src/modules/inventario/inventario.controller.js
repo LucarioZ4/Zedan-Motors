@@ -1,5 +1,6 @@
 const patronContiene = require('../../utils/patronContiene');
 const pool = require('../../config/database');
+const bitacora = require('../../services/bitacora.service');
 
 const getAll = async (req, res) => {
     try {
@@ -56,7 +57,27 @@ const create = async (req, res) => {
              VALUES ($1, $2, $3, $4) RETURNING id_repuesto, nombre, marca, precio, stock`,
             [nombre, marca || null, precio, stock || 0]
         );
-        res.status(201).json((await consultarDetalle(result.rows[0].id_repuesto)).rows[0]);
+        const nuevo = result.rows[0];
+
+        // Registrar en bitácora
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'inventario',
+                accion: 'crear',
+                entidad: 'inventario',
+                idRegistro: nuevo.id_repuesto,
+                descripcion: `Creó repuesto "${nuevo.nombre}" (Stock inicial: ${nuevo.stock})`,
+                datosAntes: null,
+                datosDespues: nuevo,
+                contexto: { id_repuesto: nuevo.id_repuesto, nombre: nuevo.nombre }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
+        res.status(201).json((await consultarDetalle(nuevo.id_repuesto)).rows[0]);
 
     } catch (err) {
         console.error(err);
@@ -67,6 +88,13 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { nombre, marca, precio, stock } = req.body;
+        const id = req.params.id;
+
+        // Obtener estado anterior
+        const prevRes = await pool.query('SELECT * FROM inventario WHERE id_repuesto = $1', [id]);
+        if (prevRes.rows.length === 0)
+            return res.status(404).json({ error: 'Repuesto no encontrado' });
+        const anterior = prevRes.rows[0];
 
         const result = await pool.query(
             `UPDATE inventario SET
@@ -77,7 +105,27 @@ const update = async (req, res) => {
         );
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'Repuesto no encontrado' });
-        res.json((await consultarDetalle(result.rows[0].id_repuesto)).rows[0]);
+        const actualizado = result.rows[0];
+
+        // Registrar en bitácora
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'inventario',
+                accion: 'actualizar',
+                entidad: 'inventario',
+                idRegistro: id,
+                descripcion: `Actualizó repuesto "${actualizado.nombre}" (Stock: ${anterior.stock} -> ${actualizado.stock})`,
+                datosAntes: anterior,
+                datosDespues: actualizado,
+                contexto: { id_repuesto: id, nombre: actualizado.nombre }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
+        res.json((await consultarDetalle(actualizado.id_repuesto)).rows[0]);
 
     } catch (err) {
         console.error(err);
@@ -87,12 +135,35 @@ const update = async (req, res) => {
 
 const remove = async (req, res) => {
     try {
-        const result = await pool.query(
-            'DELETE FROM inventario WHERE id_repuesto = $1 RETURNING *',
-            [req.params.id]
-        );
-        if (result.rows.length === 0)
+        const id = req.params.id;
+        const prevRes = await pool.query('SELECT * FROM inventario WHERE id_repuesto = $1', [id]);
+        if (prevRes.rows.length === 0)
             return res.status(404).json({ error: 'Repuesto no encontrado' });
+        const anterior = prevRes.rows[0];
+
+        await pool.query(
+            'DELETE FROM inventario WHERE id_repuesto = $1',
+            [id]
+        );
+
+        // Registrar en bitácora
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'inventario',
+                accion: 'eliminar',
+                entidad: 'inventario',
+                idRegistro: id,
+                descripcion: `Eliminó repuesto "${anterior.nombre}" (#${id})`,
+                datosAntes: anterior,
+                datosDespues: null,
+                contexto: { id_repuesto: id, nombre: anterior.nombre }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
         res.json({ mensaje: 'Repuesto eliminado correctamente' });
     } catch (err) {
         console.error(err);

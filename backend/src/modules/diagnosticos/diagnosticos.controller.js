@@ -4,6 +4,7 @@
 
 const pool = require('../../config/database');
 const storage = require('../../services/storage.service');
+const bitacora = require('../../services/bitacora.service');
 const crypto = require('crypto');
 const path = require('path');
 const { diagMaxMb, diagAllowedMime, diagBucket } = require('../../config/env');
@@ -27,6 +28,19 @@ const guardar = async (req, res) => {
   try {
     client = await pool.connect();
     await client.query('BEGIN');
+    let anterior = null;
+    if (id) {
+      const anteriorResult = await client.query(
+        'SELECT * FROM diagnostico WHERE id_diagnostico=$1 FOR UPDATE',
+        [id]
+      );
+      if (!anteriorResult.rows[0]) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Diagnóstico no encontrado' });
+      }
+      anterior = anteriorResult.rows[0];
+    }
+
     const result = id
       ? await client.query(
           `UPDATE diagnostico SET fecha_ingreso=COALESCE($1,fecha_ingreso),kilometraje=COALESCE($2,kilometraje),
@@ -47,6 +61,29 @@ const guardar = async (req, res) => {
         await client.query('INSERT INTO diagnostico_accesorio(id_diagnostico,nombre,estado,observacion) VALUES($1,$2,$3,$4)',
           [diagnostico.id_diagnostico,a?.nombre,a?.estado,a?.observacion || null]);
     }
+
+    const idSesion = req.usuario?.id_sesion;
+    const idUsuario = req.usuario?.id;
+    if (idSesion && idUsuario) {
+      await bitacora.registrarEvento({
+        client,
+        idSesion,
+        idUsuario,
+        modulo: 'diagnostico',
+        accion: id ? 'actualizar' : 'crear',
+        entidad: 'diagnostico',
+        idRegistro: diagnostico.id_diagnostico,
+        descripcion: `${id ? 'Actualizó' : 'Creó'} diagnóstico #${diagnostico.id_diagnostico}`,
+        datosAntes: anterior,
+        datosDespues: diagnostico,
+        contexto: {
+          id_diagnostico: diagnostico.id_diagnostico,
+          id_vehiculo: diagnostico.id_vehiculo,
+          id_cita: diagnostico.id_cita
+        }
+      });
+    }
+
     await client.query('COMMIT');
     res.status(id ? 200 : 201).json(diagnostico);
   } catch (err) {

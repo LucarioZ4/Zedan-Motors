@@ -29,3 +29,24 @@ export const deleteFactura = async (id) => {
   // La API de C# responde 204 sin cuerpo; la de Node responde JSON
   return res.status === 204 ? null : res.json();
 };
+
+export const enviarFacturaCorreo = async (id, correo = null) => {
+  const options = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  };
+  if (correo) {
+    options.body = JSON.stringify({ correo });
+  }
+  const res = await apiFetch(`/api/facturacion/${id}/enviar-correo`, options);
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Error al enviar factura por correo'));
+  return res.json();
+};
+
+export const enviarFacturaWhatsApp = async (id) => {
+  const res = await apiFetch(`/api/facturacion/${id}/enviar-whatsapp`, {
+    method: 'POST'
+  });
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Error al enviar factura por WhatsApp'));
+  return res.json();
+};
