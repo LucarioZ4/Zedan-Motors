@@ -76,10 +76,10 @@ export const analizarFotoInventario = async (imagenObjeto) => {
   return data;
 };
 
-export const aplicarConteoIA = async ({ modo, items, nota }) => {
+export const aplicarConteoIA = async ({ id_operacion, modo, items, nota }) => {
   const res = await apiFetch('/api/inventario/ia/aplicar', {
     method: 'POST',
-    body: JSON.stringify({ modo, items, nota })
+    body: JSON.stringify({ id_operacion, modo, items, nota })
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Error al aplicar cambios');

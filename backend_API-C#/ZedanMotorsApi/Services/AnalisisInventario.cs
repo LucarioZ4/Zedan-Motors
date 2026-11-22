@@ -93,14 +93,16 @@ public class AnalisisInventario(HttpClient http, IConfiguration cfg)
             var fila = n as JsonObject;
             var id = Entero(fila?["id_repuesto"]);
             var confianza = Texto(fila?["confianza"], 10);
+            var cantidad = Entero(fila?["cantidad"]);
+            if (cantidad is not (>= 1 and <= 100000)) cantidad = null;
             items.Add(new
             {
                 id_repuesto = id.HasValue && ids.Contains(id.Value) ? id : null,
                 nombre_detectado = Texto(fila?["nombre_detectado"], 100) ?? "Repuesto automotriz",
                 marca_detectada = Texto(fila?["marca_detectada"], 50),
-                cantidad = Math.Clamp(Entero(fila?["cantidad"]) ?? 1, 1, 100000),
-                confianza = confianza is "alta" or "baja" ? confianza : "media",
-                nota = Texto(fila?["nota"], 200)
+                cantidad,
+                confianza = cantidad == null ? "baja" : confianza is "alta" or "baja" ? confianza : "media",
+                nota = cantidad == null ? "Indica la cantidad: la IA no devolvió un conteo válido." : Texto(fila?["nota"], 200)
             });
         }
         var calidad = Texto(propuesta["calidad_imagen"], 10);
