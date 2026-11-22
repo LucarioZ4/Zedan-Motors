@@ -2,4 +2,4 @@
    **/.env
    .git
    openwa-data
-   frontend-react
+   frontend-react/dist

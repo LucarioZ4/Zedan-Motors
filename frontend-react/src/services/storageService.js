@@ -17,9 +17,24 @@ export const subirVideoFirmado = async ({ bucket, ruta, token, archivo }) => {
     auth: { persistSession: false, autoRefreshToken: false }
   });
 
+  let contentType = archivo.type;
+  if (!contentType) {
+    const ext = archivo.name?.split('.').pop()?.toLowerCase();
+    const map = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      webp: 'image/webp',
+      mp4: 'video/mp4',
+      webm: 'video/webm',
+      mov: 'video/quicktime'
+    };
+    contentType = map[ext] || 'image/jpeg';
+  }
+
   const { error } = await supabase.storage
     .from(bucket)
-    .uploadToSignedUrl(ruta, token, archivo, { contentType: archivo.type || 'video/mp4' });
+    .uploadToSignedUrl(ruta, token, archivo, { contentType });
 
   if (error) throw new Error(error.message || 'No se pudo subir el video');
 };

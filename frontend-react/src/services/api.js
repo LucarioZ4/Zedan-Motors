@@ -1,5 +1,10 @@
-const API_URL = import.meta.env.VITE_API_URL
-  ?? (import.meta.env.DEV ? 'http://localhost:5200' : '');
+// En producción (ej. Vercel), frontend y backend comparten el mismo dominio (/api),
+// por lo que nunca debe apuntar a localhost ni requerir URL absoluta.
+let apiUrl = import.meta.env.VITE_API_URL || '';
+if (import.meta.env.PROD && (apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1'))) {
+  apiUrl = '';
+}
+const API_URL = apiUrl;
 
 export const getHeaders = () => {
   const token = sessionStorage.getItem('token');

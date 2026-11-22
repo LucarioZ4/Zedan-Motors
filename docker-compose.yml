@@ -1,62 +1,25 @@
 services:
   # ========================================================
-  # Base de Datos PostgreSQL 16
-  # ========================================================
-  postgres:
-    image: postgres:16-alpine
-    container_name: zedan-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME:-zedan_motors}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_secure_pass}
-    ports:
-      - "${DB_PORT:-5433}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      # Inicializa el schema y seed automáticamente en la primera ejecución
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
-      - ./database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-zedan_motors}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - zedan-net
-
-  # ========================================================
   # Backend API & Frontend (Node.js + Express)
   # ========================================================
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
+      secrets:
+        - frontend_env
     container_name: zedan-backend
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
+    env_file:
+      - ./backend/.env
     environment:
       PORT: 3000
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME:-zedan_motors}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres_secure_pass}
-      JWT_SECRET: ${JWT_SECRET:-super_secret_jwt_key_zedan_2026_change_me}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
-      FACTUS_API_URL: ${FACTUS_API_URL:-}
-      FACTUS_API_TOKEN: ${FACTUS_API_TOKEN:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-5-5}
-      IA_ANALISIS_POR_HORA: ${IA_ANALISIS_POR_HORA:-20}
-      IA_MAX_IMAGENES: ${IA_MAX_IMAGENES:-5}
-      IA_MAX_MB: ${IA_MAX_MB:-5}
+      NODE_ENV: production
+      DB_SSL: "true"
     volumes:
       - ./backend/uploads/inventario-ia:/app/backend/uploads/inventario-ia
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - zedan-net
 
@@ -74,17 +37,23 @@ services:
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
       - NODE_ENV=production
-      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://n8n:5678/}
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-America/Bogota}
       - TZ=${TZ:-America/Bogota}
       - N8N_COMMUNITY_PACKAGES_ENABLED=true
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL:-http://localhost:5678}
+      - N8N_EMAIL_MODE=${N8N_EMAIL_MODE:-smtp}
+      - N8N_SMTP_HOST=${N8N_SMTP_HOST:-}
+      - N8N_SMTP_PORT=${N8N_SMTP_PORT:-465}
+      - N8N_SMTP_USER=${N8N_SMTP_USER:-}
+      - N8N_SMTP_PASS=${N8N_SMTP_PASS:-}
+      - N8N_SMTP_SENDER=${N8N_SMTP_SENDER:-}
+      - N8N_SMTP_SSL=${N8N_SMTP_SSL:-true}
+      - N8N_SMTP_STARTTLS=${N8N_SMTP_STARTTLS:-false}
     volumes:
       - n8n_data:/home/node/.n8n
       - ./n8n:/n8n-workflows:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - zedan-net
 
@@ -105,6 +74,7 @@ services:
       - DATABASE_SYNCHRONIZE=true
       - AUTO_START_SESSIONS=true
       - CSP_UPGRADE_INSECURE_REQUESTS=false
+      - SSRF_ALLOWED_HOSTS=n8n
     volumes:
       # Persistencia de base de datos SQLite, sesiones de WhatsApp y tokens
       - ./openwa-data:/app/data
@@ -114,8 +84,11 @@ services:
 # ========================================================
 # Volúmenes y Redes
 # ========================================================
+secrets:
+  frontend_env:
+    file: ./frontend-react/.env
+
 volumes:
-  postgres_data:
   n8n_data:
 
 networks:

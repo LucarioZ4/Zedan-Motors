@@ -371,9 +371,29 @@ export default function DiagnosticoDetalle() {
                     {arc.tipo.toUpperCase()}
                   </span>
                   {arc.tipo === 'imagen' ? (
-                    <img src={arc.url || arc.ruta} alt={arc.nombre_original} />
+                    arc.url ? (
+                      <img
+                        src={arc.url}
+                        alt={arc.nombre_original}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.parentElement.classList.add('img-fallback-active');
+                        }}
+                      />
+                    ) : (
+                      <div className="img-fallback-active">
+                        <FileImage size={24} style={{ color: '#cbd5e1' }} />
+                        <span>Foto guardada</span>
+                      </div>
+                    )
                   ) : (
-                    <video src={arc.url || arc.ruta} controls />
+                    <video src={arc.url || ''} controls />
+                  )}
+                  {arc.tipo === 'imagen' && arc.url && (
+                    <div className="archivo-media-overlay" title="Click para ampliar">
+                      <ExternalLink size={16} />
+                      <span>Ampliar</span>
+                    </div>
                   )}
                 </div>
 
@@ -392,17 +412,36 @@ export default function DiagnosticoDetalle() {
                 </div>
 
                 <div className="archivo-actions">
-                  <a
-                    href={arc.url || arc.ruta}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-accion ver"
-                    style={{ fontSize: '11.5px', padding: '4px 8px' }}
-                    title="Abrir enlace original"
-                  >
-                    <ExternalLink size={13} />
-                    <span>Abrir</span>
-                  </a>
+                  {arc.tipo === 'imagen' ? (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewMedia(arc)}
+                      className="btn-accion ver"
+                      style={{ fontSize: '11.5px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      title="Ver foto ampliada"
+                    >
+                      <FileImage size={13} />
+                      <span>Ver foto</span>
+                    </button>
+                  ) : (
+                    <a
+                      href={arc.url || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-accion ver"
+                      style={{ fontSize: '11.5px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      title="Abrir video"
+                      onClick={(e) => {
+                        if (!arc.url || !arc.url.startsWith('http')) {
+                          e.preventDefault();
+                          alert('El video aún no está disponible.');
+                        }
+                      }}
+                    >
+                      <Video size={13} />
+                      <span>Ver video</span>
+                    </a>
+                  )}
                   <button
                     type="button"
                     onClick={() => handleDeleteArchivo(arc)}
@@ -425,40 +464,130 @@ export default function DiagnosticoDetalle() {
         )}
       </div>
 
-      {/* ── Modal Visualizador Ampliado de Imágenes ── */}
+      {/* ── Modal Visualizador Ampliado de Imágenes (Diseño Claro y Nítido) ── */}
       {previewMedia && (
         <div className="modal-overlay" onClick={() => setPreviewMedia(null)}>
           <div
             style={{
-              maxWidth: '90vw',
-              maxHeight: '90vh',
-              background: '#0f172a',
+              maxWidth: '92vw',
+              maxHeight: '92vh',
+              background: '#ffffff',
               borderRadius: '16px',
               overflow: 'hidden',
               position: 'relative',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
+              boxShadow: '0 25px 60px rgba(15, 23, 42, 0.35)',
+              border: '1px solid #e2e8f0'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 18px', background: '#1e293b', color: '#ffffff', alignItems: 'center' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600 }}>
-                {previewMedia.nombre_original} {previewMedia.descripcion ? `— ${previewMedia.descripcion}` : ''}
-              </span>
-              <button
-                type="button"
-                onClick={() => setPreviewMedia(null)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
-              >
-                <X size={20} />
-              </button>
+            {/* Header del modal */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px 20px',
+                background: '#f8fafc',
+                borderBottom: '1px solid #e2e8f0'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    background: '#eff6ff',
+                    color: '#1e3a8a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <FileImage size={18} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1e293b' }}>
+                    {previewMedia.nombre_original}
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: '#64748b' }}>
+                    {formatoMb(previewMedia.tamano)} {previewMedia.descripcion ? `• ${previewMedia.descripcion}` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {previewMedia.url && previewMedia.url.startsWith('http') && (
+                  <a
+                    href={previewMedia.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary-custom"
+                    style={{ fontSize: '12px', padding: '6px 12px', textDecoration: 'none' }}
+                  >
+                    <ExternalLink size={13} />
+                    <span>Pestaña nueva</span>
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setPreviewMedia(null)}
+                  style={{
+                    background: '#f1f5f9',
+                    border: 'none',
+                    borderRadius: '8px',
+                    width: '32px',
+                    height: '32px',
+                    color: '#64748b',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  title="Cerrar vista previa"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
-            <img
-              src={previewMedia.url || previewMedia.ruta}
-              alt={previewMedia.nombre_original}
-              style={{ maxWidth: '85vw', maxHeight: '75vh', objectFit: 'contain' }}
-            />
+
+            {/* Contenedor de la foto con fondo claro e iluminación natural */}
+            <div
+              style={{
+                padding: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#f8fafc',
+                minHeight: '260px',
+                maxHeight: '75vh',
+                overflow: 'auto'
+              }}
+            >
+              {previewMedia.url && previewMedia.url.startsWith('http') ? (
+                <img
+                  src={previewMedia.url}
+                  alt={previewMedia.nombre_original}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '70vh',
+                    objectFit: 'contain',
+                    borderRadius: '8px',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)'
+                  }}
+                />
+              ) : (
+                <div style={{ textAlign: 'center', color: '#64748b', padding: '40px 20px' }}>
+                  <FileImage size={48} style={{ color: '#cbd5e1', marginBottom: '12px' }} />
+                  <p style={{ margin: 0, fontWeight: 600 }}>La imagen aún no tiene un enlace activo.</p>
+                  <p style={{ margin: '4px 0 0', fontSize: '12.5px' }}>
+                    Asegúrate de que la foto se haya subido correctamente.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

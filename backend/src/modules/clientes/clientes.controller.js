@@ -1,5 +1,6 @@
 const patronContiene = require('../../utils/patronContiene');
 const pool = require('../../config/database');
+const bitacora = require('../../services/bitacora.service');
 
 const getAll = async (req, res) => {
     try {
@@ -65,7 +66,26 @@ const create = async (req, res) => {
             [nombre, apellido, telefono, correo || null, direccion || null]
         );
 
-        res.status(201).json((await consultarDetalle(result.rows[0].id_cliente)).rows[0]);
+        const nuevo = result.rows[0];
+
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'cliente',
+                accion: 'crear',
+                entidad: 'cliente',
+                idRegistro: nuevo.id_cliente,
+                descripcion: `Registró cliente ${nuevo.nombre} ${nuevo.apellido}`,
+                datosAntes: null,
+                datosDespues: nuevo,
+                contexto: { id_cliente: nuevo.id_cliente, telefono: nuevo.telefono }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
+        res.status(201).json((await consultarDetalle(nuevo.id_cliente)).rows[0]);
 
     } catch (err) {
         if (err.code === '23505')
@@ -78,6 +98,12 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { nombre, apellido, telefono, correo, direccion } = req.body;
+        const id = req.params.id;
+
+        const prevRes = await pool.query('SELECT * FROM cliente WHERE id_cliente = $1', [id]);
+        if (prevRes.rows.length === 0)
+            return res.status(404).json({ error: 'Cliente no encontrado' });
+        const anterior = prevRes.rows[0];
 
         const result = await pool.query(
             `UPDATE cliente SET
@@ -88,13 +114,29 @@ const update = async (req, res) => {
                 direccion = $5
              WHERE id_cliente = $6
              RETURNING *`,
-            [nombre, apellido, telefono, correo || null, direccion || null, req.params.id]
+            [nombre, apellido, telefono, correo || null, direccion || null, id]
         );
 
-        if (result.rows.length === 0)
-            return res.status(404).json({ error: 'Cliente no encontrado' });
+        const actualizado = result.rows[0];
 
-        res.json((await consultarDetalle(result.rows[0].id_cliente)).rows[0]);
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'cliente',
+                accion: 'actualizar',
+                entidad: 'cliente',
+                idRegistro: id,
+                descripcion: `Actualizó datos de cliente ${actualizado.nombre} ${actualizado.apellido}`,
+                datosAntes: anterior,
+                datosDespues: actualizado,
+                contexto: { id_cliente: id, telefono: actualizado.telefono }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
+        res.json((await consultarDetalle(actualizado.id_cliente)).rows[0]);
 
     } catch (err) {
         if (err.code === '23505')
@@ -106,16 +148,35 @@ const update = async (req, res) => {
 
 const remove = async (req, res) => {
     try {
-        const result = await pool.query(
-            'DELETE FROM cliente WHERE id_cliente = $1 RETURNING *',
-            [req.params.id]
+        const id = req.params.id;
+        const prevRes = await pool.query('SELECT * FROM cliente WHERE id_cliente = $1', [id]);
+        if (prevRes.rows.length === 0)
+            return res.status(404).json({ error: 'Cliente no encontrado' });
+        const anterior = prevRes.rows[0];
+
+        await pool.query(
+            'DELETE FROM cliente WHERE id_cliente = $1',
+            [id]
         );
 
-        if (result.rows.length === 0)
-            return res.status(404).json({ error: 'Cliente no encontrado' });
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'cliente',
+                accion: 'eliminar',
+                entidad: 'cliente',
+                idRegistro: id,
+                descripcion: `Eliminó cliente ${anterior.nombre} ${anterior.apellido} (#${id})`,
+                datosAntes: anterior,
+                datosDespues: null,
+                contexto: { id_cliente: id }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
 
         res.json({ mensaje: 'Cliente eliminado correctamente' });
-
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });

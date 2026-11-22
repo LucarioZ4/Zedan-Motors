@@ -42,8 +42,19 @@ export default function Login() {
         sessionStorage.setItem('nombre', data.usuario?.nombre || usuario);
         navigate('/dashboard');
       } else {
-        setErrorMsg(await getErrorMessage(response,
-          response.status === 401 ? 'Credenciales incorrectas.' : 'No se pudo iniciar sesión.'));
+        let detalle = '';
+        try {
+          const texto = await response.text();
+          try {
+            const json = JSON.parse(texto);
+            detalle = json.error || json.mensaje || json.title || texto;
+          } catch {
+            detalle = texto.replace(/<[^>]*>?/gm, '').trim().slice(0, 100);
+          }
+        } catch {
+          detalle = response.statusText;
+        }
+        setErrorMsg(detalle || (response.status === 401 ? 'Credenciales incorrectas.' : `Error ${response.status}`));
       }
     } catch (err) {
       console.error('Error login:', err);

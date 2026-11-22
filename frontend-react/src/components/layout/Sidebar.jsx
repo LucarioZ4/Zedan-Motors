@@ -1,5 +1,5 @@
-import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { API_URL } from '../../services/api';
 import {
   LayoutDashboard,
   Users,
@@ -13,6 +13,7 @@ import {
   Receipt,
   History,
   MessageSquare,
+  ShieldCheck,
   LogOut,
   X
 } from 'lucide-react';
@@ -41,7 +42,8 @@ const navItems = [
       { label: 'Inventario', path: '/inventario', icon: Package },
       { label: 'Facturación', path: '/facturacion', icon: Receipt },
       { label: 'Historial', path: '/historial', icon: History },
-      { label: 'Mensajes', path: '/mensajes', icon: MessageSquare }
+      { label: 'Mensajes', path: '/mensajes', icon: MessageSquare },
+      { label: 'Bitácora', path: '/bitacora', icon: ShieldCheck }
     ]
   }
 ];
@@ -57,8 +59,25 @@ export default function Sidebar({ isOpen = true, onClose = () => {} }) {
     if (window.matchMedia('(max-width: 900px)').matches) onClose();
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm('¿Deseas cerrar sesión?')) {
+      try {
+        const token = sessionStorage.getItem('token');
+        if (token) {
+          const response = await fetch(`${API_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (!response.ok) {
+            console.warn('No se pudo registrar el cierre de sesión:', response.status);
+          }
+        }
+      } catch (err) {
+        console.warn('No se pudo registrar el cierre de sesión:', err);
+      }
       sessionStorage.clear();
       navigate('/login');
     }

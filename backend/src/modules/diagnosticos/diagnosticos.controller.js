@@ -4,6 +4,8 @@
 
 const pool = require('../../config/database');
 const storage = require('../../services/storage.service');
+const bitacora = require('../../services/bitacora.service');
+const whatsapp = require('../../services/whatsapp.service');
 const crypto = require('crypto');
 const path = require('path');
 const { diagMaxMb, diagAllowedMime, diagBucket } = require('../../config/env');
@@ -27,6 +29,19 @@ const guardar = async (req, res) => {
   try {
     client = await pool.connect();
     await client.query('BEGIN');
+    let anterior = null;
+    if (id) {
+      const anteriorResult = await client.query(
+        'SELECT * FROM diagnostico WHERE id_diagnostico=$1 FOR UPDATE',
+        [id]
+      );
+      if (!anteriorResult.rows[0]) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Diagnóstico no encontrado' });
+      }
+      anterior = anteriorResult.rows[0];
+    }
+
     const result = id
       ? await client.query(
           `UPDATE diagnostico SET fecha_ingreso=COALESCE($1,fecha_ingreso),kilometraje=COALESCE($2,kilometraje),
@@ -47,7 +62,56 @@ const guardar = async (req, res) => {
         await client.query('INSERT INTO diagnostico_accesorio(id_diagnostico,nombre,estado,observacion) VALUES($1,$2,$3,$4)',
           [diagnostico.id_diagnostico,a?.nombre,a?.estado,a?.observacion || null]);
     }
+
+    const idSesion = req.usuario?.id_sesion;
+    const idUsuario = req.usuario?.id;
+    if (idSesion && idUsuario) {
+      await bitacora.registrarEvento({
+        client,
+        idSesion,
+        idUsuario,
+        modulo: 'diagnostico',
+        accion: id ? 'actualizar' : 'crear',
+        entidad: 'diagnostico',
+        idRegistro: diagnostico.id_diagnostico,
+        descripcion: `${id ? 'Actualizó' : 'Creó'} diagnóstico #${diagnostico.id_diagnostico}`,
+        datosAntes: anterior,
+        datosDespues: diagnostico,
+        contexto: {
+          id_diagnostico: diagnostico.id_diagnostico,
+          id_vehiculo: diagnostico.id_vehiculo,
+          id_cita: diagnostico.id_cita
+        }
+      });
+    }
+
     await client.query('COMMIT');
+
+    // Notificación automática por WhatsApp al registrar o actualizar diagnóstico
+    pool.query(`
+      SELECT d.id_diagnostico, d.kilometraje, d.estado,
+             v.placa, v.marca, v.modelo,
+             COALESCE(cl.nombre || ' ' || cl.apellido, 'Estimado cliente') AS cliente,
+             cl.telefono AS cliente_telefono
+      FROM diagnostico d
+      JOIN vehiculo v ON d.id_vehiculo = v.id_vehiculo
+      LEFT JOIN cliente cl ON v.id_cliente = cl.id_cliente
+      WHERE d.id_diagnostico = $1
+    `, [diagnostico.id_diagnostico]).then(r => {
+      if (r.rows.length > 0) {
+        const row = r.rows[0];
+        const vehiculo = `${row.placa} - ${row.marca || ''} ${row.modelo || ''}`.trim();
+        whatsapp.notificarDiagnosticoGuardado({
+          idDiagnostico: row.id_diagnostico,
+          cliente: row.cliente,
+          telefono: row.cliente_telefono,
+          vehiculo,
+          kilometraje: row.kilometraje,
+          estado: row.estado
+        }).catch(e => console.warn('[WhatsApp] Error diagnostico guardado:', e.message));
+      }
+    }).catch(() => {});
+
     res.status(id ? 200 : 201).json(diagnostico);
   } catch (err) {
     if (client) await client.query('ROLLBACK').catch(() => {});
@@ -130,7 +194,7 @@ const detalle = async (req, res) => {
     }
     const archivosConUrl = archivos.rows.map(a => ({
       ...a,
-      url: urls[a.ruta] || a.ruta
+      url: urls[a.ruta] || ''
     }));
 
     res.json({ ...d.rows[0], accesorios: accesorios.rows, archivos: archivosConUrl });

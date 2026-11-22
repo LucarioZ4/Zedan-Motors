@@ -1,5 +1,7 @@
 const patronContiene = require('../../utils/patronContiene');
 const pool = require('../../config/database');
+const bitacora = require('../../services/bitacora.service');
+const whatsapp = require('../../services/whatsapp.service');
 
 const getAll = async (req, res) => {
     try {
@@ -47,6 +49,7 @@ const consultarDetalle = id => pool.query(
                     TO_CHAR(c.hora, 'HH24:MI') AS hora,
                     c.motivo, c.id_vehiculo, c.id_estado,
                     cl.id_cliente,
+                    cl.telefono, cl.correo,
                     cl.nombre || ' ' || cl.apellido AS cliente,
                     v.placa || ' - ' || v.marca || ' ' || v.modelo AS vehiculo,
                     e.nombre_estado AS estado
@@ -84,7 +87,31 @@ const create = async (req, res) => {
             [fecha, hora, motivo || null, id_vehiculo, id_estado || 1]
         );
 
-        res.status(201).json((await consultarDetalle(result.rows[0].id_cita)).rows[0]);
+        const nueva = result.rows[0];
+
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'cita',
+                accion: 'crear',
+                entidad: 'cita',
+                idRegistro: nueva.id_cita,
+                descripcion: `Agendó cita para el ${fecha} a las ${hora} (Motivo: ${motivo || 'General'})`,
+                datosAntes: null,
+                datosDespues: nueva,
+                contexto: { id_cita: nueva.id_cita, id_vehiculo, fecha, hora }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
+        const detalle = (await consultarDetalle(nueva.id_cita)).rows[0];
+
+        // Notificación automática por WhatsApp al cliente
+        whatsapp.notificarCitaAgendada(detalle).catch(e => console.warn('[WhatsApp] Error cita agendada:', e.message));
+
+        res.status(201).json(detalle);
 
     } catch (err) {
         if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
@@ -96,6 +123,12 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { fecha, hora, motivo, id_vehiculo, id_estado } = req.body;
+        const id = req.params.id;
+
+        const prevRes = await pool.query('SELECT * FROM cita WHERE id_cita = $1', [id]);
+        if (prevRes.rows.length === 0)
+            return res.status(404).json({ error: 'Cita no encontrada' });
+        const anterior = prevRes.rows[0];
 
         const result = await pool.query(
             `UPDATE cita SET
@@ -106,13 +139,51 @@ const update = async (req, res) => {
                 id_estado   = $5
              WHERE id_cita = $6
              RETURNING *`,
-            [fecha, hora, motivo || null, id_vehiculo, id_estado || 1, req.params.id]
+            [fecha, hora, motivo || null, id_vehiculo, id_estado || 1, id]
         );
 
-        if (result.rows.length === 0)
-            return res.status(404).json({ error: 'Cita no encontrada' });
+        const actualizada = result.rows[0];
 
-        res.json((await consultarDetalle(result.rows[0].id_cita)).rows[0]);
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            const esCambioEstado = anterior.id_estado !== actualizada.id_estado;
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'cita',
+                accion: esCambioEstado ? 'cambiar_estado' : 'actualizar',
+                entidad: 'cita',
+                idRegistro: id,
+                descripcion: `Actualizó cita #${id} (${actualizada.fecha} ${actualizada.hora})`,
+                datosAntes: anterior,
+                datosDespues: actualizada,
+                contexto: { id_cita: id, id_vehiculo, fecha: actualizada.fecha }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
+        const detalle = (await consultarDetalle(actualizada.id_cita)).rows[0];
+
+        // Notificación automática por WhatsApp si cambió el estado
+        if (anterior.id_estado !== actualizada.id_estado) {
+            whatsapp.notificarCitaCambioEstado(detalle, detalle.estado).catch(e => console.warn('[WhatsApp] Error estado cita:', e.message));
+
+            // Si tiene orden de trabajo asociada, notificar también estado de orden
+            pool.query('SELECT id_orden FROM orden_trabajo WHERE id_cita = $1', [id])
+                .then(r => {
+                    if (r.rows.length > 0) {
+                        whatsapp.notificarOrdenCambioEstado({
+                            cliente: detalle.cliente,
+                            telefono: detalle.telefono,
+                            vehiculo: detalle.vehiculo,
+                            idOrden: r.rows[0].id_orden,
+                            estadoNuevo: detalle.estado
+                        }).catch(e => console.warn('[WhatsApp] Error estado orden:', e.message));
+                    }
+                }).catch(() => {});
+        }
+
+        res.json(detalle);
 
     } catch (err) {
         if (err.code === '23503') return res.status(400).json({ error: 'La referencia indicada no existe' });
@@ -123,20 +194,38 @@ const update = async (req, res) => {
 
 const remove = async (req, res) => {
     try {
-        const result = await pool.query(
-            'DELETE FROM cita WHERE id_cita = $1 RETURNING *',
-            [req.params.id]
-        );
-
-        if (result.rows.length === 0)
+        const id = req.params.id;
+        const prevRes = await pool.query('SELECT * FROM cita WHERE id_cita = $1', [id]);
+        if (prevRes.rows.length === 0)
             return res.status(404).json({ error: 'Cita no encontrada' });
+        const anterior = prevRes.rows[0];
+
+        await pool.query('DELETE FROM cita WHERE id_cita = $1', [id]);
+
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'cita',
+                accion: 'eliminar',
+                entidad: 'cita',
+                idRegistro: id,
+                descripcion: `Canceló / eliminó cita #${id} de fecha ${anterior.fecha}`,
+                datosAntes: anterior,
+                datosDespues: null,
+                contexto: { id_cita: id, id_vehiculo: anterior.id_vehiculo }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
 
         res.json({ mensaje: 'Cita eliminada correctamente' });
-
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
+
+
 
 module.exports = { getAll, getById, create, update, remove };

@@ -1,4 +1,6 @@
 const pool = require('../../config/database');
+const bitacora = require('../../services/bitacora.service');
+const whatsapp = require('../../services/whatsapp.service');
 
 const bloquearOrdenEditable = async (client, id) => {
     const orden = await client.query('SELECT 1 FROM orden_trabajo WHERE id_orden=$1 FOR UPDATE', [id]);
@@ -68,9 +70,11 @@ const consultarOrden = (db, id) => db.query(`
                 o.observaciones,
                 o.id_cita,
                 o.id_empleado,
+                cl.telefono, cl.correo,
                 cl.nombre || ' ' || cl.apellido AS cliente,
                 v.placa || ' - ' || v.marca || ' ' || v.modelo AS vehiculo,
                 e.nombre || ' ' || e.apellido AS empleado,
+                c.id_estado,
                 est.nombre_estado AS estado,
                 COALESCE((SELECT jsonb_agg(jsonb_build_object('id_servicio',s.id_servicio,'nombre_servicio',s.nombre_servicio,'costo',s.costo) ORDER BY s.id_servicio)
                           FROM orden_servicio os JOIN servicio s USING(id_servicio) WHERE os.id_orden=o.id_orden),'[]') AS servicios,
@@ -128,8 +132,41 @@ const create = async (req, res, next) => {
             if (!ajustado.rowCount) throw new ErrorNegocio(400, 'Repuesto inexistente o stock insuficiente');
             await client.query('INSERT INTO orden_inventario(id_orden,id_repuesto,cantidad) VALUES($1,$2,$3)',[id,rid,cantidad]);
         }
+        // Al crear la orden, pasar la cita a 'En proceso' (id_estado = 3) automáticamente
+        if (id_cita) {
+            await client.query('UPDATE cita SET id_estado = 3 WHERE id_cita = $1 AND id_estado < 3', [id_cita]);
+        }
         const detalle = await consultarOrden(client,id);
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            await bitacora.registrarEvento({
+                client,
+                idSesion,
+                idUsuario,
+                modulo: 'orden',
+                accion: 'crear',
+                entidad: 'orden_trabajo',
+                idRegistro: id,
+                descripcion: `Creó orden de trabajo #${id} (Fecha inicio: ${fecha_inicio})`,
+                datosAntes: null,
+                datosDespues: detalle.rows[0],
+                contexto: { id_orden: id, id_cita, id_empleado }
+            });
+        }
         await client.query('COMMIT');
+
+        // Notificaciones automáticas por WhatsApp
+        const ordenCreada = detalle.rows[0];
+        whatsapp.notificarOrdenCreada(ordenCreada).catch(e => console.warn('[WhatsApp] Error orden creada:', e.message));
+        whatsapp.notificarOrdenCambioEstado({
+            cliente: ordenCreada.cliente,
+            telefono: ordenCreada.telefono,
+            vehiculo: ordenCreada.vehiculo,
+            idOrden: id,
+            estadoNuevo: 'En proceso'
+        }).catch(e => console.warn('[WhatsApp] Error orden en proceso:', e.message));
+
         res.status(201).json(detalle.rows[0]);
     } catch (err) {
         if (client) await client.query('ROLLBACK').catch(() => {});
@@ -142,18 +179,78 @@ const create = async (req, res, next) => {
 };
 
 const update = conOrdenEditable(async (client, req) => {
-    const { fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado } = req.body;
+    const { fecha_inicio, fecha_fin, observaciones, id_cita, id_empleado, id_estado } = req.body;
+    const id = req.params.id;
+    const anterior = (await consultarOrden(client, id)).rows[0];
     await client.query(`
         UPDATE orden_trabajo SET fecha_inicio=$1, fecha_fin=$2, observaciones=$3,
             id_cita=$4, id_empleado=$5 WHERE id_orden=$6 RETURNING *`,
-        [fecha_inicio, fecha_fin || null, observaciones || null, id_cita, id_empleado, req.params.id]);
-    return { body: (await consultarOrden(client,req.params.id)).rows[0] };
+        [fecha_inicio, fecha_fin || null, observaciones || null, id_cita, id_empleado, id]);
+
+    // Si se envió id_estado, actualizar estado de la cita vinculada
+    const targetCitaId = id_cita || anterior.id_cita;
+    if (id_estado && targetCitaId) {
+        await client.query('UPDATE cita SET id_estado=$1 WHERE id_cita=$2', [id_estado, targetCitaId]);
+    }
+
+    const actualizada = (await consultarOrden(client, id)).rows[0];
+    const idSesion = req.usuario?.id_sesion;
+    const idUsuario = req.usuario?.id;
+    if (idSesion && idUsuario) {
+        await bitacora.registrarEvento({
+            client,
+            idSesion,
+            idUsuario,
+            modulo: 'orden',
+            accion: 'actualizar',
+            entidad: 'orden_trabajo',
+            idRegistro: id,
+            descripcion: `Actualizó orden de trabajo #${id}`,
+            datosAntes: anterior,
+            datosDespues: actualizada,
+            contexto: { id_orden: id, id_cita, id_empleado, estado: actualizada.estado }
+        });
+    }
+
+    // Si cambió el estado, notificar automáticamente por WhatsApp
+    if (anterior.estado !== actualizada.estado) {
+        whatsapp.notificarOrdenCambioEstado({
+            cliente: actualizada.cliente,
+            telefono: actualizada.telefono,
+            vehiculo: actualizada.vehiculo,
+            idOrden: id,
+            estadoNuevo: actualizada.estado
+        }).catch(e => console.warn('[WhatsApp] Error orden cambio estado:', e.message));
+    }
+
+    return { body: actualizada };
 });
 
 const remove = conOrdenEditable(async (client, req) => {
-    await client.query('DELETE FROM orden_trabajo WHERE id_orden=$1', [req.params.id]);
+    const id = req.params.id;
+    const anterior = (await consultarOrden(client, id)).rows[0];
+    await client.query('DELETE FROM orden_trabajo WHERE id_orden=$1', [id]);
+    const idSesion = req.usuario?.id_sesion;
+    const idUsuario = req.usuario?.id;
+    if (idSesion && idUsuario) {
+        await bitacora.registrarEvento({
+            client,
+            idSesion,
+            idUsuario,
+            modulo: 'orden',
+            accion: 'eliminar',
+            entidad: 'orden_trabajo',
+            idRegistro: id,
+            descripcion: `Eliminó orden de trabajo #${id}`,
+            datosAntes: anterior,
+            datosDespues: null,
+            contexto: { id_orden: id }
+        });
+    }
     return { body: { mensaje: 'Orden eliminada correctamente' } };
 });
+
+
 
 const getServicios = async (req, res) => {
     try {

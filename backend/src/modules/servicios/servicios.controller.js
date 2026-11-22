@@ -1,5 +1,6 @@
 const patronContiene = require('../../utils/patronContiene');
 const pool = require('../../config/database');
+const bitacora = require('../../services/bitacora.service');
 
 const getAll = async (req, res) => {
     try {
@@ -52,7 +53,27 @@ const create = async (req, res) => {
              VALUES ($1, $2, $3) RETURNING *`,
             [nombre_servicio, descripcion || null, costo]
         );
-        res.status(201).json(result.rows[0]);
+
+        const nuevo = result.rows[0];
+
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'servicios',
+                accion: 'crear',
+                entidad: 'servicio',
+                idRegistro: nuevo.id_servicio,
+                descripcion: `Creó servicio "${nuevo.nombre_servicio}" (Costo: $${nuevo.costo})`,
+                datosAntes: null,
+                datosDespues: nuevo,
+                contexto: { id_servicio: nuevo.id_servicio }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
+        res.status(201).json(nuevo);
 
     } catch (err) {
         if (err.code === '23505')
@@ -65,6 +86,12 @@ const create = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { nombre_servicio, descripcion, costo } = req.body;
+        const id = req.params.id;
+
+        const prevRes = await pool.query('SELECT * FROM servicio WHERE id_servicio = $1', [id]);
+        if (prevRes.rows.length === 0)
+            return res.status(404).json({ error: 'Servicio no encontrado' });
+        const anterior = prevRes.rows[0];
 
         const result = await pool.query(
             `UPDATE servicio SET
@@ -72,11 +99,29 @@ const update = async (req, res) => {
                 descripcion     = $2,
                 costo           = $3
              WHERE id_servicio = $4 RETURNING *`,
-            [nombre_servicio, descripcion || null, costo, req.params.id]
+            [nombre_servicio, descripcion || null, costo, id]
         );
-        if (result.rows.length === 0)
-            return res.status(404).json({ error: 'Servicio no encontrado' });
-        res.json(result.rows[0]);
+
+        const actualizado = result.rows[0];
+
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'servicios',
+                accion: 'actualizar',
+                entidad: 'servicio',
+                idRegistro: id,
+                descripcion: `Actualizó servicio "${actualizado.nombre_servicio}" (Costo: $${anterior.costo} -> $${actualizado.costo})`,
+                datosAntes: anterior,
+                datosDespues: actualizado,
+                contexto: { id_servicio: id }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
+        res.json(actualizado);
 
     } catch (err) {
         if (err.code === '23505')
@@ -88,12 +133,34 @@ const update = async (req, res) => {
 
 const remove = async (req, res) => {
     try {
-        const result = await pool.query(
-            'DELETE FROM servicio WHERE id_servicio = $1 RETURNING *',
-            [req.params.id]
-        );
-        if (result.rows.length === 0)
+        const id = req.params.id;
+        const prevRes = await pool.query('SELECT * FROM servicio WHERE id_servicio = $1', [id]);
+        if (prevRes.rows.length === 0)
             return res.status(404).json({ error: 'Servicio no encontrado' });
+        const anterior = prevRes.rows[0];
+
+        await pool.query(
+            'DELETE FROM servicio WHERE id_servicio = $1',
+            [id]
+        );
+
+        const idSesion = req.usuario?.id_sesion;
+        const idUsuario = req.usuario?.id;
+        if (idSesion && idUsuario) {
+            bitacora.registrarEvento({
+                idSesion,
+                idUsuario,
+                modulo: 'servicios',
+                accion: 'eliminar',
+                entidad: 'servicio',
+                idRegistro: id,
+                descripcion: `Eliminó servicio "${anterior.nombre_servicio}" (#${id})`,
+                datosAntes: anterior,
+                datosDespues: null,
+                contexto: { id_servicio: id }
+            }).catch(e => console.warn('Bitácora error:', e.message));
+        }
+
         res.json({ mensaje: 'Servicio eliminado correctamente' });
     } catch (err) {
         console.error(err);
